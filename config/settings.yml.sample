@@ -1,0 +1,11 @@
+default:
+  name: "Darcy Laycock"
+  server: irc.freenode.net
+  port: 6667
+  channel: "#offtesting"
+development:
+  user: MarvinBot
+  name: MarvinBot
+  nick: MarvinBot
+production:
+  deployed: false
