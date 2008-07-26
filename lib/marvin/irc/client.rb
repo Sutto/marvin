@@ -44,7 +44,7 @@ module Marvin::IRC
       command! :user, Marvin::Settings.user, "0", "*", ":" + Marvin::Settings.name # name is a special case
       nick Marvin::Settings.nick
       join Marvin::Settings.channel
-      say  ":IDENTIFY #{Marvin::Settings.password}", "NickServ" if Marvin::Settings.password
+      say  ":IDENTIFY #{Marvin::Settings.password}", "NickServ" if Marvin::Settings[:password]
     end
     
     def receive_data(data)
@@ -83,7 +83,7 @@ module Marvin::IRC
       if match
         properties = match[1] # The properties array
         name       = properties[0]
-        options    = Hash[*properties[1].zip(stored_match.drop(1)).flatten]
+        options    = Hash[*properties[1].zip(stored_match.to_a[1..-1]).flatten]
         handle_callback(name, options)
       else
        puts "Unrecognized: #{line}"
@@ -103,6 +103,10 @@ module Marvin::IRC
     # Get the current handler for this module.
     def handler
       @handler ||= Marvin::Base.instance
+    end
+    
+    def channels
+      @in_channels ||= []
     end
     
     # Take's a handle type (as name) and a hash of options
@@ -147,13 +151,23 @@ module Marvin::IRC
     def join(channel)
       # Append the # symbol to the front of the name
       channel = "##{channel}" unless channel[0..0] == "#"
-      Marvin::Logger.debug "Joining Channel #{channel}"
+      self.channels << channel
+      Marvin::Logger.debug "Joining Channel #{channel} - Now in #{self.channels * ", "}"
       command! :join, channel
     end
     
     def part(channel, message = nil)
+      channel = "##{channel}" unless channel[0..0] == "#"
       Marvin::Logger.debug "Parting #{channel} w/ message = #{message || 'Not Specified'}"
+      self.channels.delete(channel)
       command! :part, channel, message
+    end
+    
+    def quit(message = nil)
+      Marvin::Logger.debug "Asked to quit the server"
+      self.channels.each { |channel| part channel, message }
+      command! :quit
+      EventMachine::stop
     end
     
     def pong(data)
@@ -162,6 +176,11 @@ module Marvin::IRC
     
     def say(message, target)
       command! :privmsg, target, message
+    end
+    
+    def periodically(time, target = nil, &blk)
+      blk ||= proc { handle_callback(target, {}) }
+      EventMachine::add_periodic_timer(time, &blk)
     end
     
     def action(action, target)

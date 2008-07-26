@@ -12,7 +12,12 @@ module Marvin
     def handle_message(opts = {})
       Marvin::Logger.debug("Got Message in #{opts[:target]} - #{opts[:message]}")
       client::say "Hello, #{opts[:nick]}", opts[:target] if opts[:message] =~ /h(ello|i)/i
-      client::part opts[:target], "buhbye" if opts[:message] =~ /diediedie/i
+      client::quit ":buhbye" if opts[:message] =~ /diediedie/i
+      client::periodically(5, :hello_time) if opts[:message] =~ /time it/i
+    end
+    
+    def handle_hello_time(opts = {})
+      client::say "Periodic Hello", Marvin::Settings.channel
     end
     
   end
