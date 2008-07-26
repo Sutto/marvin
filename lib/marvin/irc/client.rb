@@ -1,5 +1,28 @@
 require 'eventmachine'
 module Marvin::IRC
+  
+  
+  # == Marvin::IRC::Client - An event machine backed IRC client
+  #   
+  #   Marvin::IRC::Client (MIC from here on in) is a simple IRC client
+  #   built to implement the minimal amount of features required to run
+  #   an IRC bot.
+  #   
+  #   MIC works by using a handler. Essentially, can set the current
+  #   handler using:
+  #   
+  #     Marvin::IRC::Client::handler = MyHandler.new
+  #   
+  #   Typically, this handler will have at least one base method defined -
+  #   handle - which accepts two parameters (a sym with the handle type and
+  #   a hash with a key -> value set of information for it.By default, this
+  #   defaults to the Singleton instance of Marvin::Base. 
+  #   
+  #   Other methods (of the form handle_[type] e.g. handle_message or handle_part)
+  #   can be defined - these taking precedence over the the handle method. If said
+  #   methods don't exist and neither does the handler instance, it will currently
+  #   do nothing.
+  
   module Client
     
     HANDLE_TYPES = {
@@ -124,6 +147,10 @@ module Marvin::IRC
     
     ## Starting the client
     
+    # Connects to the IRC server defined by Marvin::Settings.server and Marvin::Sending.port
+    # and enters the event loop - using the rest of the client to process it. This is called
+    # once all other components of the setup have been taken care of e.g. it usually doesn't
+    # return.
     def self.run
       EventMachine::run do
         Marvin::Logger.debug "Connecting to #{Marvin::Settings.server}:#{Marvin::Settings.port} & entering event loop"
@@ -136,7 +163,7 @@ module Marvin::IRC
     def command!(keyword, *args)
       args.flatten!
       args.compact!
-      args[-1] = ":#{args.last}" if args.length > 0 && args.last.include?(" ")
+      args[-1] = ":#{args.last}" if args.length > 0 && args.last.include?(" ") && args.last[0..0] != ":"
       irc_command = "#{keyword.to_s.upcase} #{args.join(" ").strip} \r\n"
       Marvin::Logger.debug "Sending: #{irc_command}"
       send_data irc_command
