@@ -107,6 +107,10 @@ module Marvin::IRC
     
     def self.run
       self.setup # So we have options etc
+      EventMachine::run do
+        logger.debug "Connecting"
+        EventMachine::connect self.configuration.server, (self.configuration.port || 6667), self
+      end
     end
     
     # General IRC Functions
