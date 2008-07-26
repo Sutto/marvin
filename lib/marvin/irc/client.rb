@@ -31,7 +31,8 @@ module Marvin::IRC
       /^\:(.+)\!\~?(.+)\@(.+) PRIVMSG #{Marvin::Settings.nick} \:(.+)$/ => [:private_message, [:nick, :ident, :host, :target, :message]],
       /^\:(.+)\!\~?(.+)\@(.+) PING (.*)$/ => [:ping, [:nick, :ident, :host, :data]],
       /^\:(.+)\!\~?(.+)\@(.+) QUIT (\w+) \:(.+)$/ => [:quit, [:nick, :ident, :host, :user, :message]],
-      /^\:(.+)\!\~?(.+)\@(.+) PART (\#?\w+) \:(.+)$/ => [:part, [:nick, :ident, :host, :user, :reason]],
+      /^\:(.+)\!\~?(.+)\@(.+) PART (\#?\w+) \:?(.*)$/ => [:part, [:nick, :ident, :host, :channel, :reason]],
+      /^\:(.+)\!\~?(.+)\@(.+) JOIN \:?(\#\w+).*$/ => [:join, [:nick, :ident, :host, :room]]
     }
     
     ## EventMachine callbacks
