@@ -136,6 +136,11 @@ module Marvin::IRC
       end
     end
     
+    def periodically(time, target = nil, &blk)
+      blk ||= proc { self::handle_callback(target, {}) }
+      EventMachine::add_periodic_timer(time, &blk)
+    end
+    
     ## Default Integrated Handlers
     
     def handle_ping(opts = {})
@@ -176,16 +181,13 @@ module Marvin::IRC
     end
     
     def say(message, target)
+      handle_callback :say, :message => message, :target => target, :nick => Marvin::Settings.nick
       command! :privmsg, target, message
     end
     
-    def periodically(time, target = nil, &blk)
-      blk ||= proc { handle_callback(target, {}) }
-      EventMachine::add_periodic_timer(time, &blk)
-    end
-    
     def action(action, target)
-      
+      handle_callback :action, :message => action, :target => target, :nick => Marvin::Settings.nick
+      command! :privmsg, target, ":\01ACTION #{action}\01"
     end
     
     ## Starting the client
