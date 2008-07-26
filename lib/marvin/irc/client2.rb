@@ -1,3 +1,4 @@
+require 'ostruct'
 require 'eventmachine'
 require 'active_support'
 require File.dirname(__FILE__) + "/event"
@@ -11,14 +12,17 @@ module Marvin::IRC
     cattr_accessor :events, :handlers, :configuration, :logger, :is_setup
     attr_accessor  :channels, :nickname
     
-    def initialize(*args)
+    # Initialize the class
+    def post_init
       super
-      self.channels ||= []
+      self.channels = []
       self.handlers.each { |h| h.client = self if h.respond_to?(:client=) }
+      handle_event :post_init
     end
     
     def self.configuration=(config)
       config_hash = config.to_hash
+      super(OpenStruct.new(config_hash))
     end
     
     # Prepares it for usage.
@@ -45,8 +49,9 @@ module Marvin::IRC
     end
     
     def receive_line(line)
+      handle_event :incoming_line, :line => line
       event = self.events.detect { |e| e.matches?(line) }
-      logger.debug (event ? "Logger matched event #{event.name}" : "Unknown response")
+      logger.debug(event ? "Logger matched event #{event.name}" : "Unknown response")
       handle_event(event.to_incoming_event_name, event.to_hash) unless event.nil?
     end
     
@@ -69,23 +74,47 @@ module Marvin::IRC
       end
     end
     
+    # Default handlers
+    
+    def handle_post_init(opts = {})
+      # IRC Connection is establish so join the room and set the nick.
+      command :user, self.configuration.user, "0", "*", lp(self.configuration.name)
+      default_nickname = self.configuration.nick || self.configuration.nicknames.shift
+      nick default_nickname
+      say ":IDENTIFY #{self.configuration.password}", "NickServ" unless self.configuration.password.blank?
+      # Join the default channels
+      self.configuration.channels.each { |c| self.join c }
+      # Finally, 
+    end
+    
+    def handle_incoming_nick_taken(opts = {})
+      logger.info "Nick Is Taken"
+      if self.configuration.nicknames.is_a?(Array) && !self.configuration.nicknames.empty?
+        next_nick = self.configuration.next_nick.shift
+        nick next_nick
+      else
+        logger.warn "No Nicknames available - QUITTING"
+        quit
+      end
+    end
+    
+    def handle_incoming_ping(opts = {})
+      logger.info "Recevied Incoming Ping - Handling"
+      pong(opts[:data])
+    end
+    
     # General IRC Tools / Options
     
     def self.run
       self.setup # So we have options etc
     end
     
-    # IRC Specific
+    # General IRC Functions
     
     def command(name, *args)
       # First, get the appropriate command
       name = name.to_s.upcase
       args = args.flatten.compact
-      # Secondly, fix the last command - we want
-      # to append a :
-      if args.last.include?(" ") and args.last[0..0] != ":"
-        args[-1] = ":" + args[-1]
-      end
       irc_command = "#{name} #{args.join(" ").strip} \r\n"
       send_data irc_command
     end
@@ -125,7 +154,7 @@ module Marvin::IRC
     
     def action(target, message)
       action_text = lp "\01ACTION #{message.strip}\01"
-      command :privmsg target, action_text
+      command :privmsg, target, action_text
       handle_event :outgoing_action, :target => target, :message => message
       logger.info "Action sent to #{target} - #{message}"
     end
@@ -136,15 +165,25 @@ module Marvin::IRC
       logger.info "PONG sent to #{data}"
     end
     
+    def nick(new_nick)
+      command :nick, new_nick
+      self.nickname = new_nick
+      handle_event :outgoing_nick, :new_nick => new_nick
+      logger.info "Nickname changed to #{new_nick}"
+    end
+    
+    # Some helper functions for clients
+    
+    # Registers a callback handle that will be periodically run.
+    def periodically(timing, event_callback)
+      callback = proc { self.handle_event event_callback.to_sym }
+      EventMachine::add_periodic_timer(timing, &callback)
+    end
+    
     # Declare the default outgoing events
+    
     # Please note, these regexp's are thanks to Net::YAIL - apparantly also
     # coming from IRCSocket.
-    # when /^:((.+?)(?:!.+?)?) PRIVMSG (\S+?) :?\001(.+?)\001$/i
-    #   handle :incoming_ctcp, $1, $2, $3, $4
-    # when /^:((.+?)(?:!.+?)?) NOTICE (\S+?) :?\001(.+?)\001$/i
-    #   handle :incoming_ctcpreply, $1, $2, $3, $4
-    # when /^:((.+?)(?:!.+?)?) NOTICE (\S+?) :?(.+?)$/i
-    #   handle :incoming_notice, $1, $2, $3, $4
     
     register_event :invite,  /^\:(.+)\!\~?(.+)\@(.+) INVITE (\S+) :?(.+?)$/i,
                    :nick, :ident, :host, :target, :channel
@@ -152,7 +191,7 @@ module Marvin::IRC
     register_event :action,  /^\:(.+)\!\~?(.+)\@(.+) PRIVMSG (\S+) :?\001ACTION (.+?)\001$/i,
                    :nick, :ident, :host, :target, :message
     
-    register_event :message, /^\:(.+)\!\~?(.+)\@(.+) PRIVMSG (\S+) :?(.+?)$/i.
+    register_event :message, /^\:(.+)\!\~?(.+)\@(.+) PRIVMSG (\S+) :?(.+?)$/i,
                    :nick, :ident, :host, :target, :message
                    
     register_event :join,    /^\:(.+)\!\~?(.+)\@(.+) JOIN (\S+)/i,
@@ -176,18 +215,13 @@ module Marvin::IRC
     register_event :quit,    /^\:(.+)\!\~?(.+)\@(.+) QUIT :?(.+?)$/i,
                    :nick, :ident, :host, :message
                    
-    # register_event :what,    /^\:(.+)\!\~?(.+)\@(.+) COMMAND (\S+) :?(.+?)$/i,
-    #                    :nick, :ident, :host, :target, :message
-    #                                   
-    #     register_event :what,    /^\:(.+)\!\~?(.+)\@(.+) COMMAND (\S+) :?(.+?)$/i,
-    #                    :nick, :ident, :host, :target, :message
-    #                    
-    #     register_event :what,    /^\:(.+)\!\~?(.+)\@(.+) COMMAND (\S+) :?(.+?)$/i,
-    #                    :nick, :ident, :host, :target, :message
-    # 
-    #     register_event :what,    /^\:(.+)\!\~?(.+)\@(.+) COMMAND (\S+) :?(.+?)$/i,
-    #                    :nick, :ident, :host, :target, :message
-    
+    register_event :nick_taken, /^:(\S+) 433 \* (\w+) :(.+)$/,
+                   :server, :target, :message
+                   
+    register_event :ping, /^\:(.+)\!\~?(.+)\@(.+) PING (.*)$/,
+                   :nick, :ident, :host, :data
+
+
     private
     
     def chan(name)

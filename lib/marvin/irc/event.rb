@@ -1,8 +1,8 @@
 module Marvin::IRC
   class Event
-    attr_accesor :regexp, :keys, :name, :match_data
+    attr_accessor :regexp, :keys, :name, :match_data
     
-    def initalize(name, regexp, *args)
+    def initialize(name, regexp, *args)
       self.name = name.to_sym
       self.regexp = regexp
       self.keys = args.flatten.map { |k| k.to_sym }
@@ -20,6 +20,10 @@ module Marvin::IRC
         results[key] = values.shift
       end
       return results
+    end
+    
+    def inspect
+      "#<Marvin::IRC::Event name=#{self.name} attributes=#{keys * ","}>"
     end
     
     def to_incoming_event_name
