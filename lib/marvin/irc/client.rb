@@ -41,14 +41,20 @@ module Marvin::IRC
       @buffer = ""
       @in_channels = []
       Marvin::Base.instance.client = self # set the client
-      command! :user, Marvin::Settings.user, "0", "*", ":" + Marvin::Settings.name.to_s
+      command! :user, Marvin::Settings.user, "0", "*", ":" + Marvin::Settings.name # name is a special case
       nick Marvin::Settings.nick
       join Marvin::Settings.channel
+      say  ":IDENTIFY #{Marvin::Settings.password}", "NickServ" if Marvin::Settings.password
     end
     
     def receive_data(data)
       @buffer << data
       process_data
+      # post_receive is a handle that let's you do
+      # things such as add tasks that run every X
+      # but not that it's dependant on receiving
+      # data of some sort every so often.
+      handle_callback :post_receive
     end
     
     def unbind
@@ -56,6 +62,8 @@ module Marvin::IRC
     
     ## Processing Code
     
+    # Get's any complete lines from the buffer and then proceeds
+    # to call process_line on each
     def process_data
       buffer_lines = @buffer.split("\r\n")
       if buffer_lines.length > 0 # Nonempty Buffy
@@ -65,22 +73,25 @@ module Marvin::IRC
       end
     end
     
+    # Given an individual line, finds a matching HANDLE_TYPES value
+    # and then uses the results to built the data to be passed to
+    # If no match is found, it simply prints to stdout and proceeds
+    # on it's merry way.
     def process_line(line)
       stored_match = nil
       match = HANDLE_TYPES.detect { |re, vals| (stored_match = re.match(line)) }
       if match
-        properties = match[1]
+        properties = match[1] # The properties array
         name       = properties[0]
-        values     = stored_match.to_a[1..-1]
-        options    = Hash[*properties[1].zip(values).flatten]
-        if Marvin::Base.instance.respond_to?("handle_#{name}")
-          Marvin::Base.instance.send("handle_#{name}", options)
-        end
+        options    = Hash[*properties[1].zip(stored_match.drop(1)).flatten]
+        handle_callback(name, options)
       else
        puts "Unrecognized: #{line}"
       end
     end
     
+    # Set the handler for this client to a specific
+    # object. See the module overview for specific details
     def handler=(new_handler)
       if new_handler.respond_to?(:client=)
         # Automatically set the handler.
@@ -89,26 +100,34 @@ module Marvin::IRC
       @handler = new_handler
     end
     
+    # Get the current handler for this module.
     def handler
       @handler ||= Marvin::Base.instance
     end
     
-    def handle_callback(name, opts)
+    # Take's a handle type (as name) and a hash of options
+    # (extracted from data) and calls the respective handlers
+    # on both the Client (self) and the designated handler.
+    def handle_callback(name, opts = {})
       current_handler = handler
       handler_name = name.to_s.underscore.to_sym
+      full_handler_name = "handle_#{handler_name}"
       
-      if self.respond_to?("handle_#{handler_name}")
+      if self.respond_to?(full_handler_name)
         # We're running a handler here ourselves,
         # hence we want to call that as well.
-        self.send("handle_#{handler_name}", opts)
+        # used for things like responding to PING
+        self.send(full_handler_name, opts)
       end
       
-      if handler.respond_to?("handle_#{handler_name}")
-        handler.send("handle_#{handler_name}", opts)
+      # Check if our handler is setup to respond
+      # to this in some fashion.
+      if handler.respond_to?(full_handler_name)
+        handler.send(full_handler_name, opts)
       elsif handler.respond_to?(:handle)
         handler.handle(handler_name, opts)
       else
-        Marvin::Logger.warn "No logger specified for #{handler_name} - Data was #{opts.inspect}"
+        Marvin::Logger.debug "No handler specified for #{handler_name} - Data was #{opts.inspect}"
       end
     end
     
@@ -143,6 +162,10 @@ module Marvin::IRC
     
     def say(message, target)
       command! :privmsg, target, message
+    end
+    
+    def action(action, target)
+      
     end
     
     ## Starting the client

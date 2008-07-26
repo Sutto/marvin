@@ -21,6 +21,23 @@ module Marvin
                            merge(options)
         self.configuration.merge!(loaded_options)
         self.configuration.symbolize_keys!
+        mod = Module.new do
+          Settings.configuration.keys.each do |k|
+            define_method(k) do
+              return Settings.configuration[k]
+            end
+          
+            define_method("#{k}=") do |val|
+              Settings.configuration[k] = val
+            end
+          end
+        end
+        
+        # Extend and include.
+        
+        extend mod
+        include mod
+        
         self.is_setup = true
       end
       
@@ -37,14 +54,6 @@ module Marvin
       
       def to_hash
         self.configuration
-      end
-      
-      def method_missing(name, *args, &blk)
-        if self.configuration.has_key?(name.to_sym) && args.blank?
-          return self.configuration[name.to_sym]
-        else
-          super(name, *args, &blk)
-        end
       end
       
     end
