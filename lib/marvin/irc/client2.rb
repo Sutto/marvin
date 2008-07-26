@@ -15,24 +15,33 @@ module Marvin::IRC
     # Initialize the class
     def post_init
       super
+      logger.debug "Starting Post Init"
       self.channels = []
+      logger.debug "Setting the Handlers client"
       self.handlers.each { |h| h.client = self if h.respond_to?(:client=) }
       handle_event :post_init
     end
     
     def self.configuration=(config)
       config_hash = config.to_hash
-      super(OpenStruct.new(config_hash))
+      @@configuration = OpenStruct.new(config_hash)
     end
     
     # Prepares it for usage.
     def self.setup
       return if self.is_setup
       # Default the logger back to a new one.
+      self.handlers               ||= {}
+      self.configuration          ||= {}
+      self.configuration.channels ||= []
+      unless self.configuration.channel.blank? || self.configuration.channels.include?(self.configuration.channel)
+        self.configuration.channels.unshift(self.configuration.channel)
+      end
       if configuration.logger.blank?
         require 'logger'
         configuration.logger = ::Logger.new(STDERR)
       end
+      self.logger = self.configuration.logger
       self.is_setup = true
     end
     
@@ -51,11 +60,12 @@ module Marvin::IRC
     def receive_line(line)
       handle_event :incoming_line, :line => line
       event = self.events.detect { |e| e.matches?(line) }
-      logger.debug(event ? "Logger matched event #{event.name}" : "Unknown response")
+      #logger.debug(event ? "Logger matched event #{event.name}")
       handle_event(event.to_incoming_event_name, event.to_hash) unless event.nil?
     end
     
     def handle_event(name, opts = {})
+      
       full_handler_name = "handle_#{name}"
       
       # If the current handle_name method is defined on this
@@ -63,7 +73,7 @@ module Marvin::IRC
       self.send(full_handler_name, opts) if respond_to?(full_handler_name)
       
       # Handle an event inside each of the handler classes.
-      handlers.each do |handler|
+      self.handlers.each do |handler|
         if handler.respond_to?(full_handler_name, opts)
           handler.send(full_handler_name)
         elsif handler.respond_to?(:handle)
@@ -77,14 +87,16 @@ module Marvin::IRC
     # Default handlers
     
     def handle_post_init(opts = {})
+      logger.debug "About to handle post init"
       # IRC Connection is establish so join the room and set the nick.
+      logger.debug "sending user command"
       command :user, self.configuration.user, "0", "*", lp(self.configuration.name)
       default_nickname = self.configuration.nick || self.configuration.nicknames.shift
+      logger.debug "Setting default nickname"
       nick default_nickname
       say ":IDENTIFY #{self.configuration.password}", "NickServ" unless self.configuration.password.blank?
       # Join the default channels
       self.configuration.channels.each { |c| self.join c }
-      # Finally, 
     end
     
     def handle_incoming_nick_taken(opts = {})
@@ -108,8 +120,8 @@ module Marvin::IRC
     def self.run
       self.setup # So we have options etc
       EventMachine::run do
-        logger.debug "Connecting"
-        EventMachine::connect self.configuration.server, (self.configuration.port || 6667), self
+        logger.debug "Connecting to #{self.configuration.server}:#{self.configuration.port}"
+        EventMachine::connect self.configuration.server, self.configuration.port, self
       end
     end
     
@@ -238,4 +250,5 @@ module Marvin::IRC
     end
     
   end
+  
 end
