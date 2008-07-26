@@ -74,12 +74,12 @@ module Marvin::IRC
       
       # Handle an event inside each of the handler classes.
       self.handlers.each do |handler|
-        if handler.respond_to?(full_handler_name, opts)
-          handler.send(full_handler_name)
+        if handler.respond_to?(full_handler_name)
+          handler.send(full_handler_name, opts)
         elsif handler.respond_to?(:handle)
           handler.handle name, opts
         else
-          logger.debug "#{handler.inspect} doesn't have a handle for #{name} with options #{opts.inspect}"
+          #logger.debug "#{handler} doesn't have a handle for #{name} with options #{opts.inspect}"
         end
       end
     end
@@ -103,6 +103,7 @@ module Marvin::IRC
       logger.info "Nick Is Taken"
       if self.configuration.nicknames.is_a?(Array) && !self.configuration.nicknames.empty?
         next_nick = self.configuration.next_nick.shift
+        logger.info "Attemping to set nickname to #{new_nick}"
         nick next_nick
       else
         logger.warn "No Nicknames available - QUITTING"

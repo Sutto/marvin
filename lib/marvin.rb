@@ -12,6 +12,4 @@ module Marvin
   
   Settings.setup # Load Settings etc.
   
-  puts Settings[:username]
-  
 end
