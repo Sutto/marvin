@@ -42,12 +42,11 @@ module Marvin
     end
     
     def say(message, target = self.target)
-      logger.debug "Saying: #{message} to #{target}"
-      client.msg message, target
+      client.msg target, message
     end
     
     def pm(target, message)
-      say(message, target)
+      say(target, message)
     end
     
     def reply(message)
@@ -57,6 +56,13 @@ module Marvin
         say message, self.from # Default back to pm'ing the user
       end
     end
+    
+    def ctcp(message)
+      return if from_channel? # Must be from user
+      say "\01#{message}\1", self.from
+    end
+    
+    # Request information
     
     def from_user?
       self.target && !from_channel?

@@ -5,10 +5,11 @@ require 'active_support'
 require 'marvin/core_ext'
 
 module Marvin
-  autoload :Base,     'marvin/base'
-  autoload :Settings, 'marvin/settings'
-  autoload :Logger,   'marvin/logger'
-  autoload :IRC,      'marvin/irc'
+  autoload :Base,        'marvin/base'
+  autoload :ClientMixin, 'marvin/client_mixin'
+  autoload :Settings,    'marvin/settings'
+  autoload :Logger,      'marvin/logger'
+  autoload :IRC,         'marvin/irc'
   
   Settings.setup # Load Settings etc.
   

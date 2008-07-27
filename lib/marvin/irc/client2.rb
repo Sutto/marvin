@@ -15,6 +15,7 @@ module Marvin::IRC
     # Initialize the class
     def post_init
       super
+      self.class.setup
       logger.debug "Starting Post Init"
       self.channels = []
       logger.debug "Setting the Handlers client"
@@ -60,7 +61,6 @@ module Marvin::IRC
     def receive_line(line)
       handle_event :incoming_line, :line => line
       event = self.events.detect { |e| e.matches?(line) }
-      #logger.debug(event ? "Logger matched event #{event.name}")
       handle_event(event.to_incoming_event_name, event.to_hash) unless event.nil?
     end
     
@@ -78,8 +78,6 @@ module Marvin::IRC
           handler.send(full_handler_name, opts)
         elsif handler.respond_to?(:handle)
           handler.handle name, opts
-        else
-          #logger.debug "#{handler} doesn't have a handle for #{name} with options #{opts.inspect}"
         end
       end
     end
@@ -101,12 +99,16 @@ module Marvin::IRC
     
     def handle_incoming_nick_taken(opts = {})
       logger.info "Nick Is Taken"
-      if self.configuration.nicknames.is_a?(Array) && !self.configuration.nicknames.empty?
-        next_nick = self.configuration.next_nick.shift
+      logger.debug "Available Nickname: #{self.configuration.nicknames.inspect}"
+      available_nicknames = self.configuration.nicknames.to_a 
+      if available_nicknames.length > 0
+        logger.debug "Getting next nickname to switch"
+        next_nick = available_nicknames.shift # Get the next nickname
+        self.configuration.nicknames = available_nicknames
         logger.info "Attemping to set nickname to #{new_nick}"
         nick next_nick
       else
-        logger.warn "No Nicknames available - QUITTING"
+        logger.info "No Nicknames available - QUITTING"
         quit
       end
     end
@@ -183,6 +185,7 @@ module Marvin::IRC
     end
     
     def nick(new_nick)
+      logger.info "Changing nickname to #{new_nick}"
       command :nick, new_nick
       self.nickname = new_nick
       handle_event :outgoing_nick, :new_nick => new_nick
@@ -206,6 +209,9 @@ module Marvin::IRC
                    :nick, :ident, :host, :target, :channel
                    
     register_event :action,  /^\:(.+)\!\~?(.+)\@(.+) PRIVMSG (\S+) :?\001ACTION (.+?)\001$/i,
+                   :nick, :ident, :host, :target, :message
+                   
+    register_event :ctcp, /^\:(.+)\!\~?(.+)\@(.+) PRIVMSG (\S+) :?\001(.+?)\001$/i,
                    :nick, :ident, :host, :target, :message
     
     register_event :message, /^\:(.+)\!\~?(.+)\@(.+) PRIVMSG (\S+) :?(.+?)$/i,
