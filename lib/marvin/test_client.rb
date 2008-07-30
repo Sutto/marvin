@@ -71,18 +71,7 @@ module Marvin
       handle_event :outgoing_nick, :new_nick => new_nick
       logger.info "Nickname changed to #{new_nick}"
     end
-
-    private
-
-    def chan(name)
-      return name.to_s[0..0] == "#" ? name.to_s : "##{name}"
-    end
-
-    # Specifies the last param - which is quoted etc.
-    def lp(section)
-      section && ":#{section.to_s.strip} "
-    end
-
+    
     # Class Methods - mostly related to setup
 
     def self.configuration=(config)
@@ -124,6 +113,17 @@ module Marvin
     def self.register_handler(handler)
       return if handler.blank?
       (self.handlers ||= []) << handler
+    end
+
+    private
+
+    def chan(name)
+      return name.to_s[0..0] == "#" ? name.to_s : "##{name}"
+    end
+
+    # Specifies the last param - which is quoted etc.
+    def lp(section)
+      section && ":#{section.to_s.strip} "
     end
     
   end
