@@ -73,12 +73,16 @@ module Marvin::IRC
       self.send(full_handler_name, opts) if respond_to?(full_handler_name)
       
       # Handle an event inside each of the handler classes.
-      self.handlers.each do |handler|
-        if handler.respond_to?(full_handler_name)
-          handler.send(full_handler_name, opts)
-        elsif handler.respond_to?(:handle)
-          handler.handle name, opts
+      begin
+        self.handlers.each do |handler|
+          if handler.respond_to?(full_handler_name)
+            handler.send(full_handler_name, opts)
+          elsif handler.respond_to?(:handle)
+            handler.handle name, opts
+          end
         end
+      rescue HaltHandlerProcessing
+        logger.debug "Handler Progress halted; Continuing on."
       end
     end
     

@@ -1,3 +1,5 @@
+require 'ostruct'
+
 module Marvin
   # A Client Handler
   class Base
@@ -21,6 +23,12 @@ module Marvin
         self.registered_handlers ||= {}
         self.registered_handlers[name] ||= []
         self.registered_handlers[name] << blk
+      end
+      
+      # Register's in the IRC Client callback chain.
+      def register!
+        return if self == Marvin::Base # Only do it for sub-classes.
+        Marvin::IRC::Client2.register_handler self.new
       end
       
     end
@@ -64,22 +72,33 @@ module Marvin
     
     # Request information
     
+    # reflects whether or not the current message / previous message came
+    # from a user via pm.
     def from_user?
       self.target && !from_channel?
     end
     
+    # Determines whether the previous message was inside a channel.
     def from_channel?
       self.target && self.target[0..0] == "#"
     end
     
+    # Get's the registered handler for a certain type of message.
     def get_handlers_for(message)
       self.registered_handlers[message] ||= []
     end
     
     def setup_defaults(options)
-      self.options = options
+      self.options = options.is_a?(OpenStruct) ? options : OpenStruct.new(options)
       self.target  = options[:target] if options.has_key?(:target)
       self.from    = options[:nick]   if options.has_key?(:nick)
+    end
+    
+    # Halt's on the handler, used to prevent
+    # other handlers also responding to the same
+    # message more than once.
+    def halt!
+      raise HaltHandlerProcessing
     end
     
   end
