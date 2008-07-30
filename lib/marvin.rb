@@ -13,6 +13,7 @@ module Marvin
   autoload :Settings,    'marvin/settings'
   autoload :Logger,      'marvin/logger'
   autoload :IRC,         'marvin/irc'
+  autoload :TestClient,  'marvin/test_client'
   
   # Default Handlers
   autoload :CommandHandler, 'marvin/command_handler'

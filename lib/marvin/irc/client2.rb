@@ -53,10 +53,10 @@ module Marvin::IRC
     attr_accessor  :channels, :nickname
     
     # Set the default values for the variables
-    self.handlers               = []
-    self.events                 = []
-    self.configuration          = {}
-    self.configuration.channels = []
+    self.handlers                 = []
+    self.events                   = []
+    self.configuration            = OpenStruct.new
+    self.configuration.channels   = []
     
     # Initializes the instance variables used for the
     # current connection, dispatching a :post_init event
@@ -89,6 +89,7 @@ module Marvin::IRC
     def self.setup
       return if self.is_setup
       # Default the logger back to a new one.
+      self.configuration.channels ||= []
       unless self.configuration.channel.blank? || self.configuration.channels.include?(self.configuration.channel)
         self.configuration.channels.unshift(self.configuration.channel)
       end

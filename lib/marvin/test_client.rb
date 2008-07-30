@@ -12,9 +12,10 @@ module Marvin
     def initialize(opts = {})
       self.configuration = opts unless opts.keys.empty?
       self.channels = []
+      self.nick(self.configuration.nickname || self.configuration.nicknames.to_a.shift)
     end
     
-    def command(name, args)
+    def command(name, *args)
       logger.info "Sending IRC Command #{name} - #{args.inspect}"
     end
     
@@ -24,14 +25,14 @@ module Marvin
       self.channels << channels
       command :JOIN, channel
       logger.info "Joined channel #{channel}"
-      handle_event :outgoing_join, :target => channel
+      #handle_event :outgoing_join, :target => channel
     end
 
     def part(channel, reason = nil)
       channel = chan(channel)
       if self.channels.include?(channel)
         command :part, channel, lp(reason)
-        handle_event :outgoing_part, :target => channel, :reason => reason
+        #handle_event :outgoing_part, :target => channel, :reason => reason
         logger.info "Parted from room #{channel}#{reason ? " - #{reason}" : ""}"
       else
         logger.warn "Tried to disconnect from #{channel} - which you aren't a part of"
@@ -41,26 +42,26 @@ module Marvin
     def quit(channel, reason = nil)
       self.channels.each { |chan| self.part chan, reason }
       command :quit
-      handle_event :quit
+      #handle_event :quit
       logger.info  "Quit from server"
     end
 
     def msg(target, message)
       command :privmsg, target, lp(message)
       logger.info "Message sent to #{target} - #{message}"
-      handle_event :outgoing_message, :target => target, :message => message
+      #handle_event :outgoing_message, :target => target, :message => message
     end
 
     def action(target, message)
       action_text = lp "\01ACTION #{message.strip}\01"
       command :privmsg, target, action_text
-      handle_event :outgoing_action, :target => target, :message => message
+      #handle_event :outgoing_action, :target => target, :message => message
       logger.info "Action sent to #{target} - #{message}"
     end
 
     def pong(data)
       command :pong, data
-      handle_event :outgoing_pong
+      #handle_event :outgoing_pong
       logger.info "PONG sent to #{data}"
     end
 
@@ -68,7 +69,7 @@ module Marvin
       logger.info "Changing nickname to #{new_nick}"
       command :nick, new_nick
       self.nickname = new_nick
-      handle_event :outgoing_nick, :new_nick => new_nick
+      #handle_event :outgoing_nick, :new_nick => new_nick
       logger.info "Nickname changed to #{new_nick}"
     end
     
