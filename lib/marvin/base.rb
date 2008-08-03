@@ -83,6 +83,10 @@ module Marvin
       self.target && self.target[0..0] == "#"
     end
     
+    def addressed?
+      self.from_user? || options.message.split(" ").first == "#{self.client.nickname}:"
+    end
+    
     # Get's the registered handler for a certain type of message.
     def get_handlers_for(message)
       self.registered_handlers[message] ||= []

@@ -35,7 +35,7 @@ module Marvin
         command, data = options.message.split(" ", 2)
       end
       # Double check for sanity
-      return if command.blank? || data.blank?
+      return if command.blank?
       logger.debug "Raw: #{command} -> #{data}"
       command_name = extract_command_name(command)
       unless command_name.nil?
