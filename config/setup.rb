@@ -3,5 +3,6 @@
 Marvin::Loader.before_connecting do
   
   OfficusBoticus.register! if Marvin::Settings.use_logging
+  KnowledgeHandler.register!
   
 end

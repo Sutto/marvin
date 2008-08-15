@@ -7,7 +7,7 @@ default:
 development:
   user: Offbot3
   name: Offbot3
-  nick: Offbot3
+  nick:  MarvinBot
   rails_root: "/Users/sutto/Code/Offrails/Community"
 production:
   deployed: false
