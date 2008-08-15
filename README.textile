@@ -58,9 +58,9 @@ The other you may want to look at is Marvin::CommandHandler - you
 can then just define methods and "expose" them - e.g.:
 
   class MySecondExample < Marvin::CommandHandler
-  
+    
     exposes :hello
-  
+    
     def hello(data)
       reply "Hello!"
     end
