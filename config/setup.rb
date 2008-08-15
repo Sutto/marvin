@@ -2,9 +2,6 @@
 # when the clien connects.
 Marvin::Loader.before_connecting do
   
-  # E.G.
-  # MyHandler.register! (Marvin::Base subclass)
-  # or
-  # Marvin::Settings.default_client.register_handler my_handler
+  OfficusBoticus.register! if Marvin::Settings.use_logging
   
 end

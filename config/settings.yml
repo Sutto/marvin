@@ -3,9 +3,11 @@ default:
   server: irc.freenode.net
   port: 6667
   channel: "#offtesting"
+  use_logging: true
 development:
-  user: MarvinBot
-  name: MarvinBot
-  nick: MarvinBot
+  user: Offbot3
+  name: Offbot3
+  nick: Offbot3
+  rails_root: "/Users/sutto/Code/Offrails/Community"
 production:
   deployed: false
