@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+ENV['RAILS_ENV'] ||= (ARGV[0] || "development")
+require 'lib/marvin'
+
+trap "SIGINT" do
+  Marvin::Loader.stop!
+end
+
+Marvin::Loader.run!

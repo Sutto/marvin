@@ -49,7 +49,7 @@ module Marvin::IRC
   # handler as the only argument.
   class Client2 < EventMachine::Protocols::LineAndTextProtocol
     
-    cattr_accessor :events, :handlers, :configuration, :logger, :is_setup
+    cattr_accessor :events, :handlers, :configuration, :logger, :is_setup, :connections
     attr_accessor  :channels, :nickname
     
     # Set the default values for the variables
@@ -57,6 +57,7 @@ module Marvin::IRC
     self.events                   = []
     self.configuration            = OpenStruct.new
     self.configuration.channels   = []
+    self.connections              = []
     
     # Initializes the instance variables used for the
     # current connection, dispatching a :post_init event
@@ -67,12 +68,17 @@ module Marvin::IRC
       self.class.setup
       logger.debug "Initializing the current instance"
       self.channels = []
+      (self.connections ||= []) << self
       logger.debug "Setting the client for each handler"
       self.handlers.each { |h| h.client = self if h.respond_to?(:client=) }
       logger.debug "Dispatching the default :post_init event"
       dispatch_event :post_init
     end
     
+    def unbind
+      self.connections.delete(self) if self.connections.include?(self)
+      dispatch_event :unbind
+    end
     
     # Sets the current class-wide settings of this IRC Client
     # to either an OpenStruct or the results of #to_hash on
@@ -221,6 +227,14 @@ module Marvin::IRC
       end
     end
     
+    def self.stop
+      logger.debug "Telling all connections to quit"
+      self.connections.dup.each { |connection| connection.quit }
+      logger.debug "Telling Event Machine to Stop"
+      EventMachine::stop_event_loop
+      logger.debug "Stopped."
+    end
+    
     ## General IRC Functions
     
     # Sends a specified command to the server.
@@ -238,7 +252,7 @@ module Marvin::IRC
     def join(channel)
       channel = chan(channel)
       # Record the fact we're entering the room.
-      self.channels << channels
+      self.channels << channel
       command :JOIN, channel
       logger.info "Joined channel #{channel}"
       dispatch_event :outgoing_join, :target => channel
@@ -255,10 +269,13 @@ module Marvin::IRC
       end
     end
     
-    def quit(channel, reason = nil)
+    def quit(reason = nil)
+      logger.debug self.channels.inspect
       self.channels.each { |chan| self.part chan, reason }
       command :quit
       dispatch_event :quit
+      # Remove the connections from the pool
+      self.connections.delete(self)
       logger.info  "Quit from server"
     end
     

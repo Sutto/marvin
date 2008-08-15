@@ -36,8 +36,16 @@ module Marvin
       Marvin::Settings.default_client.run
     end
     
+    def stop!
+      Marvin::Settings.default_client.stop
+    end
+    
     def self.run!
       self.new.run!
+    end
+    
+    def self.stop!
+      self.new.stop!
     end
     
   end
