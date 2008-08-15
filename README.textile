@@ -39,17 +39,17 @@ method on_event to define responses to events. The passed in meta
 data for each event is then usable via options.attribute_name - an
 openstruct version of the details. e.g.
 
-    class NinjaStuff < Marvin::Base
-    
-      on_event :incoming_message do
-        do_something
-      end
-    
-      def do_something
-        reply options.message # Will echo back the message
-      end
-    
+  class NinjaStuff < Marvin::Base
+  
+    on_event :incoming_message do
+      do_something
     end
+  
+    def do_something
+      reply options.message # Will echo back the message
+    end
+  
+  end
     
 Or the like. Also, the halt! method can be called in any subclass to
 halt the handler callback chain.
@@ -57,14 +57,14 @@ halt the handler callback chain.
 The other you may want to look at is Marvin::CommandHandler - you
 can then just define methods and "expose" them - e.g.:
 
-    class MySecondExample < Marvin::CommandHandler
-    
-      exposes :hello
-    
-      def hello(data)
-        reply "Hello!"
-      end
+  class MySecondExample < Marvin::CommandHandler
+  
+    exposes :hello
+  
+    def hello(data)
+      reply "Hello!"
     end
+  end
     
 Where data is an array of parameters. exposed methods will be called
 when they match the following pattern:
