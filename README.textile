@@ -1,0 +1,72 @@
+h1. Marvin
+
+Marvin is a simple IRC Framework for Rails suitable for building things
+such as simple IRC bots. Extracted from real use - we'd originally used
+a heavily modified version of MatzBot - it's been built to service a
+particular need.
+
+h2. Background
+
+Marvin is an event driven framework in two ways - for one, it uses
+EventMachine for all networking purposes - as a result, it's both
+relatively stable / reliable and also powerful.
+
+Following on from this, the irc library is event driven. At the base
+level, you choose a client (By Default, Marvin::IRC::Client2 - Marvin::IRC::Client
+is outdated, incompatible and should _not_ be used.) and then you register
+any number of handlers. Whenever an event happens e.g. an incoming message,
+a connection unbinding or event just post_init, each handler is notified
+and given a small set of details about the event.
+
+Handlers are very simple - in fact, you could probably get away
+with registering Object.new as a handler.
+
+To function, handlers only require one method: handle - which takes
+two options. an event name (e.g. :incoming_message) and a hash
+of the aformentioned attributes / details. This data can then be processed.
+Alternatively, if a handler has a "handle_[event_name]" method (e.g.
+handle_incoming_message), it will instead be called. Also, if client=
+is implemented this will be called when the client is setup containing
+a reference to said client. This is used to that the handler can
+respond to actions.
+
+Built in, there are several examples for which you can look at but
+it's likely you will usually only want to use one of two classes.
+The first, Marvin::Base provides a base set of methods (e.g. say,
+reply etc etc.) which make writing a client easier. You can simply
+inherit from Marvin::Base, write some logic and then use the class
+method on_event to define responses to events. The passed in meta
+data for each event is then usable via options.attribute_name - an
+openstruct version of the details. e.g.
+
+    class NinjaStuff < Marvin::Base
+    
+      on_event :incoming_message do
+        do_something
+      end
+    
+      def do_something
+        reply options.message # Will echo back the message
+      end
+    
+    end
+    
+Or the like. Also, the halt! method can be called in any subclass to
+halt the handler callback chain.
+
+The other you may want to look at is Marvin::CommandHandler - you
+can then just define methods and "expose" them - e.g.:
+
+    class MySecondExample < Marvin::CommandHandler
+    
+      exposes :hello
+    
+      def hello(data)
+        reply "Hello!"
+      end
+    end
+    
+Where data is an array of parameters. exposed methods will be called
+when they match the following pattern:
+
+  Botname: <exposed-method> <space-seperated-list-meaning-data>
