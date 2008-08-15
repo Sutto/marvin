@@ -1,13 +1,12 @@
 default:
-  name: "Darcy Laycock"
+  name: "Marvin Bot"
   server: irc.freenode.net
   port: 6667
   channel: "#offtesting"
   use_logging: true
 development:
-  user: Offbot3
-  name: Offbot3
+  user: MarvinBot
+  name: MarvinBot
   nick:  MarvinBot
-  rails_root: "/Users/sutto/Code/Offrails/Community"
 production:
   deployed: false

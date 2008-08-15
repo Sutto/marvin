@@ -1,4 +1,4 @@
-
+# Not Yet Complete: Twitter Client in Channel.
 class TweetTweet < Marvin::Base
   
   on_event :post_init do
@@ -15,6 +15,5 @@ class TweetTweet < Marvin::Base
   
   def show_tweet(tweet)
   end
-  
   
 end

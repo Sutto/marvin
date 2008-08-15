@@ -1,11 +1,18 @@
-class OfficusBoticus < Marvin::CommandHandler
+# A Simple Channel Logger, built for the 
+# #offrails community. Please note that this
+# relies on models etc. inside the Rails App.
+# it's suited for modification of subclassing
+# if you wish to write your own Channel Logger.
+# I plan on open sourcing the app sometime in
+# the near future.
+class LoggingHandler < Marvin::CommandHandler
   
   class_inheritable_accessor :connection, :setup
   attr_accessor :listening, :users
   
   def initialize
     super
-    logger.debug "Setting up OfficusBoticus"
+    logger.debug "Setting up LoggingHandler"
     self.setup!
     self.users = {}
   end
@@ -52,6 +59,7 @@ class OfficusBoticus < Marvin::CommandHandler
   
   def log_message(from, to, message)
     return unless listening?
+    ensure_connection_is_alive # Before Logging, ensure that the connection is alive.
     self.users[from.strip] ||= IrcHandle.find_or_create_by_name(from.strip)
     self.users[from.strip].messages.create :message => message, :target => to
   end
