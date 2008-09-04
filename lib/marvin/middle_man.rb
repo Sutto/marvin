@@ -33,7 +33,6 @@ module Marvin
     end
     
     def handle(message, options)
-      logger.debug "Handling event on MiddleMan instance - #{message}"
       begin
         full_handler_name = "handle_#{message}"
         self.send(full_handler_name, opts) if respond_to?(full_handler_name)

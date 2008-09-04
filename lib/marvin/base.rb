@@ -19,14 +19,22 @@ module Marvin
     
     class << self
       
-      def event_handlers_for(message_name)
+      def event_handlers_for(message_name, plus_superclass = true)
+        return [] if self == Marvin::Base
         rh = (self.registered_handlers ||= {})
-        rh[message_name] ||= []
-        return rh[message_name]
+        rh[self.name] ||= {}
+        rh[self.name][message_name] ||= []
+        if plus_superclass
+          found_handlers = rh[self.name][message_name]
+          found_handlers += self.superclass.event_handlers_for(message_name)
+          return found_handlers
+        else
+          return rh[self.name][message_name]
+        end
       end
       
       def on_event(name, &blk)
-        self.event_handlers_for(name) << blk
+        self.event_handlers_for(name, false) << blk
       end
       
       # Register's in the IRC Client callback chain.
@@ -42,7 +50,6 @@ module Marvin
       begin
         self.setup_defaults(options)
         h = self.class.event_handlers_for(message)
-        logger.debug "Found handlers for #{message}: #{h.inspect}"
         h.each do |handle|
           self.instance_eval &handle
         end
@@ -73,7 +80,7 @@ module Marvin
     
     def ctcp(message)
       return if from_channel? # Must be from user
-      say "\01#{message}\1", self.from
+      say "\01#{message}\01", self.from
     end
     
     # Request information
