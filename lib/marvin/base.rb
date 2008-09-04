@@ -10,6 +10,7 @@ module Marvin
     
     attr_accessor :client, :target, :from, :options, :logger
     class_inheritable_accessor :registered_handlers
+    self.registered_handlers = {}
     
     def initialize
       self.registered_handlers ||= {}
@@ -18,17 +19,20 @@ module Marvin
     
     class << self
       
+      def event_handlers_for(message_name)
+        rh = (self.registered_handlers ||= {})
+        rh[message_name] ||= []
+        return rh[message_name]
+      end
+      
       def on_event(name, &blk)
-        logger
-        self.registered_handlers ||= {}
-        self.registered_handlers[name] ||= []
-        self.registered_handlers[name] << blk
+        self.event_handlers_for(name) << blk
       end
       
       # Register's in the IRC Client callback chain.
-      def register!
+      def register!(parent = Marvin::Settings.default_client)
         return if self == Marvin::Base # Only do it for sub-classes.
-        Marvin::IRC::Client2.register_handler self.new
+        parent.register_handler self.new
       end
       
     end
@@ -37,7 +41,9 @@ module Marvin
     def handle(message, options)
       begin
         self.setup_defaults(options)
-        get_handlers_for(message).each do |handle|
+        h = self.class.event_handlers_for(message)
+        logger.debug "Found handlers for #{message}: #{h.inspect}"
+        h.each do |handle|
           self.instance_eval &handle
         end
       rescue Exception => e
@@ -85,11 +91,6 @@ module Marvin
     
     def addressed?
       self.from_user? || options.message.split(" ").first == "#{self.client.nickname}:"
-    end
-    
-    # Get's the registered handler for a certain type of message.
-    def get_handlers_for(message)
-      self.registered_handlers[message] ||= []
     end
     
     def setup_defaults(options)

@@ -7,7 +7,9 @@ Marvin::Loader.before_connecting do
   # Marvin::Settings.default_client.register_handler my_handler (a handler instance)
   
   # Example Handler use.
-  LoggingHandler.register! if Marvin::Settings.use_logging
-  KnowledgeHandler.register!
+  # LoggingHandler.register! if Marvin::Settings.use_logging
+  
+  # Register using Marvin::MiddleMan.
+  HelloWorld.register!(Marvin::MiddleMan)
   
 end
