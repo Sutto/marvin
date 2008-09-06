@@ -92,3 +92,25 @@ relatively simple to use. On any Marvin::Base subclass (baring
 the MiddleMan itself), you can simple use the normal methods
 of registering a handler with one exception - you now pass
 one argument, the class reference to your middleman class.
+
+h2. Marvin::DataStore - A dead simple persistent hash store
+
+Want to save data between when you stop and start your IRC
+Client? With Marvin, it's really, really simple - Marvin::DataStore
+offers a simple syntax for persistent data stores.
+
+New datastores can be created with Marvin::DataStore.new("global-store-key").
+From there, you have a hash to do whatever the hell you want. Just
+make sure the data you store is JSON-serializable.
+
+When you start - stop a server (via Marvin::Loader.run! and Marvin::Loader.stop!)
+you're data will be loaded from and written to disk accordingly.
+
+If you're inside a Marvin::Base subclass it's even easier. You can get a cattr_access
+style accessor for free - just use the "uses_datastore" method. e.g:
+
+  class X < Marvin::Base
+    uses_datastore "datastore-global-key", :cattr_name
+  end
+  
+Then, self.cattr_name will point to the data store instance.
