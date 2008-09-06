@@ -15,7 +15,7 @@ module Marvin
       def setup!(options = {})
         self.environment ||= "development"
         self.configuration = {}
-        self.default_client ||= Marvin::IRC::Client2
+        self.default_client ||= Marvin::IRC::Client
         loaded_yaml = YAML.load_file(File.present_dir / "../../config/settings.yml")
         loaded_options = loaded_yaml["default"].
                            merge(loaded_yaml[self.environment]).

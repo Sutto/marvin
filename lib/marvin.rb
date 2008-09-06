@@ -16,6 +16,7 @@ module Marvin
   autoload :TestClient,  'marvin/test_client'
   autoload :Loader,      'marvin/loader'
   autoload :MiddleMan,   'marvin/middle_man'
+  autoload :DRBHandler,  'marvin/drb_handler'
   
   # Default Handlers
   autoload :CommandHandler, 'marvin/command_handler'

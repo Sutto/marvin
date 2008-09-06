@@ -19,12 +19,12 @@ module Marvin
     
     class << self
       
-      def event_handlers_for(message_name, plus_superclass = true)
+      def event_handlers_for(message_name, direct = true)
         return [] if self == Marvin::Base
         rh = (self.registered_handlers ||= {})
         rh[self.name] ||= {}
         rh[self.name][message_name] ||= []
-        if plus_superclass
+        if direct
           found_handlers = rh[self.name][message_name]
           found_handlers += self.superclass.event_handlers_for(message_name)
           return found_handlers

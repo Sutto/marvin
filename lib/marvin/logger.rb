@@ -18,7 +18,5 @@ module Marvin
     
     end
     
-    
-    
   end
 end

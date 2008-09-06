@@ -30,8 +30,11 @@ is implemented this will be called when the client is setup containing
 a reference to said client. This is used to that the handler can
 respond to actions.
 
-Built in, there are several examples for which you can look at but
-it's likely you will usually only want to use one of two classes.
+Like Rack for HTTP, Marvin provides a fair amount of example
+handlers for simple stuff inside IRC.
+
+h2. Marvin::Base - A handler starting point
+
 The first, Marvin::Base provides a base set of methods (e.g. say,
 reply etc etc.) which make writing a client easier. You can simply
 inherit from Marvin::Base, write some logic and then use the class
@@ -54,7 +57,7 @@ openstruct version of the details. e.g.
 Or the like. Also, the halt! method can be called in any subclass to
 halt the handler callback chain.
 
-h3. Marvin::CommandHandler - Ridiculously easy Bots
+h2. Marvin::CommandHandler - Ridiculously easy Bots
 
 With Marvin::CommandHandler, you get to define seriously
 simple classes which can act as a simple bot. It takes
@@ -79,3 +82,13 @@ Where data is an array of parameters. exposed methods will be called
 when they match the following pattern:
 
   Botname: <exposed-method> <space-seperated-list-meaning-data>
+
+h2. Marvin::MiddleMan - Introducing middleware
+
+Marvin::MiddleMan lets you insert middleware between handlers
+and you're client - letting you do things such as translating
+all messages on the fly. It's build to be extensible and is
+relatively simple to use. On any Marvin::Base subclass (baring
+the MiddleMan itself), you can simple use the normal methods
+of registering a handler with one exception - you now pass
+one argument, the class reference to your middleman class.

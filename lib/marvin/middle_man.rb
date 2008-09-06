@@ -19,9 +19,6 @@ module Marvin
     
     # Finally, the client.
     attr_reader :client
-    
-    def initialize
-    end
   
     # When we're told to set the client,
     # not only do we set out own instance
