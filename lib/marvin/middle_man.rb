@@ -29,21 +29,26 @@ module Marvin
       setup_subhandler_clients
     end
     
+    def process_event(message, options)
+      return message, options
+    end
+    
+    # Filter incoming events.
     def handle(message, options)
-      begin
-        full_handler_name = "handle_#{message}"
-        self.send(full_handler_name, opts) if respond_to?(full_handler_name)
-        self.subhandlers.each do |sh|
-          forward_message_to_handler(sh, message, options, full_handler_name)
-        end
-      rescue HaltHandlerProcessing
-        logger.info "Asked to halt the filter processing chain inside a middleman."
-      rescue Exception => e
-        logger.fatal "Exception processing handle #{message}"
-        logger.fatal "#{e} - #{e.message}"
-        e.backtrace.each do |line|
-          logger.fatal line
-        end
+      # Process the current event.
+      message, options = process_event(message, options)
+      full_handler_name = "handle_#{message}"
+      self.send(full_handler_name, opts) if respond_to?(full_handler_name)
+      self.subhandlers.each do |sh|
+        forward_message_to_handler(sh, message, options, full_handler_name)
+      end
+    rescue HaltHandlerProcessing
+      logger.info "Asked to halt the filter processing chain inside a middleman."
+    rescue Exception => e
+      logger.fatal "Exception processing handle #{message}"
+      logger.fatal "#{e} - #{e.message}"
+      e.backtrace.each do |line|
+        logger.fatal line
       end
     end
     

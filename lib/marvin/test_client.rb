@@ -3,7 +3,7 @@ require 'active_support'
 
 module Marvin
   # Marvin::TestClient is a simple client used for testing
-  # Marvin::Base derivatives in a non-irc-reliant setting.
+  # Marvin::Base derivatives in a non-network-reliant setting.
   class TestClient
     
     cattr_accessor :handlers, :logger, :is_setup
@@ -25,14 +25,14 @@ module Marvin
       self.channels << channels
       command :JOIN, channel
       logger.info "Joined channel #{channel}"
-      #handle_event :outgoing_join, :target => channel
+      handle_event :outgoing_join, :target => channel
     end
 
     def part(channel, reason = nil)
       channel = chan(channel)
       if self.channels.include?(channel)
         command :part, channel, lp(reason)
-        #handle_event :outgoing_part, :target => channel, :reason => reason
+        handle_event :outgoing_part, :target => channel, :reason => reason
         logger.info "Parted from room #{channel}#{reason ? " - #{reason}" : ""}"
       else
         logger.warn "Tried to disconnect from #{channel} - which you aren't a part of"
@@ -42,26 +42,26 @@ module Marvin
     def quit(channel, reason = nil)
       self.channels.each { |chan| self.part chan, reason }
       command :quit
-      #handle_event :quit
+      handle_event :quit
       logger.info  "Quit from server"
     end
 
     def msg(target, message)
       command :privmsg, target, lp(message)
       logger.info "Message sent to #{target} - #{message}"
-      #handle_event :outgoing_message, :target => target, :message => message
+      handle_event :outgoing_message, :target => target, :message => message
     end
 
     def action(target, message)
       action_text = lp "\01ACTION #{message.strip}\01"
       command :privmsg, target, action_text
-      #handle_event :outgoing_action, :target => target, :message => message
+      handle_event :outgoing_action, :target => target, :message => message
       logger.info "Action sent to #{target} - #{message}"
     end
 
     def pong(data)
       command :pong, data
-      #handle_event :outgoing_pong
+      handle_event :outgoing_pong
       logger.info "PONG sent to #{data}"
     end
 
@@ -69,7 +69,7 @@ module Marvin
       logger.info "Changing nickname to #{new_nick}"
       command :nick, new_nick
       self.nickname = new_nick
-      #handle_event :outgoing_nick, :new_nick => new_nick
+      handle_event :outgoing_nick, :new_nick => new_nick
       logger.info "Nickname changed to #{new_nick}"
     end
     
