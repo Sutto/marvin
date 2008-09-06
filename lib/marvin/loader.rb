@@ -8,7 +8,8 @@ module Marvin
     end
     
     def setup_defaults
-      Marvin::Settings.default_client = Marvin::IRC::Client2
+      Marvin::Logger.setup
+      Marvin::Settings.default_client = Marvin::IRC::Client
     end
     
     def load_handlers
@@ -24,6 +25,7 @@ module Marvin
     end
     
     def pre_connect_setup
+      Marvin::DataStore.load!
       require(File.present_dir / "../../config/setup")
       self.setup_block.call unless self.setup_block.blank?
     end
@@ -38,6 +40,7 @@ module Marvin
     
     def stop!
       Marvin::Settings.default_client.stop
+      Marvin::DataStore.dump!
     end
     
     def self.run!

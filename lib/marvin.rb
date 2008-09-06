@@ -17,6 +17,7 @@ module Marvin
   autoload :Loader,      'marvin/loader'
   autoload :MiddleMan,   'marvin/middle_man'
   autoload :DRBHandler,  'marvin/drb_handler'
+  autoload :DataStore,   'marvin/data_store'
   
   # Default Handlers
   autoload :CommandHandler, 'marvin/command_handler'

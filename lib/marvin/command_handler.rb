@@ -19,6 +19,7 @@ module Marvin
     end
     
     on_event :incoming_message do
+      logger.debug "Incoming message"
       check_for_commands
     end
     
@@ -36,7 +37,6 @@ module Marvin
       end
       # Double check for sanity
       return if command.blank?
-      logger.debug "Raw: #{command} -> #{data}"
       command_name = extract_command_name(command)
       unless command_name.nil?
         logger.debug "Command Exists - processing"

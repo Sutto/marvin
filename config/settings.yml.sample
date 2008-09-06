@@ -4,6 +4,7 @@ default:
   port: 6667
   channel: "#offtesting"
   use_logging: true
+  datastore_location: tmp/datastore.json
 development:
   user: MarvinBot
   name: MarvinBot

@@ -43,6 +43,13 @@ module Marvin
         parent.register_handler self.new
       end
       
+      def uses_datastore(datastore_name, local_name)
+        cattr_accessor local_name.to_sym
+        self.send("#{local_name}=", Marvin::DataStore.new(datastore_name))
+        rescue Exception => e
+          logger.debug "Exception in datastore declaration - #{e.inspect}"
+      end
+      
     end
     
     # Given an incoming message, handle it appropriatly.
