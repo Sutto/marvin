@@ -48,7 +48,7 @@ module Marvin
     end
     
     def [](key)
-      self.registered_stores[self.name][key.to_s]
+      ((self.registered_stores||={})[self.name]||={})[key.to_s]
     end
     
     def []=(key,value)

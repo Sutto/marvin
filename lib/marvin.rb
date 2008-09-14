@@ -8,6 +8,7 @@ require 'marvin/core_ext'
 require 'marvin/exceptions'
 
 module Marvin
+  autoload :AbstractClient,   'marvin/abstract_client'
   autoload :Base,             'marvin/base'
   autoload :ClientMixin,      'marvin/client_mixin'
   autoload :Settings,         'marvin/settings'
