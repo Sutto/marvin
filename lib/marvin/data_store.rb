@@ -6,20 +6,24 @@ module Marvin
   class DataStore
     
     cattr_accessor :logger, :registered_stores
-    self.logger = Marvin::Logger.logger || ::Logger.new(STDOUT)
+    self.logger = Marvin::Logger.logger
     self.registered_stores = {}
     
+    # Returns the path to the data store relative to this file.
+    # Used when loading / dumping the data.
     def self.datastore_location
       path =  Marvin::Settings[:datastore_location] ? Marvin::Settings.datastore_location : "tmp/datastore.json"
       return File.dirname(__FILE__) / "../.." / path
     end
     
+    # Dump the current data store contents to file.
     def self.dump!
       File.open(self.datastore_location, "w+") do |f|
         f.write self.registered_stores.to_json
       end
     end
     
+    # Load the current data store contents from file.
     def self.load!
       results = {}
       if File.exists?(self.datastore_location)

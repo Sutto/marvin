@@ -71,13 +71,13 @@ module Marvin::IRC
       (self.connections ||= []) << self
       logger.debug "Setting the client for each handler"
       self.handlers.each { |h| h.client = self if h.respond_to?(:client=) }
-      logger.debug "Dispatching the default :post_init event"
-      dispatch_event :post_init
+      logger.debug "Dispatching the default :client_connected event"
+      dispatch_event :client_connected
     end
     
     def unbind
       self.connections.delete(self) if self.connections.include?(self)
-      dispatch_event :unbind
+      dispatch_event :client_disconnected
     end
     
     # Sets the current class-wide settings of this IRC Client
@@ -173,7 +173,7 @@ module Marvin::IRC
     # set out nick, join all of the channels / rooms we wish
     # to be in and if a password is specified in the configuration,
     # it will also attempt to identify us.
-    def handle_post_init(opts = {})
+    def handle_client_connected(opts = {})
       logger.debug "About to handle post init"
       # IRC Connection is establish so we send all the required commands to the server.
       logger.debug "sending user command"
@@ -194,7 +194,7 @@ module Marvin::IRC
     # will then call #nick to change the nickname.
     def handle_incoming_nick_taken(opts = {})
       logger.info "Nick Is Taken"
-      logger.debug "Available Nickname: #{self.configuration.nicknames.inspect}"
+      logger.debug "Available Nicknames: #{self.configuration.nicknames.to_a.join(", ")}"
       available_nicknames = self.configuration.nicknames.to_a 
       if available_nicknames.length > 0
         logger.debug "Getting next nickname to switch"

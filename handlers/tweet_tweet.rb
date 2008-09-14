@@ -1,7 +1,7 @@
 # Not Yet Complete: Twitter Client in Channel.
 class TweetTweet < Marvin::Base
   
-  on_event :post_init do
+  on_event :client_connected do
     start_tweeting
   end
   

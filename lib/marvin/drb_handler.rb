@@ -1,4 +1,7 @@
 module Marvin
-  class DRBHandler
+    
+    def handle(message, options)
+    end
+    
   end
 end

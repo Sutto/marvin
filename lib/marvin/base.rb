@@ -62,10 +62,7 @@ module Marvin
         end
       rescue Exception => e
         logger.fatal "Exception processing handle #{message}"
-        logger.fatal "#{e} - #{e.message}"
-        e.backtrace.each do |line|
-          logger.fatal line
-        end
+        Marvin::ExceptionTracker.log(e)
       end
     end
     

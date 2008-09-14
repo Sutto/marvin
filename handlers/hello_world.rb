@@ -6,6 +6,7 @@ class HelloWorld < Marvin::CommandHandler
   
   
   def hello(data)
+    self.counts ||= {}
     self.counts[options.nick] ||= 0
     self.counts[options.nick] += 1
     reply "Oh hai there - This is hello ##{self.counts[options.nick]} from you!"

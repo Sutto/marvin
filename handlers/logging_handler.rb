@@ -54,7 +54,7 @@ class LoggingHandler < Marvin::CommandHandler
   end
   
   on_event :incoming_action do
-    log_message(options.nick, options.target, "ACTION #{options.message}")
+    log_message(options.nick, options.target, "ACTION \01#{options.message}\01")
   end
   
   def log_message(from, to, message)

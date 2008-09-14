@@ -46,10 +46,7 @@ module Marvin
       logger.info "Asked to halt the filter processing chain inside a middleman."
     rescue Exception => e
       logger.fatal "Exception processing handle #{message}"
-      logger.fatal "#{e} - #{e.message}"
-      e.backtrace.each do |line|
-        logger.fatal line
-      end
+      Marvin::ExceptionTracker.log(e)
     end
     
     class << self
