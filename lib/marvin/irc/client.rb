@@ -1,7 +1,4 @@
-require 'ostruct'
 require 'eventmachine'
-require 'active_support'
-require File.dirname(__FILE__) + "/event"
 
 module Marvin::IRC
   
@@ -104,8 +101,6 @@ module Marvin::IRC
       callback = proc { self.dispatch_event event_callback.to_sym }
       EventMachine::add_periodic_timer(timing, &callback)
     end
-    
-
     
   end
   

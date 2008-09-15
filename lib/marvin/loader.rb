@@ -9,7 +9,6 @@ module Marvin
     
     def setup_defaults
       Marvin::Logger.setup
-      Marvin::Settings.default_client = Marvin::IRC::Client
     end
     
     def load_handlers

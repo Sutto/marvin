@@ -1,3 +1,7 @@
+require 'ostruct'
+require 'active_support'
+require "marvin/irc/event"
+
 module Marvin
   class AbstractClient
     
