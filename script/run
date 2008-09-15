@@ -4,6 +4,7 @@ require 'lib/marvin'
 
 trap "SIGINT" do
   Marvin::Loader.stop!
+  exit
 end
 
 Marvin::Loader.run!

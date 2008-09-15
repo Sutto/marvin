@@ -9,11 +9,11 @@ module Marvin
     attr_accessor  :channels, :nickname
     
     # Set the default values for the variables
-    self.handlers                 = []
-    self.events                   = []
-    self.configuration            = OpenStruct.new
-    self.configuration.channels   = []
-    self.connections              = []
+    self.handlers               = []
+    self.events                 = []
+    self.configuration          = OpenStruct.new
+    self.configuration.channels = []
+    self.connections            = []
     
     # Initializes the instance variables used for the
     # current connection, dispatching a :client_connected event
@@ -198,7 +198,7 @@ module Marvin
     end
     
     def quit(reason = nil)
-      logger.debug self.channels.inspect
+      logger.debug "Preparing to part from #{self.channels.size} channels"
       self.channels.each { |chan| self.part chan, reason }
       command :quit
       dispatch_event :quit

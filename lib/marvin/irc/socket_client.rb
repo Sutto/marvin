@@ -32,9 +32,6 @@ module Marvin::IRC
     
     def quit(*args)
       super(*args)
-      @socket.close
-      self.process_disconnect unless self.disconnect_processed?
-      @disconnect_processed = true
     end
     
     ## Client specific details
@@ -49,6 +46,8 @@ module Marvin::IRC
       logger.debug "Telling all connections to quit"
       self.connections.each do |connection|
         connection.quit
+        logger.debug "Preparing to close socket"
+        connection.socket.close
       end
       logger.debug "Stopped."
     end

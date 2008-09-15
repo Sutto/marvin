@@ -21,6 +21,7 @@ module Marvin
     def load_settings
       Marvin::Settings.setup
       Marvin::Settings.default_client.configuration = Marvin::Settings.to_hash
+      Marvin::Settings.default_client.setup
     end
     
     def pre_connect_setup

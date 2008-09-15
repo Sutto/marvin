@@ -15,7 +15,12 @@ module Marvin
       def setup!(options = {})
         self.environment ||= "development"
         self.configuration = {}
-        self.default_client ||= Marvin::IRC::Client
+        self.default_client ||= begin
+                                  require 'eventmachine'
+                                  Marvin::IRC::Client
+                                rescue LoadError
+                                  Marvin::IRC::SocketClient
+                                end
         loaded_yaml = YAML.load_file(File.present_dir / "../../config/settings.yml")
         loaded_options = loaded_yaml["default"].
                            merge(loaded_yaml[self.environment]).
@@ -36,7 +41,7 @@ module Marvin
         
         # Extend and include.
         
-        extend mod
+        extend  mod
         include mod
         
         self.is_setup = true
