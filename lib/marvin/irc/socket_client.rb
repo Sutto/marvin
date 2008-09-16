@@ -11,7 +11,7 @@ module Marvin::IRC
     end
     
     def send_line(*args)
-      args.each { |l| @socket.write l }
+      args.each { |l| @socket.write l } if !@socket.closed?
     end
     
     def disconnect_processed?
@@ -25,9 +25,12 @@ module Marvin::IRC
       end
       self.process_disconnect unless self.disconnect_processed?
       @disconnect_processed = true
-    rescue EOFError
+    rescue SystemExit
       self.process_disconnect unless self.disconnect_processed?
       @disconnect_processed = true
+    rescue Exception => e
+      logger.debug e.class
+      Marvin::ExceptionTracker.log(e)
     end
     
     def quit(*args)

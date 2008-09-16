@@ -199,7 +199,11 @@ module Marvin
     
     def quit(reason = nil)
       logger.debug "Preparing to part from #{self.channels.size} channels"
-      self.channels.each { |chan| self.part chan, reason }
+      self.channels.to_a.each do |chan|
+        logger.debug "Parting from #{chan}"
+        self.part chan, reason
+      end
+      logger.debug "Parted from all channels, quitting"
       command :quit
       dispatch_event :quit
       # Remove the connections from the pool
