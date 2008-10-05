@@ -4,6 +4,10 @@ class HelloWorld < Marvin::CommandHandler
   
   uses_datastore "hello-count", :counts
   
+  on_event :incoming_numeric_processed do
+    logger.info "Incoming: #{options.code} - #{options.data.inspect}"
+  end
+  
   def hello(data)
     self.counts ||= {}
     self.counts[options.nick] ||= 0
