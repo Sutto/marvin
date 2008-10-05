@@ -13,7 +13,7 @@ module Marvin
       def arguments(input)
         prefix, *ending = input.split(":")
         prefix = prefix.split(" ")
-        prefix << ending.join(":")
+        prefix << ending.join(":").strip
         return prefix
       end
 
