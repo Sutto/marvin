@@ -132,7 +132,7 @@ module Marvin
       logger.debug "About to handle post init"
       # IRC Connection is establish so we send all the required commands to the server.
       logger.debug "sending user command"
-      command :user, self.configuration.user, "0", "*", lp(self.configuration.name)
+      command :user, self.configuration.user, "0", "*", Marvin::Util.last_param(self.configuration.name)
       default_nickname = self.configuration.nick || self.configuration.nicknames.shift
       logger.debug "Setting default nickname"
       nick default_nickname
@@ -163,6 +163,22 @@ module Marvin
       end
     end
     
+    # The default response for PING's - it simply replies
+    # with a PONG.
+    def handle_incoming_ping(opts = {})
+      logger.info "Received Incoming Ping - Handling with a PONG"
+      pong(opts[:data])
+    end
+    
+    # TODO: Get the correct mapping for a given
+    # Code.
+    def handle_incoming_numeric(opts = {})
+      code = opts[:code].to_i
+      args = Marvin::Util.arguments(opts[:data])
+      logger.debug "Dispatching processed numeric - #{code}"
+      dispatch_event :incoming_numeric_processed, {:code => code, :data => args}
+    end
+    
     ## General IRC Functions
     
     # Sends a specified command to the server.
@@ -178,7 +194,7 @@ module Marvin
     end
     
     def join(channel)
-      channel = chan(channel)
+      channel = Marvin::Util.channel_name(channel)
       # Record the fact we're entering the room.
       self.channels << channel
       command :JOIN, channel
@@ -187,9 +203,9 @@ module Marvin
     end
     
     def part(channel, reason = nil)
-      channel = chan(channel)
+      channel = Marvin::Util.channel_name(channel)
       if self.channels.include?(channel)
-        command :part, channel, lp(reason)
+        command :part, channel, Marvin::Util.last_param(reason)
         dispatch_event :outgoing_part, :target => channel, :reason => reason
         logger.info "Parted from room #{channel}#{reason ? " - #{reason}" : ""}"
       else
@@ -212,13 +228,13 @@ module Marvin
     end
     
     def msg(target, message)
-      command :privmsg, target, lp(message)
+      command :privmsg, target, Marvin::Util.last_param(message)
       logger.info "Message sent to #{target} - #{message}"
       dispatch_event :outgoing_message, :target => target, :message => message
     end
     
     def action(target, message)
-      action_text = lp "\01ACTION #{message.strip}\01"
+      action_text = Marvin::Util.last_param "\01ACTION #{message.strip}\01"
       command :privmsg, target, action_text
       dispatch_event :outgoing_action, :target => target, :message => message
       logger.info "Action sent to #{target} - #{message}"
@@ -236,15 +252,6 @@ module Marvin
       self.nickname = new_nick
       dispatch_event :outgoing_nick, :new_nick => new_nick
       logger.info "Nickname changed to #{new_nick}"
-    end
-    
-    # Some helper functions for clients
-    
-    # The default response for PING's - it simply replies
-    # with a PONG.
-    def handle_incoming_ping(opts = {})
-      logger.info "Received Incoming Ping - Handling with a PONG"
-      pong(opts[:data])
     end
     
     ## The Default IRC Events
@@ -286,27 +293,14 @@ module Marvin
     register_event :quit,    /^\:(.+)\!\~?(.+)\@(.+) QUIT :?(.+?)$/i,
                    :nick, :ident, :host, :message
                    
-    register_event :nick_taken, /^:(\S+) 433 \* (\w+) :(.+)$/,
+    register_event :nick_taken, /^\:(\S+) 433 \* (\w+) :(.+)$/,
                    :server, :target, :message
                    
-    register_event :ping, /^\:(.+)\!\~?(.+)\@(.+) PING (.*)$/,
+    register_event :ping,   /^\:(.+)\!\~?(.+)\@(.+) PING (.*)$/,
                    :nick, :ident, :host, :data
 
-    private
-    
-    # Return the channel-name version of a string by
-    # appending "#" to the front if it doesn't already
-    # start with it.
-    def chan(name)
-      return name.to_s[0..0] == "#" ? name.to_s : "##{name}"
-    end
-    
-    # Specifies the last parameter of a response, used to
-    # specify parameters which have spaces etc (for example,
-    # the actual message part of a response).
-    def lp(section)
-      section && ":#{section.to_s.strip} "
-    end
+    register_event :numeric, /^\:(\S+) ([0-9]+) (.*)$/,
+                   :host, :code, :data
     
   end
 end

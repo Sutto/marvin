@@ -29,7 +29,6 @@ module Marvin::IRC
       self.process_disconnect unless self.disconnect_processed?
       @disconnect_processed = true
     rescue Exception => e
-      logger.debug e.class
       Marvin::ExceptionTracker.log(e)
     end
     

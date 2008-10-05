@@ -4,7 +4,6 @@ class HelloWorld < Marvin::CommandHandler
   
   uses_datastore "hello-count", :counts
   
-  
   def hello(data)
     self.counts ||= {}
     self.counts[options.nick] ||= 0
