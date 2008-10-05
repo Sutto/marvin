@@ -43,15 +43,12 @@ data for each event is then usable via options.attribute_name - an
 openstruct version of the details. e.g.
 
   class NinjaStuff < Marvin::Base
-  
     on_event :incoming_message do
       do_something
     end
-  
     def do_something
       reply options.message # Will echo back the message
     end
-  
   end
     
 Or the like. Also, the halt! method can be called in any subclass to
@@ -70,9 +67,7 @@ To write a CommandHandler, you simply create a subclass
 just use the "exposes" class method. e.g.
 
   class MySecondExample < Marvin::CommandHandler
-    
     exposes :hello
-    
     def hello(data)
       reply "Hello!"
     end
