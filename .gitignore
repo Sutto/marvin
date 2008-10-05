@@ -1,3 +1,4 @@
 log/*.log
 tmp/pids/*.pid
 config/settings.yml
+tmp/datastore.json
