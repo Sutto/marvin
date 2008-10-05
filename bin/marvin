@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'fileutils'
+
+LOCATION_ROOT = File.join(File.dirname(__FILE__), "..")
+
+puts "Marvin - A Ruby IRC Library / Framework"
+if ARGV.length == 1
+  puts "Usage: marvin create <name> - Creates a marvin directory at name or ./marvin"
+  puts "       marvin (in a Marvin dir) - Starts it, equiv. to script/marvin"
+end
+
+if ARGV.length >= 1
+  if ARGV[0].to_s.downcase != "create"
+    puts "'#{ARGV[0]}' isn't a valid command."
+    exit
+  end
+  dest = ARGV[1] || "./marvin"
+  if File.exist?(dest) && File.directory?(dest)
+    puts "The folder '#{dest}' already exists."
+    exit
+  end
