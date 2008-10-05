@@ -12,8 +12,7 @@ EventMachine for all networking purposes - as a result, it's both
 relatively stable / reliable and also powerful.
 
 Following on from this, the irc library is event driven. At the base
-level, you choose a client (By Default, Marvin::IRC::Client2 - Marvin::IRC::Client
-is outdated, incompatible and should _not_ be used.) and then you register
+level, you choose a client (By Default, Marvin::IRC::Client.) and then you register
 any number of handlers. Whenever an event happens e.g. an incoming message,
 a connection unbinding or event just post_init, each handler is notified
 and given a small set of details about the event.

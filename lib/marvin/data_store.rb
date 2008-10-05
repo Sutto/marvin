@@ -13,7 +13,7 @@ module Marvin
     # Used when loading / dumping the data.
     def self.datastore_location
       path =  Marvin::Settings[:datastore_location] ? Marvin::Settings.datastore_location : "tmp/datastore.json"
-      return File.dirname(__FILE__) / "../.." / path
+      return Marvin::Settings.root / path
     end
     
     # Dump the current data store contents to file.

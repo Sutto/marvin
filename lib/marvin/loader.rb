@@ -12,7 +12,7 @@ module Marvin
     end
     
     def load_handlers
-      handlers = Dir[File.present_dir / "../../handlers/**/*.rb"].map { |h| h[0..-4] }
+      handlers = Dir[Marvin::Settings.root / "handlers/**/*.rb"].map { |h| h[0..-4] }
       handlers.each do |handler|
         require handler
       end
@@ -26,7 +26,7 @@ module Marvin
     
     def pre_connect_setup
       Marvin::DataStore.load!
-      require(File.present_dir / "../../config/setup")
+      require(Marvin::Settings.root / "config/setup")
       self.setup_block.call unless self.setup_block.blank?
     end
     

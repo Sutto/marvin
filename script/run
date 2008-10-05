@@ -1,6 +1,14 @@
 #!/usr/bin/env ruby
-ENV['RAILS_ENV'] ||= (ARGV[0] || "development")
-require 'lib/marvin'
+require 'rubygems'
+# Set the root of Marvin
+
+if File.exist?(File.dirname(__FILE__) + "/../lib/marvin.rb")
+  $:.unshift(File.dirname(__FILE__) + "/../lib/")
+end
+
+MARVIN_ROOT = File.join(File.dirname(__FILE__), "..")
+# And Require Marvin.
+require 'marvin'
 
 trap "SIGINT" do
   Marvin::Loader.stop!
