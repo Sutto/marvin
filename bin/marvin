@@ -3,20 +3,57 @@ require 'rubygems'
 require 'fileutils'
 
 LOCATION_ROOT = File.join(File.dirname(__FILE__), "..")
+DEST = ARGV[1] || "./marvin"
+
+def j(*args); File.join(*args); end
+
+def copy(f, t = nil)
+  t = f if t.nil?
+  File.open(j(DEST, t), "w+") do |file|
+    file.puts File.read(j(LOCATION_ROOT, f))
+  end
+end
 
 puts "Marvin - A Ruby IRC Library / Framework"
-if ARGV.length == 1
+if ARGV.include?("-h") || ARGV.include?("--help")
   puts "Usage: marvin create <name> - Creates a marvin directory at name or ./marvin"
   puts "       marvin (in a Marvin dir) - Starts it, equiv. to script/marvin"
+  exit
 end
 
 if ARGV.length >= 1
   if ARGV[0].to_s.downcase != "create"
-    puts "'#{ARGV[0]}' isn't a valid command."
-    exit
+    puts "'#{ARGV[0]}' isn't a valid command. - Please use #{__FILE__} --help"
+    exit(1)
   end
-  dest = ARGV[1] || "./marvin"
-  if File.exist?(dest) && File.directory?(dest)
-    puts "The folder '#{dest}' already exists."
-    exit
+  if File.exist?(DEST) && File.directory?(DEST)
+    puts "The folder '#{DEST}' already exists."
+    exit(1)
   end
+  # Generate it.
+  FileUtils.mkdir(DEST)
+  ["log", "tmp", "config", "handlers", "script"].each do |folder|
+    FileUtils.mkdir(j(DEST, folder))
+  end
+  
+  puts "Writing Settings file"
+  copy "config/settings.yml.sample", "config/settings"
+  
+  puts "Writing setup.rb"
+  copy "config/setup.rb"
+  
+  puts "Copying start script - script/run"
+  copy "script/run"
+  
+  puts "Copying example handler"
+  copy "handlers/hello_world.rb"
+  
+  puts "Done!"
+  
+else
+  if !File.exist?("script/run")
+    puts "Woops! This isn't a marvin directory."
+    exit(1)
+  end
+  exec "script/run"
+end

@@ -1,13 +1,13 @@
 default:
-  name: "Marvin Bot"
+  name: "My Marvin Bot"
   server: irc.freenode.net
   port: 6667
-  channel: "#offtesting"
-  use_logging: true
+  channel: "#marvin-testing"
+  use_logging: false
   datastore_location: tmp/datastore.json
 development:
   user: MarvinBot
   name: MarvinBot
-  nick:  MarvinBot
+  nick:  MarvinBot3000
 production:
   deployed: false
