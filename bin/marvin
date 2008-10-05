@@ -37,13 +37,14 @@ if ARGV.length >= 1
   end
   
   puts "Writing Settings file"
-  copy "config/settings.yml.sample", "config/settings"
+  copy "config/settings.yml.sample", "config/settings.yml"
   
   puts "Writing setup.rb"
   copy "config/setup.rb"
   
   puts "Copying start script - script/run"
   copy "script/run"
+  FileUtils.chmod 0755, j(DEST, "script/run")
   
   puts "Copying example handler"
   copy "handlers/hello_world.rb"
