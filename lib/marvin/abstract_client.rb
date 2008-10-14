@@ -64,14 +64,6 @@ module Marvin
     
     ## Handling all of the the actual client stuff.
     
-    # Appends an event to the end of the the events callback
-    # chain. It will be search in order of first-registered
-    # when used to match a URL (hence, order matters).
-    def self.register_event(*args)
-      event = (args.first.is_a?(Marvin::IRC::Event) ? args.first : Marvin::IRC::Event.new(*args))
-      self.events  << event
-    end
-    
     # Appends a handler to the end of the handler callback
     # chain. Note that they will be called in the order they
     # are appended.
@@ -82,7 +74,7 @@ module Marvin
     
     def receive_line(line)
       dispatch_event :incoming_line, :line => line
-      event = self.events.detect { |e| e.matches?(line) }
+      event = Marvin::Settings.default_parser.parse(line)
       dispatch_event(event.to_incoming_event_name, event.to_hash) unless event.nil?
     end
     
@@ -253,54 +245,6 @@ module Marvin
       dispatch_event :outgoing_nick, :new_nick => new_nick
       logger.info "Nickname changed to #{new_nick}"
     end
-    
-    ## The Default IRC Events
-    
-    # Note that some of these Regexp's are from Net::YAIL,
-    # which apparantly sources them itself from the IRCSocket
-    # library.
-    
-    register_event :invite,  /^\:(.+)\!\~?(.+)\@(.+) INVITE (\S+) :?(.+?)$/i,
-                   :nick, :ident, :host, :target, :channel
-                   
-    register_event :action,  /^\:(.+)\!\~?(.+)\@(.+) PRIVMSG (\S+) :?\001ACTION (.+?)\001$/i,
-                   :nick, :ident, :host, :target, :message
-                   
-    register_event :ctcp, /^\:(.+)\!\~?(.+)\@(.+) PRIVMSG (\S+) :?\001(.+?)\001$/i,
-                   :nick, :ident, :host, :target, :message
-    
-    register_event :message, /^\:(.+)\!\~?(.+)\@(.+) PRIVMSG (\S+) :?(.+?)$/i,
-                   :nick, :ident, :host, :target, :message
-                   
-    register_event :join,    /^\:(.+)\!\~?(.+)\@(.+) JOIN (\S+)/i,
-                   :nick, :ident, :host, :target               
-                   
-    register_event :part,    /^\:(.+)\!\~?(.+)\@(.+) PART (\S+)\s?:?(.+?)$/i,
-                   :nick, :ident, :host, :target, :message
-                   
-    register_event :mode,    /^\:(.+)\!\~?(.+)\@(.+) MODE (\S+) :?(.+?)$/i,
-                   :nick, :ident, :host, :target, :mode               
-
-    register_event :kick,    /^\:(.+)\!\~?(.+)\@(.+) KICK (\S+) (\S+)\s?:?(.+?)$/i,
-                   :nick, :ident, :host, :target, :channel, :reason
-                   
-    register_event :topic,  /^\:(.+)\!\~?(.+)\@(.+) TOPIC (\S+) :?(.+?)$/i,
-                   :nick, :ident, :host, :target, :topic
-                   
-    register_event :nick,    /^\:(.+)\!\~?(.+)\@(.+) NICK :?(.+?)$/i,
-                   :nick, :ident, :host, :new_nick
-
-    register_event :quit,    /^\:(.+)\!\~?(.+)\@(.+) QUIT :?(.+?)$/i,
-                   :nick, :ident, :host, :message
-                   
-    register_event :nick_taken, /^\:(\S+) 433 \* (\w+) :(.+)$/,
-                   :server, :target, :message
-                   
-    register_event :ping,   /^\:(.+)\!\~?(.+)\@(.+) PING (.*)$/,
-                   :nick, :ident, :host, :data
-
-    register_event :numeric, /^\:(\S+) ([0-9]+) (.*)$/,
-                   :host, :code, :data
     
   end
 end

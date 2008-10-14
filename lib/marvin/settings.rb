@@ -3,12 +3,12 @@ require 'yaml'
 module Marvin
   class Settings
     
-    cattr_accessor :environment, :configuration, :is_setup, :default_client, :handler_folder
+    cattr_accessor :environment, :configuration, :is_setup, :default_client, :handler_folder, :default_parser
     
     class << self
       
       def root
-        MARVIN_ROOT
+        defined?(MARVIN_ROOT) ? MARVIN_ROOT : File.dirname(__FILE__) / "../.."
       end
       
       def setup(options = {})
@@ -25,6 +25,7 @@ module Marvin
                                 rescue LoadError
                                   Marvin::IRC::SocketClient
                                 end
+        self.default_parser ||= Marvin::Parsers::RegexpParser
         loaded_yaml = YAML.load_file(root / "config/settings.yml")
         loaded_options = loaded_yaml["default"].
                            merge(loaded_yaml[self.environment]).

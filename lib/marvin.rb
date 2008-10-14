@@ -21,6 +21,9 @@ module Marvin
   autoload :DRBHandler,       'marvin/drb_handler'
   autoload :DataStore,        'marvin/data_store'
   autoload :ExceptionTracker, 'marvin/exception_tracker'
+  # Parsers
+  autoload :AbstractParser,   'marvin/abstract_parser'
+  autoload :Parsers,          'marvin/parsers.rb'
   
   # Default Handlers
   autoload :CommandHandler, 'marvin/command_handler'
