@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'daemons'
+
+DIR = File.join(File.dirname(__FILE__), "..")
+
+Daemons.run(File.join(DIR, "script/run --is-daemon"),
+            {:mode => :exec,
+             :dir => DIR,
+             :dir_mode => :normal,
+             :log_output => true,
+             :app_name => 'marvin'})

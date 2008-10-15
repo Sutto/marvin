@@ -8,7 +8,8 @@ module Marvin
     class << self
       
       def setup
-        self.logger ||= ::Logger.new(Marvin::Settings.daemon? ? "log/#{Marvin::Settings.environment}.log" : STDOUT)
+        log_path = Marvin::Settings.root / "log/#{Marvin::Settings.environment}.log"
+        self.logger ||= ::Logger.new(Marvin::Settings.daemon? ? log_path : STDOUT)
       end
       
       def method_missing(name, *args, &blk)

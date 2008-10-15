@@ -21,7 +21,7 @@ if ARGV.include?("-h") || ARGV.include?("--help")
   exit
 end
 
-if ARGV.length >= 1
+if ARGV.length >= 1 && !["start", "stop", "run", "restart"].include?(ARGV[0])
   if ARGV[0].to_s.downcase != "create"
     puts "'#{ARGV[0]}' isn't a valid command. - Please use #{__FILE__} --help"
     exit(1)
@@ -44,13 +44,20 @@ if ARGV.length >= 1
   
   puts "Copying start script - script/run"
   copy "script/run"
+  copy "script/daemon-runner"
   FileUtils.chmod 0755, j(DEST, "script/run")
+  FileUtils.chmod 0755, j(DEST, "script/daemon-runner")
   
   puts "Copying example handler"
   copy "handlers/hello_world.rb"
   
   puts "Done!"
-  
+elsif ARGV.length >= 1
+  if !File.exist?("script/daemon-runner")
+    puts "Woops! This isn't a marvin directory."
+    exit(1)
+  end
+  exec "script/daemon-runner #{ARGV.map {|a| a.include?(" ") ? "\"#{a}\"" : a }.join(" ")}"
 else
   if !File.exist?("script/run")
     puts "Woops! This isn't a marvin directory."
