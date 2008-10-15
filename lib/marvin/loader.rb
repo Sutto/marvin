@@ -3,12 +3,23 @@ module Marvin
     
     cattr_accessor :setup_block
     
+    cattr_accessor :start_hooks, :stop_hooks
+    self.stop_hooks, self.start_hooks = [], []
+    
     def self.before_connecting(&blk)
       self.setup_block = blk
     end
     
     def setup_defaults
       Marvin::Logger.setup
+    end
+    
+    def self.before_run(&blk)
+      self.start_hooks << blk unless blk.blank?
+    end
+    
+    def self.after_stop(&blk)
+      self.stop_hooks << blk unless blk.blank?
     end
     
     def load_handlers
@@ -35,11 +46,13 @@ module Marvin
       self.load_settings
       self.load_handlers
       self.pre_connect_setup
+      self.start_hooks.each { |h| h.call }
       Marvin::Settings.default_client.run
     end
     
     def stop!
       Marvin::Settings.default_client.stop
+      self.stop_hooks.each { |h| h.call }
       Marvin::DataStore.dump!
     end
     
