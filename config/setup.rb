@@ -9,7 +9,6 @@ Marvin::Loader.before_connecting do
   # Example Handler use.
   # LoggingHandler.register! if Marvin::Settings.use_logging
   
-  # Register using Marvin::MiddleMan.
-  #HelloWorld.register!(Marvin::MiddleMan)
+  #HelloWorld.register!
   
 end
