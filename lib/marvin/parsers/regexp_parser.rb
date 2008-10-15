@@ -88,7 +88,7 @@ module Marvin
                      :nick, :ident, :host, :data
 
       register_event :numeric, /^\:(\S+) ([0-9]+) (.*)$/,
-                     :host, :code, :data
+                     :server, :code, :data
     end 
   end
 end

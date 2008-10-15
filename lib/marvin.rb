@@ -31,3 +31,13 @@ module Marvin
   Settings.setup # Load Settings etc.
   
 end
+
+def p(text)
+  res = Marvin::Parsers::SimpleParser.parse(text)
+  if res.blank?
+    puts "Unrecognized Result"
+  else
+    STDOUT.puts "Event: #{res.to_incoming_event_name}"
+    STDOUT.puts "Args:  #{res.to_hash.inspect}"
+  end
+end

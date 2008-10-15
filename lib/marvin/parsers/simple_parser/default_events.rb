@@ -2,17 +2,8 @@ class Marvin::Parsers::SimpleParser < Marvin::AbstractParser
   module DefaultEvents
     
     def self.included(parent)
-      STDOUT.puts "Included in #{parent.inspect}"
       parent.class_eval do
-        extend ClassMethods        
-        # Now register the default events
-
-        #register_event :action,  /^\:(.+)\!\~?(.+)\@(.+) PRIVMSG (\S+) :?\001ACTION (.+?)\001$/i,
-        #               :nick, :ident, :host, :target, :message
-
-        #register_event :ctcp, /^\:(.+)\!\~?(.+)\@(.+) PRIVMSG (\S+) :?\001(.+?)\001$/i,
-        #               :nick, :ident, :host, :target, :message
-        
+        extend ClassMethods
         # Register the default set of events with commands
         register_event :nick,    :NICK,    :new_nick
         register_event :quit,    :QUIT,    :message

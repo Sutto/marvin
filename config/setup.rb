@@ -9,6 +9,6 @@ Marvin::Loader.before_connecting do
   # Example Handler use.
   # LoggingHandler.register! if Marvin::Settings.use_logging
   
-  #HelloWorld.register!
+  HelloWorld.register!
   
 end

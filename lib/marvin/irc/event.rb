@@ -11,8 +11,9 @@ module Marvin::IRC
       return {} unless self.raw_arguments
       results = {}
       values = self.raw_arguments.to_a
-      self.keys.each do |key|
-        results[key] = values.shift
+      last_index = self.keys.size - 1
+      self.keys.each_with_index do |key, i|
+        results[key] = (i == last_index ? values.join(" ").strip : values.shift)
       end
       return results
     end

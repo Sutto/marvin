@@ -41,9 +41,9 @@ module Marvin
         self.parts = head.split(" ")
         self.parts << tail
         command = self.parts.shift.upcase.to_sym
-        if command =~ /^[0-9]{3}$/
+        if command.to_s =~ /^[0-9]{3}$/
           # Other Command
-          self.parts = [self.parts.join(" ")]
+          self.parts.unshift(command.to_s) # Reappend the command
           process_event self.events[:numeric]
         elsif self.events.has_key? command
           # Registered Command
@@ -79,12 +79,13 @@ module Marvin
       end
       
       def extract_prefix!(text)
+        return if text.blank?
         full_prefix = text[1..-1]
         prefix = full_prefix
         # Ugly regexp for nick!ident@host format
         # Officially this should be less-terse, but hey
         # it's a simple parser.
-        if full_prefix =~ /^([^@!]+)\!\~([^@]+)@(.*)$/
+        if full_prefix =~ /^([^@!]+)\!\~?([^@]+)@(.*)$/
           prefix = UserPrefix.new($1, $2, $3)
         else
           # TODO: Validate the hostname here.
@@ -95,7 +96,6 @@ module Marvin
       end
       
       include DefaultEvents
-    
     end 
   end
 end
