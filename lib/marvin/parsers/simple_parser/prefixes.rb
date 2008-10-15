@@ -1,6 +1,6 @@
 # A Set of prefixes for a given IRC line
 # as parsed from an incoming line.
-class Marvin::Parsers::SimpleParser
+class Marvin::Parsers::SimpleParser < Marvin::AbstractParser
   
   class Prefix; end
   

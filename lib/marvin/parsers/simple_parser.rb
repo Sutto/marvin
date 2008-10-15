@@ -7,7 +7,7 @@ module Marvin
     class SimpleParser < Marvin::AbstractParser
       
       cattr_accessor :events
-      self.events = {}
+      self.events ||= {}
       
       attr_accessor :arguments, :prefix, :current_line, :parts, :event
       
@@ -35,6 +35,8 @@ module Marvin
         else
           prefix_text = nil
         end
+        extract_prefix! prefix_text
+        
         head, tail = line.split(":", 2)
         self.parts = head.split(" ")
         self.parts << tail
@@ -43,7 +45,7 @@ module Marvin
           # Other Command
           self.parts = [self.parts.join(" ")]
           process_event self.events[:numeric]
-        elsif self.commands.has_key? command
+        elsif self.events.has_key? command
           # Registered Command
           process_event self.events[command]
         else
@@ -79,8 +81,11 @@ module Marvin
       def extract_prefix!(text)
         full_prefix = text[1..-1]
         prefix = full_prefix
-        if full_prefix =~ /^([^@!]+)(!\~([^@]+))?(@(.*))?$/ # Ugly regexp for nick!ident@host format
-          prefix = UserPrefix.new($1, $3, $5)
+        # Ugly regexp for nick!ident@host format
+        # Officially this should be less-terse, but hey
+        # it's a simple parser.
+        if full_prefix =~ /^([^@!]+)\!\~([^@]+)@(.*)$/
+          prefix = UserPrefix.new($1, $2, $3)
         else
           # TODO: Validate the hostname here.
           prefix = ServerNamePrefix.new(prefix.strip)
@@ -89,7 +94,7 @@ module Marvin
         return prefix
       end
       
-      include Marvin::Parsers::SimpleParser::DefaultEvents
+      include DefaultEvents
     
     end 
   end

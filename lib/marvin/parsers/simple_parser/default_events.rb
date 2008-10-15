@@ -1,7 +1,8 @@
-class Marvin::Parsers::SimpleParser
+class Marvin::Parsers::SimpleParser < Marvin::AbstractParser
   module DefaultEvents
     
-    def included(parent)
+    def self.included(parent)
+      STDOUT.puts "Included in #{parent.inspect}"
       parent.class_eval do
         extend ClassMethods        
         # Now register the default events
