@@ -23,7 +23,7 @@ module Marvin
       self.class.setup
       logger.debug "Initializing the current instance"
       self.channels = []
-      (self.connections ||= []) << self
+      self.connections << self
       logger.debug "Setting the client for each handler"
       self.handlers.each { |h| h.client = self if h.respond_to?(:client=) }
       logger.debug "Dispatching the default :client_connected event"
@@ -167,7 +167,6 @@ module Marvin
     def handle_incoming_numeric(opts = {})
       code = opts[:code].to_i
       args = Marvin::Util.arguments(opts[:data])
-      logger.debug "Dispatching processed numeric - #{code}"
       dispatch_event :incoming_numeric_processed, {:code => code, :data => args}
     end
     

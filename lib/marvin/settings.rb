@@ -16,6 +16,10 @@ module Marvin
         self.setup!(options)
       end
       
+      def daemon?
+        defined?(IS_DAEMON) && IS_DAEMON
+      end
+      
       def setup!(options = {})
         self.environment ||= "development"
         self.configuration = {}

@@ -1,12 +1,13 @@
 #!/usr/bin/env ruby
 require 'rubygems'
-# Set the root of Marvin
 
 if File.exist?(File.dirname(__FILE__) + "/../lib/marvin.rb")
   $:.unshift(File.dirname(__FILE__) + "/../lib/")
 end
 
 MARVIN_ROOT = File.join(File.dirname(__FILE__), "..")
+IS_DAEMON = ARGV.include?("--is-daemon")
+
 # And Require Marvin.
 require 'marvin'
 
