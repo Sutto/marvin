@@ -11,9 +11,15 @@ IS_DAEMON = ARGV.include?("--is-daemon")
 # And Require Marvin.
 require 'marvin'
 
-trap "SIGINT" do
-  Marvin::Loader.stop!
-  exit
+["INT", "TERM"].each do |sig|
+  
+  # Trap a given signal and run all
+  # of our callbacks etc,
+  trap sig do
+    Marvin::Loader.stop!
+    exit
+  end
+  
 end
 
 Marvin::Loader.run!
