@@ -39,9 +39,9 @@ module Marvin
       self.receive_line irc_command
     end
     
-    def dispatch_event(name, opts = {})
+    def dispatch(name, opts = {})
       self.dispatched_events << [name, opts]
-      super(name, opts = {})
+      super(name, opts)
     end
     
     def self.run

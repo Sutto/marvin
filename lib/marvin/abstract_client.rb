@@ -5,11 +5,12 @@ require "marvin/irc/event"
 module Marvin
   class AbstractClient
     
-    cattr_accessor :events, :handlers, :configuration, :logger, :is_setup, :connections
+    include Marvin::Dispatchable
+    
+    cattr_accessor :events, :configuration, :logger, :is_setup, :connections
     attr_accessor  :channels, :nickname
     
     # Set the default values for the variables
-    self.handlers               = []
     self.events                 = []
     self.configuration          = OpenStruct.new
     self.configuration.channels = []
@@ -27,12 +28,12 @@ module Marvin
       logger.debug "Setting the client for each handler"
       self.handlers.each { |h| h.client = self if h.respond_to?(:client=) }
       logger.debug "Dispatching the default :client_connected event"
-      dispatch_event :client_connected
+      dispatch :client_connected
     end
     
     def process_disconnect
       self.connections.delete(self) if self.connections.include?(self)
-      dispatch_event :client_disconnected
+      dispatch :client_disconnected
       Marvin::Loader.stop! if self.connections.blank?
     end
     
@@ -65,53 +66,10 @@ module Marvin
     
     ## Handling all of the the actual client stuff.
     
-    # Appends a handler to the end of the handler callback
-    # chain. Note that they will be called in the order they
-    # are appended.
-    def self.register_handler(handler)
-      return if handler.blank?
-      self.handlers << handler
-    end
-    
     def receive_line(line)
-      dispatch_event :incoming_line, :line => line
+      dispatch :incoming_line, :line => line
       event = Marvin::Settings.default_parser.parse(line)
-      dispatch_event(event.to_incoming_event_name, event.to_hash) unless event.nil?
-    end
-    
-    # Handles the dispatch of an event and it's associated options
-    # / properties (defaulting to an empty hash) to both the client
-    # (used for things such as responding to PING) and each of the
-    # registered handlers.
-    def dispatch_event(name, opts = {})
-      # The full handler name is simply what is used to handle
-      # a single event (e.g. handle_incoming_message)
-      full_handler_name = "handle_#{name}"
-      
-      # If the current handle_name method is defined on this
-      # class, we dispatch to that first. We use this to provide
-      # functionality such as responding to PING's and handling
-      # required stuff on connections.
-      self.send(full_handler_name, opts) if respond_to?(full_handler_name)
-      
-      begin
-        # For each of the handlers, check first if they respond to
-        # the full handler name (e.g. handle_incoming_message) - calling
-        # that if it exists - otherwise falling back to the handle method.
-        # if that doesn't exist, nothing is done.
-        self.handlers.each do |handler|
-          if handler.respond_to?(full_handler_name)
-            handler.send(full_handler_name, opts)
-          elsif handler.respond_to?(:handle)
-            handler.handle name, opts
-          end
-        end
-      # Raise an exception in order to stop the flow
-      # of the control. Ths enables handlers to prevent
-      # responses from happening multiple times.
-      rescue HaltHandlerProcessing
-        logger.debug "Handler Progress halted; Continuing on."
-      end
+      dispatch(event.to_incoming_event_name, event.to_hash) unless event.nil?
     end
     
     # Default handlers
@@ -170,7 +128,7 @@ module Marvin
     def handle_incoming_numeric(opts = {})
       code = opts[:code].to_i
       args = Marvin::Util.arguments(opts[:data])
-      dispatch_event :incoming_numeric_processed, {:code => code, :data => args}
+      dispatch :incoming_numeric_processed, {:code => code, :data => args}
     end
     
     ## General IRC Functions
@@ -193,14 +151,14 @@ module Marvin
       self.channels << channel
       command :JOIN, channel
       logger.info "Joined channel #{channel}"
-      dispatch_event :outgoing_join, :target => channel
+      dispatch :outgoing_join, :target => channel
     end
     
     def part(channel, reason = nil)
       channel = Marvin::Util.channel_name(channel)
       if self.channels.include?(channel)
         command :part, channel, Marvin::Util.last_param(reason)
-        dispatch_event :outgoing_part, :target => channel, :reason => reason
+        dispatch :outgoing_part, :target => channel, :reason => reason
         logger.info "Parted from room #{channel}#{reason ? " - #{reason}" : ""}"
       else
         logger.warn "Tried to disconnect from #{channel} - which you aren't a part of"
@@ -215,7 +173,7 @@ module Marvin
       end
       logger.debug "Parted from all channels, quitting"
       command :quit
-      dispatch_event :quit
+      dispatch :quit
       # Remove the connections from the pool
       self.connections.delete(self)
       logger.info  "Quit from server"
@@ -224,19 +182,19 @@ module Marvin
     def msg(target, message)
       command :privmsg, target, Marvin::Util.last_param(message)
       logger.info "Message sent to #{target} - #{message}"
-      dispatch_event :outgoing_message, :target => target, :message => message
+      dispatch :outgoing_message, :target => target, :message => message
     end
     
     def action(target, message)
       action_text = Marvin::Util.last_param "\01ACTION #{message.strip}\01"
       command :privmsg, target, action_text
-      dispatch_event :outgoing_action, :target => target, :message => message
+      dispatch :outgoing_action, :target => target, :message => message
       logger.info "Action sent to #{target} - #{message}"
     end
     
     def pong(data)
       command :pong, data
-      dispatch_event :outgoing_pong
+      dispatch :outgoing_pong
       logger.info "PONG sent to #{data}"
     end
     
@@ -244,7 +202,7 @@ module Marvin
       logger.info "Changing nickname to #{new_nick}"
       command :nick, new_nick
       self.nickname = new_nick
-      dispatch_event :outgoing_nick, :new_nick => new_nick
+      dispatch :outgoing_nick, :new_nick => new_nick
       logger.info "Nickname changed to #{new_nick}"
     end
     

@@ -56,7 +56,7 @@ module Marvin::IRC
     
     # Registers a callback handle that will be periodically run.
     def periodically(timing, event_callback)
-      callback = proc { self.dispatch_event event_callback.to_sym }
+      callback = proc { self.dispatch event_callback.to_sym }
       Thread.new do
         while true
           callback.call

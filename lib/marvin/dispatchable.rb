@@ -79,7 +79,7 @@ module Marvin
       # Appends a handler to the list of handlers for this object.
       # Handlers are called in the order they are registered.
       def register_handler(handler)
-        self.handlers << handlers unless handler.nil? || !handler.respond_to?(:handle)
+        self.handlers << handler unless handler.nil? || !handler.respond_to?(:handle)
       end
       
     end
