@@ -1,36 +1,14 @@
-task :files do
-  files  = Dir["lib/**/*"]
-  files += Dir["bin/**/*"]
-  files += Dir["config/**/*"]
-  files += Dir["handlers/**/*"]
-  files += Dir["script/**/*"]
-  puts files.inspect
-end
-
-task :tests do
-  files = Dir["spec/**/*"]
-  puts files.inspect
-end
-
-task :build => :clean do
-  puts "Building gem..."
-  results = `gem build marvin.gemspec`
-  system "mkdir -p gems"
-  if results =~ /File\: (.*)$/
-    file = $1.strip
-    system "mv #{file} gems/#{file}"
-  else
-    puts "Error building gem"
-    exit(1)
+begin
+  require 'jeweler'
+  Jeweler::Tasks.new do |s|
+    s.name        = "marvin"
+    s.summary     = "Ruby IRC Library / Framework"
+    s.email       = "sutto@sutto.net"
+    s.homepage    = "http://blog.ninjahideout.com/"
+    s.description = "Marvin is a Ruby IRC library / framework for ultimate awesomeness and with an evented design."
+    s.authors     = ["Darcy Laycock"]
+    s.files       = FileList["[A-Z]*.*", "{bin,generators,lib,test,spec,script,handlers}/**/*"] + ["config/setup.rb", "config/settings.yml.sample"]
   end
-end
-
-task :install => :build do
-  puts "Installing Marvin..."
-  to_install = Dir["gems/marvin-*.gem"].last
-  system "sudo gem install #{to_install}"
-end
-
-task :clean do
-  system "rm -rf gems"
+rescue LoadError
+  puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
 end
