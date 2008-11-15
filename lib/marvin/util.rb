@@ -1,6 +1,5 @@
 module Marvin
-  class Util
-    class << self
+  module Util
       
       # Return the channel-name version of a string by
       # appending "#" to the front if it doesn't already
@@ -25,6 +24,7 @@ module Marvin
       end
       alias lp last_param
      
-    end
+      extend self
+     
   end
 end

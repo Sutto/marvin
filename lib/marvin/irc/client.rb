@@ -57,12 +57,10 @@ module Marvin::IRC
       end
       
       def post_init
-        super
         client.process_connect
       end
 
       def unbind
-        super
         client.process_disconnect
       end
       

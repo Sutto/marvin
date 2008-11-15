@@ -3,3 +3,9 @@ class File
     File.dirname(__FILE__)
   end
 end
+
+class String
+  def /(*args)
+    File.join(self, *args)
+  end
+end

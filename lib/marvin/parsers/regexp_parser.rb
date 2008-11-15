@@ -86,6 +86,8 @@ module Marvin
                    
       register_event :ping,   /^\:(.+)\!\~?(.+)\@(.+) PING (.*)$/,
                      :nick, :ident, :host, :data
+                     
+      register_event :ping,  /PING (.*)$/, :data
 
       register_event :numeric, /^\:(\S+) ([0-9]+) (.*)$/,
                      :server, :code, :data

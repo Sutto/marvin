@@ -1,7 +1,7 @@
 $:.unshift File.dirname(__FILE__) # Append the current working dir to the front of the line.
 
 require 'rubygems'
-require 'extlib'
+require 'active_support'
 require 'marvin/core_ext'
 
 # Make all exceptions available

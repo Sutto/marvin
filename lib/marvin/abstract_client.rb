@@ -33,6 +33,7 @@ module Marvin
     def process_disconnect
       self.connections.delete(self) if self.connections.include?(self)
       dispatch_event :client_disconnected
+      Marvin::Loader.stop! if self.connections.blank?
     end
     
     # Sets the current class-wide settings of this IRC Client
@@ -123,16 +124,18 @@ module Marvin
     def handle_client_connected(opts = {})
       logger.debug "About to handle post init"
       # IRC Connection is establish so we send all the required commands to the server.
+      logger.debug "Setting default nickname"
+      default_nickname = self.configuration.nick || self.configuration.nicknames.shift
+      nick default_nickname
       logger.debug "sending user command"
       command :user, self.configuration.user, "0", "*", Marvin::Util.last_param(self.configuration.name)
-      default_nickname = self.configuration.nick || self.configuration.nicknames.shift
-      logger.debug "Setting default nickname"
-      nick default_nickname
       # If a password is specified, we will attempt to message
       # NickServ to identify ourselves.
       say ":IDENTIFY #{self.configuration.password}", "NickServ" unless self.configuration.password.blank?
       # Join the default channels
       self.configuration.channels.each { |c| self.join c }
+    rescue Exception => e
+      Marvin::ExceptionTracker.log(e)
     end
    
     # The default handler for when a users nickname is taken on
