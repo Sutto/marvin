@@ -85,9 +85,7 @@ module Marvin
     private
     
     def setup_subhandler_clients
-      self.subhandlers.each do |sh|
-        sh.client = self.client if sh.respond_to?(:client=)
-      end
+      self.subhandlers.each { |sh| sh.client = self.client if sh.respond_to?(:client=) }
     end
     
     # This should probably be extracted into some sort of Util's library as

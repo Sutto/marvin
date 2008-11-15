@@ -76,6 +76,12 @@ module Marvin
         @@handlers ||= []
       end
       
+      # Assigns a new array of handlers and assigns each.
+      def handlers=(new_value)
+        @@handlers = []
+        new_value.to_a.each { |h| register_handler h }
+      end
+      
       # Appends a handler to the list of handlers for this object.
       # Handlers are called in the order they are registered.
       def register_handler(handler)
