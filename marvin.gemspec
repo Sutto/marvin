@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.1}
   s.summary = %q{Ruby IRC Library / Framework}
   s.bindir = "bin"
-  spec.executables << "marvin"
+  s.executables << "marvin"
 
 
   if s.respond_to? :specification_version then
