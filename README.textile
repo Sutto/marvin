@@ -32,6 +32,51 @@ respond to actions.
 Like Rack for HTTP, Marvin provides a fair amount of example
 handlers for simple stuff inside IRC.
 
+h2. Getting Started
+
+The easiest way to get started with Marvin is by installing the Marvin gem. To
+do this, make sure Github is added to your gem sources (and you are using
+rubygems >= 1.2.0):
+
+  $ gem sources -a http://gems.github.com 
+  $ sudo gem install username-marvin
+
+Once you have installed the gem, you should have access to the "marvin" command:
+
+  $ marvin --help
+  
+You can create a new marvin folder:
+
+  $ marvin create my_marvin_project
+  
+Then simply edit your settings in the +config/settings.yml+
+
+  default:
+    name: "My Marvin Bot"
+    server: irc.freenode.net
+    port: 6667
+    channel: "#marvin-testing"
+    use_logging: false
+    datastore_location: tmp/datastore.json
+  development:
+    user: MarvinBot
+    name: MarvinBot
+    nick:  MarvinBot3000
+  production:
+    deployed: false
+
+You can use the defaults or configure it. By default your marvin bot will not 
+do any logging. You will need to set that up. From this point you can begin
+running the bot as a daemon or as a console application:
+
+  $ ./script/run
+
+The bot should join the specified channel and will resond to some simple
+commands by default:
+
+  > MarvinBot3000: hello
+  > YourName: Hola!
+
 h2. Marvin::Base - A handler starting point
 
 The first, Marvin::Base provides a base set of methods (e.g. say,
