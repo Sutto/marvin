@@ -74,8 +74,8 @@ running the bot as a daemon or as a console application:
 The bot should join the specified channel and will resond to some simple
 commands by default:
 
-  |&lt;YourName&gt; MarvinBot3000: hello
-  |&lt;MarvinBot3000&gt; YourName: Hola!
+  *YourName*: MarvinBot3000: hello
+  *MarvinBot3000*: YourName: Hola!
 
 h2. Marvin::Base - A handler starting point
 
