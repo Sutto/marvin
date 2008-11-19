@@ -55,6 +55,20 @@ module Marvin
         self.event_handlers_for(name, false) << blk
       end
       
+      def on_numeric(value, method_name = nil, &blk)
+        if value.is_a?(Numeric)
+          new_value = "%03d" % value
+        else
+          new_value = Marvin::IRC::Replies[value]
+        end
+        if new_value.nil?
+          logger.error "The numeric '#{value}' was undefined"
+        else
+          blk = proc { self.send(method_name.to_sym) } if method_name.respond_to?(:to_sym) && blk.blank?
+          self.event_handlers_for(:"incoming_numeric_#{new_value}", false) << blk
+        end
+      end
+      
       # Register's in the IRC Client callback chain.
       def register!(parent = Marvin::Settings.default_client)
         return if self == Marvin::Base # Only do it for sub-classes.
@@ -74,14 +88,20 @@ module Marvin
     def handle(message, options)
       begin
         self.setup_defaults(options)
+        process_numeric if message == :incoming_numeric
         h = self.class.event_handlers_for(message)
-        h.each do |handle|
-          self.instance_eval &handle
-        end
+        h.each { |handle| self.instance_eval(&handle) }
       rescue Exception => e
         logger.fatal "Exception processing handle #{message}"
         Marvin::ExceptionTracker.log(e)
       end
+    end
+    
+    def process_numeric
+      name = :"incoming_numeric_#{options.code}"
+      events = self.class.event_handlers_for(name)
+      logger.debug "Dispatching #{events.size} events for #{name}"
+      events.each { |eh| self.instance_eval(&eh) }
     end
     
     def say(message, target = self.target)

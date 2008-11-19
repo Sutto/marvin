@@ -10,9 +10,9 @@ module Marvin
       alias chan channel_name
       
       def arguments(input)
-        prefix, *ending = input.split(":")
+        prefix, ending = input.split(":", 2)
         prefix = prefix.split(" ")
-        prefix << ending.join(":").strip
+        prefix << ending unless ending.blank?
         return prefix
       end
 

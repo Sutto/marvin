@@ -66,7 +66,7 @@ module Marvin::IRC
       end
       
       def receive_line(line)
-        #Marvin::Logger.debug "<< #{line.strip}"
+        Marvin::Logger.debug "<< #{line.strip}"
         self.client.receive_line(line)
       end
       
@@ -78,7 +78,7 @@ module Marvin::IRC
     end
 
     def send_line(*args)
-      #args.each { |line| Marvin::Logger.debug ">> #{line.strip}" }
+      args.each { |line| Marvin::Logger.debug ">> #{line.strip}" }
       em_connection.send_data *args
     end
     
