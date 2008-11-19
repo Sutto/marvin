@@ -1,4 +1,5 @@
 require 'yaml'
+require 'eventmachine'
 
 module Marvin
   class Settings
@@ -23,12 +24,7 @@ module Marvin
       def setup!(options = {})
         self.environment ||= "development"
         self.configuration = {}
-        self.default_client ||= begin
-                                  require 'eventmachine'
-                                  Marvin::IRC::Client
-                                rescue LoadError
-                                  Marvin::IRC::SocketClient
-                                end
+        self.default_client ||= Marvin::IRC::Client
         self.default_parser ||= Marvin::Parsers::RegexpParser
         loaded_yaml = YAML.load_file(root / "config/settings.yml")
         loaded_options = loaded_yaml["default"].

@@ -48,9 +48,9 @@ module Marvin::IRC
     attr_accessor :em_connection
     
     class EMConnection < EventMachine::Protocols::LineAndTextProtocol
-      attr_accessor :client
+      attr_accessor :client, :server, :port
       
-      def initialize
+      def initialize(*args)
         super
         self.client = Marvin::IRC::Client.new
         self.client.em_connection = self
@@ -65,12 +65,19 @@ module Marvin::IRC
       end
       
       def receive_line(line)
+        Marvin::Logger.debug "<< #{line}"
         self.client.receive_line(line)
+      end
+      
+      def update_client_info!
+        self.client.server = self.server
+        self.client.port   = self.port
       end
       
     end
 
     def send_line(*args)
+      args.each { |line| Marvin::Logger.debug ">> #{line}" }
       em_connection.send_data *args
     end
     
@@ -84,6 +91,18 @@ module Marvin::IRC
         logger.debug "Connecting to #{self.configuration.server}:#{self.configuration.port}"
         EventMachine::connect self.configuration.server, self.configuration.port, Marvin::IRC::Client::EMConnection
       end
+    end
+    
+    def self.connect(server, port, channels = [])
+      logger.info "Connecting to #{server}:#{port} - Channels: #{channels.join(", ")}"
+      EventMachine::connect(server, port, Marvin::IRC::Client::EMConnection) do |conn|
+        Marvin::Logger.info "Setting details for #{server}:#{port}"
+        conn.server = server
+        conn.port   = port
+        conn.client.default_channels = channels
+        conn.update_client_info!
+      end
+      logger.info "Connection created for #{server}:#{port}"
     end
     
     def self.stop
