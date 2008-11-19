@@ -55,7 +55,7 @@ module Marvin
         # call.
         self.handlers.each do |handler|
           if handler.respond_to?(full_handler_name)
-            handler.sent(full_handler_name, opts)
+            handler.send(full_handler_name, opts)
           else
             handler.handle name, opts
           end
@@ -64,7 +64,10 @@ module Marvin
       # catch it and continue on our way. In essence, we
       # stop the dispatch of events to the next set of the
       # handlers.
-      rescue HaltHandlerProcessing
+      rescue HaltHandlerProcessing => e
+        Marvin::Logger.info "Halting processing chain"
+      rescue Exception => e
+        Marvin::ExceptionTracker.log(e)
       end
       
     end

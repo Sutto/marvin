@@ -88,7 +88,6 @@ module Marvin
     def handle(message, options)
       begin
         self.setup_defaults(options)
-        process_numeric if message == :incoming_numeric
         h = self.class.event_handlers_for(message)
         h.each { |handle| self.instance_eval(&handle) }
       rescue Exception => e
@@ -97,7 +96,8 @@ module Marvin
       end
     end
     
-    def process_numeric
+    def handle_incoming_numeric(opts)
+      self.handle(:incoming_numeric, opts)
       name = :"incoming_numeric_#{options.code}"
       events = self.class.event_handlers_for(name)
       logger.debug "Dispatching #{events.size} events for #{name}"
