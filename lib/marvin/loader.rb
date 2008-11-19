@@ -42,6 +42,7 @@ module Marvin
     end
     
     def run!
+      Marvin::Options.parse!
       self.setup_defaults
       self.load_settings
       self.load_handlers

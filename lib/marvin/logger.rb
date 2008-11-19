@@ -7,7 +7,7 @@ module Marvin
       
       def setup
         log_path = Marvin::Settings.root / "log/#{Marvin::Settings.environment}.log"
-        self.logger ||= new(log_path, :debug, !Marvin::Settings.daemon?)
+        self.logger ||= new(log_path, Marvin::Settings.log_level, Marvin::Settings.verbose)
       end
       
       def method_missing(name, *args, &blk)

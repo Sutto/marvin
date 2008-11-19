@@ -4,7 +4,11 @@ require 'eventmachine'
 module Marvin
   class Settings
     
-    cattr_accessor :environment, :configuration, :is_setup, :default_client, :handler_folder, :default_parser
+    cattr_accessor :environment, :configuration, :is_setup, :default_client,
+                   :handler_folder, :default_parser, :log_level, :verbose
+                   
+    self.verbose   = false
+    self.log_level = :info
     
     class << self
       
