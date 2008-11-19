@@ -81,9 +81,6 @@ module Marvin
       register_event :quit,    /^\:(.+)\!\~?(.+)\@(.+) QUIT :?(.+?)$/i,
                      :nick, :ident, :host, :message
                    
-      register_event :nick_taken, /^\:(\S+) 433 \* (\w+) :(.+)$/,
-                     :server, :target, :message
-                   
       register_event :ping,   /^\:(.+)\!\~?(.+)\@(.+) PING (.*)$/,
                      :nick, :ident, :host, :data
                      

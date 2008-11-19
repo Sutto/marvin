@@ -11,10 +11,11 @@ module Marvin
       self.server           = opts.delete(:server)
       self.port             = opts.delete(:port)
       self.default_channels = opts.delete(:channels)
+      self.nicks            = (opts.delete(:nicks) || []).to_a
     end
     
     cattr_accessor :events, :configuration, :logger, :is_setup, :connections
-    attr_accessor  :channels, :nickname, :server, :port
+    attr_accessor  :channels, :nickname, :server, :port, :nicks
     
     # Set the default values for the variables
     self.events                 = []
@@ -85,16 +86,10 @@ module Marvin
       logger.info "About to handle post init"
       # IRC Connection is establish so we send all the required commands to the server.
       logger.info "Setting default nickname"
-      default_nickname = self.configuration.nick || self.configuration.nicknames.shift
+      default_nickname = self.nicks.shift
       nick default_nickname
       logger.info "sending user command"
       command :user, self.configuration.user, "0", "*", Marvin::Util.last_param(self.configuration.name)
-      # If a password is specified, we will attempt to message
-      # NickServ to identify ourselves.
-      say ":IDENTIFY #{self.configuration.password}", "NickServ" unless self.configuration.password.blank?
-      # Join the default channels IF they're already set
-      # Note that Marvin::IRC::Client.connect will set them AFTER this stuff is run.
-      self.default_channels.each { |c| self.join(c) }
     rescue Exception => e
       Marvin::ExceptionTracker.log(e)
     end
@@ -104,28 +99,18 @@ module Marvin
     end
     
     def default_channels=(channels)
-      logger.info "Channels >> #{channels.inspect}"
       @default_channels = channels.to_a.map { |c| c.to_s }
     end
-   
-    # The default handler for when a users nickname is taken on
-    # on the server. It will attempt to get the nicknickname from
-    # the nicknames part of the configuration (if available) and
-    # will then call #nick to change the nickname.
-    def handle_incoming_nick_taken(opts = {})
-      logger.info "Nick Is Taken"
-      logger.info "Available Nicknames: #{self.configuration.nicknames.to_a.join(", ")}"
-      available_nicknames = self.configuration.nicknames.to_a 
-      if available_nicknames.length > 0
-        logger.info "Getting next nickname to switch"
-        next_nick = available_nicknames.shift # Get the next nickname
-        self.configuration.nicknames = available_nicknames
-        logger.info "Attemping to set nickname to #{new_nick}"
-        nick next_nick
-      else
-        logger.info "No Nicknames available - QUITTING"
-        quit
+    
+    def nicks
+      if @nicks.blank? && !@nicks_loaded
+        logger.info "Setting default nick list"
+        @nicks = []
+        @nicks << self.configuration.nick
+        @nicks += self.configuration.nicks.to_a unless self.configuration.nicks.blank?
+        @nicks_loaded
       end
+      return @nicks
     end
     
     # The default response for PING's - it simply replies
@@ -138,9 +123,43 @@ module Marvin
     # TODO: Get the correct mapping for a given
     # Code.
     def handle_incoming_numeric(opts = {})
+      case opts[:code]
+        when Marvin::IRC::Replies[:RPL_WELCOME]
+          handle_welcome
+        when Marvin::IRC::Replies[:ERR_NICKNAMEINUSE]
+          handle_nick_taken
+      end
       code = opts[:code].to_i
       args = Marvin::Util.arguments(opts[:data])
       dispatch :incoming_numeric_processed, :code => code, :data => args
+    end
+    
+    def handle_welcome
+      logger.info "Say hello to my little friend - Got welcome"
+      # If a password is specified, we will attempt to message
+      # NickServ to identify ourselves.
+      say ":IDENTIFY #{self.configuration.password}", "NickServ" unless self.configuration.password.blank?
+      # Join the default channels IF they're already set
+      # Note that Marvin::IRC::Client.connect will set them AFTER this stuff is run.
+      self.default_channels.each { |c| self.join(c) }
+    end
+    
+    # The default handler for when a users nickname is taken on
+    # on the server. It will attempt to get the nicknickname from
+    # the nicknames part of the configuration (if available) and
+    # will then call #nick to change the nickname.
+    def handle_nick_taken
+      logger.info "Nickname '#{self.nickname}' on #{self.server} taken, trying next." 
+      logger.info "Available Nicknames: #{self.nicks.empty? ? "None" : self.nicks.join(", ")}"
+      if !self.nicks.empty?
+        logger.info "Getting next nickname to switch"
+        next_nick = self.nicks.shift # Get the next nickname
+        logger.info "Attemping to set nickname to '#{next_nick}'"
+        nick next_nick
+      else
+        logger.fatal "No Nicknames available - QUITTING"
+        quit
+      end
     end
     
     ## General IRC Functions
@@ -153,7 +172,7 @@ module Marvin
       # First, get the appropriate command
       name = name.to_s.upcase
       args = args.flatten.compact
-      irc_command = "#{name} #{args.join(" ").strip} \r\n"
+      irc_command = "#{name} #{args.join(" ").strip}\r\n"
       send_line irc_command
     end
     

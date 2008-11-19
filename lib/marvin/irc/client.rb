@@ -60,20 +60,17 @@ module Marvin::IRC
       
       def post_init
         client.process_connect
+        super
       end
 
       def unbind
         client.process_disconnect
+        super
       end
       
       def receive_line(line)
         Marvin::Logger.debug "<< #{line.strip}"
         self.client.receive_line(line)
-      end
-      
-      def update_client_info!
-        self.client.server = self.server
-        self.client.port   = self.port
       end
       
     end
@@ -91,6 +88,7 @@ module Marvin::IRC
       self.setup # So we have options etc
       settings = YAML.load_file(Marvin::Settings.root / "config/connections.yml")
       if settings.is_a?(Hash)
+        EventMachine.epoll
         EventMachine::run do
           settings.each do |server, options|
             channels = (options["channels"] || []).to_a
