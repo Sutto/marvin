@@ -115,11 +115,11 @@ module Marvin
     
     # Determines whether the previous message was inside a channel.
     def from_channel?
-      self.target && self.target[0] == ?#
+      self.target && [?#, ?&].include?(self.target[0])
     end
     
     def addressed?
-      self.from_user? || options.message.split(" ").first.downcase == "#{self.client.nickname.downcase}:"
+      self.from_user? || options.message =~ /^#{self.client.nickname.downcase}:\s+/i
     end
     
     def setup_defaults(options)
