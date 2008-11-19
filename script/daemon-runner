@@ -4,7 +4,7 @@ require 'daemons'
 
 DIR = File.join(File.dirname(__FILE__), "..")
 
-Daemons.run(File.join(DIR, "script/run --is-daemon"),
+Daemons.run(File.join(DIR, "script/client"),
             {:mode => :exec,
              :dir => DIR,
              :dir_mode => :normal,

@@ -45,10 +45,10 @@ if ARGV.length >= 1 && !["start", "stop", "run", "restart"].include?(ARGV[0])
   puts "Writing setup.rb"
   copy "config/setup.rb"
   
-  puts "Copying start script - script/run"
-  copy "script/run"
+  puts "Copying start scripts"
+  copy "script/client"
   copy "script/daemon-runner"
-  FileUtils.chmod 0755, j(DEST, "script/run")
+  FileUtils.chmod 0755, j(DEST, "script/client")
   FileUtils.chmod 0755, j(DEST, "script/daemon-runner")
   
   puts "Copying example handler"
@@ -62,9 +62,9 @@ elsif ARGV.length >= 1
   end
   exec "script/daemon-runner #{ARGV.map {|a| a.include?(" ") ? "\"#{a}\"" : a }.join(" ")}"
 else
-  if !File.exist?("script/run")
+  if !File.exist?("script/client")
     puts "Woops! This isn't a marvin directory."
     exit(1)
   end
-  exec "script/run"
+  exec "script/client"
 end
