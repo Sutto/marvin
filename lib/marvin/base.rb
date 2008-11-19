@@ -33,7 +33,25 @@ module Marvin
         end
       end
       
-      def on_event(name, &blk)
+      # Registers a block or method to be called when
+      # a given event is occured.
+      # == Examples
+      #
+      #   on_event :incoming_message, :process_commands
+      # 
+      # Will call process_commands the current object
+      # every time incoming message is called.
+      #
+      #   on_event :incoming_message do
+      #     Marvin::Logger.debug ">> #{options.inspect}"
+      #   end
+      #
+      # Will invoke the block every time an incoming message
+      # is processed.
+      def on_event(name, name = nil, &blk)
+        # If the name is set and it responds to :to_sym
+        # and no block was passed in.
+        blk = proc { self.send(name.to_sym) } if name.respond_to?(:to_sym) && blk.blank?
         self.event_handlers_for(name, false) << blk
       end
       

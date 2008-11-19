@@ -26,9 +26,11 @@ module Marvin
     module InstanceMethods
       
       # Returns the handlers registered on this class,
-      # used inside +dispatch+.
+      # used inside +dispatch+. Note that it will call
+      # dup on each of the objects to get a new instance.
+      # please ensure your object acts accordingly.
       def handlers
-        self.class.handlers
+        @handlers ||= self.class.handlers.map { |h| h.dup }
       end
       
       # Dispatch an 'event' with a given name to the handlers

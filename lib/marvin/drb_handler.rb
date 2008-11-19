@@ -1,7 +1,12 @@
 module Marvin
+  class DRBHandler
     
-    def handle(message, options)
+    attr_accessor :port
+    
+    # Will do the appropriate things to dispatch
+    # a message to the different DRB clients.
+    def handle(message, opts = {})
     end
-    
+
   end
 end
