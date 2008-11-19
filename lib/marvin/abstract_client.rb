@@ -12,10 +12,11 @@ module Marvin
       self.port             = opts.delete(:port)
       self.default_channels = opts.delete(:channels)
       self.nicks            = (opts.delete(:nicks) || []).to_a
+      self.pass             = opts.delete(:pass)
     end
     
     cattr_accessor :events, :configuration, :logger, :is_setup, :connections
-    attr_accessor  :channels, :nickname, :server, :port, :nicks
+    attr_accessor  :channels, :nickname, :server, :port, :nicks, :pass
     
     # Set the default values for the variables
     self.events                 = []
@@ -83,7 +84,12 @@ module Marvin
     # to be in and if a password is specified in the configuration,
     # it will also attempt to identify us.
     def handle_client_connected(opts = {})
-      logger.info "About to handle post init"
+      logger.info "About to handle client connected"
+      # If the pass is set
+      unless self.pass.blank?
+        logger.info "Sending pass for connection"
+        command :pass, self.pass
+      end
       # IRC Connection is establish so we send all the required commands to the server.
       logger.info "Setting default nickname"
       default_nickname = self.nicks.shift

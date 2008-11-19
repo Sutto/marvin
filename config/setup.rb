@@ -10,5 +10,6 @@ Marvin::Loader.before_connecting do
   # LoggingHandler.register! if Marvin::Settings.use_logging
   
   HelloWorld.register!
+  DebugHandler.register!
   
 end
