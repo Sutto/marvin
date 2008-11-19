@@ -7,6 +7,12 @@ module Marvin
     
     include Marvin::Dispatchable
     
+    def initialize(opts = {})
+      self.server           = opts.delete(:server)
+      self.port             = opts.delete(:port)
+      self.default_channels = opts.delete(:channels)
+    end
+    
     cattr_accessor :events, :configuration, :logger, :is_setup, :connections
     attr_accessor  :channels, :nickname, :server, :port
     
@@ -98,8 +104,8 @@ module Marvin
     end
     
     def default_channels=(channels)
+      logger.info "Channels >> #{channels.inspect}"
       @default_channels = channels.to_a.map { |c| c.to_s }
-      (@default_channels - self.channels).each { |c| self.join(c) }
     end
    
     # The default handler for when a users nickname is taken on

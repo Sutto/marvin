@@ -52,8 +52,9 @@ module Marvin::IRC
       attr_accessor :client, :server, :port
       
       def initialize(*args)
-        super
-        self.client = Marvin::IRC::Client.new
+        opts = args.extract_options!
+        super(*args)
+        self.client = Marvin::IRC::Client.new(opts)
         self.client.em_connection = self
       end
       
@@ -102,15 +103,10 @@ module Marvin::IRC
       end
     end
     
-    def self.connect(server, port, channels = [])
+    def self.connect(server, port, channels = [], extra_opts = {})
       logger.info "Connecting to #{server}:#{port} - Channels: #{channels.join(", ")}"
-      EventMachine::connect(server, port, Marvin::IRC::Client::EMConnection) do |conn|
-        Marvin::Logger.info "Setting details for #{server}:#{port}"
-        conn.server = server
-        conn.port   = port
-        conn.client.default_channels = channels
-        conn.update_client_info!
-      end
+      opts = {:channels => channels, :server => server, :port => port}.merge(extra_opts)
+      EventMachine::connect(server, port, Marvin::IRC::Client::EMConnection, opts)
       logger.info "Connection created for #{server}:#{port}"
     end
     
