@@ -48,10 +48,10 @@ module Marvin
       #
       # Will invoke the block every time an incoming message
       # is processed.
-      def on_event(name, name = nil, &blk)
+      def on_event(name, method_name = nil, &blk)
         # If the name is set and it responds to :to_sym
         # and no block was passed in.
-        blk = proc { self.send(name.to_sym) } if name.respond_to?(:to_sym) && blk.blank?
+        blk = proc { self.send(method_name.to_sym) } if method_name.respond_to?(:to_sym) && blk.blank?
         self.event_handlers_for(name, false) << blk
       end
       

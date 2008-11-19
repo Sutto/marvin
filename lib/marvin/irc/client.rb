@@ -45,6 +45,7 @@ module Marvin::IRC
   # the class method, register_handler with the
   # handler as the only argument.
   class Client < Marvin::AbstractClient
+    cattr_accessor :stopped
     attr_accessor :em_connection
     
     class EMConnection < EventMachine::Protocols::LineAndTextProtocol
@@ -65,7 +66,7 @@ module Marvin::IRC
       end
       
       def receive_line(line)
-        Marvin::Logger.debug "<< #{line}"
+        #Marvin::Logger.debug "<< #{line.strip}"
         self.client.receive_line(line)
       end
       
@@ -77,7 +78,7 @@ module Marvin::IRC
     end
 
     def send_line(*args)
-      args.each { |line| Marvin::Logger.debug ">> #{line}" }
+      #args.each { |line| Marvin::Logger.debug ">> #{line.strip}" }
       em_connection.send_data *args
     end
     
@@ -87,9 +88,17 @@ module Marvin::IRC
     # networking portion of the IRC Client.
     def self.run
       self.setup # So we have options etc
-      EventMachine::run do
-        logger.debug "Connecting to #{self.configuration.server}:#{self.configuration.port}"
-        EventMachine::connect self.configuration.server, self.configuration.port, Marvin::IRC::Client::EMConnection
+      settings = YAML.load_file(Marvin::Settings.root / "config/connections.yml")
+      if settings.is_a?(Hash)
+        EventMachine::run do
+          settings.each do |server, options|
+            channels = (options["channels"] || []).to_a
+            port     = (options["port"] || 6667)
+            connect server, port, channels
+          end
+        end
+      else
+        logger.fatal "config/connections.yml couldn't be loaded. Exiting"
       end
     end
     
@@ -106,11 +115,13 @@ module Marvin::IRC
     end
     
     def self.stop
+      return if self.stopped
       logger.debug "Telling all connections to quit"
       self.connections.dup.each { |connection| connection.quit }
       logger.debug "Telling Event Machine to Stop"
       EventMachine::stop_event_loop
       logger.debug "Stopped."
+      self.stopped = true
     end
     
     # Registers a callback handle that will be periodically run.

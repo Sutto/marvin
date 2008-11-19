@@ -32,6 +32,7 @@ module Marvin
     end
     
     def process_disconnect
+      logger.info "Handling disconnect for #{self.server}:#{self.port}"
       self.connections.delete(self) if self.connections.include?(self)
       dispatch :client_disconnected
       Marvin::Loader.stop! if self.connections.blank?
@@ -85,7 +86,8 @@ module Marvin
       # If a password is specified, we will attempt to message
       # NickServ to identify ourselves.
       say ":IDENTIFY #{self.configuration.password}", "NickServ" unless self.configuration.password.blank?
-      # Join the default channels
+      # Join the default channels IF they're already set
+      # Note that Marvin::IRC::Client.connect will set them AFTER this stuff is run.
       self.default_channels.each { |c| self.join(c) }
     rescue Exception => e
       Marvin::ExceptionTracker.log(e)
@@ -97,6 +99,7 @@ module Marvin
     
     def default_channels=(channels)
       @default_channels = channels.to_a.map { |c| c.to_s }
+      (@default_channels - self.channels).each { |c| self.join(c) }
     end
    
     # The default handler for when a users nickname is taken on

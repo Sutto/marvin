@@ -7,7 +7,8 @@ begin
     s.homepage    = "http://blog.ninjahideout.com/"
     s.description = "Marvin is a Ruby IRC library / framework for ultimate awesomeness and with an evented design."
     s.authors     = ["Darcy Laycock"]
-    s.files       = FileList["[A-Z]*.*", "{bin,generators,lib,test,spec,script,handlers}/**/*"] + ["config/setup.rb", "config/settings.yml.sample"]
+    s.files       = FileList["[A-Z]*.*", "{bin,generators,lib,test,spec,script,handlers}/**/*"] + ["config/setup.rb", "config/settings.yml.sample", "config/connections.yml.sample"]
+    s.executables = "marvin"
   end
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"

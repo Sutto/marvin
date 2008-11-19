@@ -39,6 +39,9 @@ if ARGV.length >= 1 && !["start", "stop", "run", "restart"].include?(ARGV[0])
   puts "Writing Settings file"
   copy "config/settings.yml.sample", "config/settings.yml"
   
+  puts "Writing Connections file"
+  copy "config/connections.yml.sample", "config/connections.yml"
+  
   puts "Writing setup.rb"
   copy "config/setup.rb"
   
