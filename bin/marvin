@@ -51,8 +51,9 @@ if ARGV.length >= 1 && !["start", "stop", "run", "restart"].include?(ARGV[0])
   FileUtils.chmod 0755, j(DEST, "script/client")
   FileUtils.chmod 0755, j(DEST, "script/daemon-runner")
   
-  puts "Copying example handler"
+  puts "Copying example handlers"
   copy "handlers/hello_world.rb"
+  copy "handlers/debug_handler.rb"
   
   puts "Done!"
 elsif ARGV.length >= 1

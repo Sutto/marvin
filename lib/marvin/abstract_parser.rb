@@ -7,12 +7,24 @@ module Marvin
       return self.new(line.strip).to_event
     end
     
+    attr_accessor :line, :command, :event
+    
+    # Instantiates a parser instance, attempts to 
+    # parse it for it's command and it's event.
     def initialize(line)
-      raise NotImplementedError, "Not implemented in an abstract parser"
+      self.line = line
+      self.command = self.class.parse!(line)
+      self.event = self.command.to_event unless self.command.blank?
     end
     
     def to_event
-      raise NotImplementedError, "Not implemented in an abstract parser"
+      self.event
+    end
+    
+    private
+    
+    def self.parse!(line)
+      raise NotImplementedError, "Must be implemented in a subclass"
     end
     
   end
