@@ -7,39 +7,24 @@ particular need.
 
 h2. Background
 
-Marvin is an event driven framework in two ways - for one, it uses
-EventMachine for all networking purposes - as a result, it's both
-relatively stable / reliable and also powerful.
+The library is designed to be event driven in that it:
+  
+  # Uses the EventMachine library for all network connections
+  # It uses an architecture based on event listeners - called 'handlers'
 
-Following on from this, the irc library is event driven. At the base
-level, you choose a client (By Default, Marvin::IRC::Client.) and then you register
-any number of handlers. Whenever an event happens e.g. an incoming message,
-a connection unbinding or event just post_init, each handler is notified
-and given a small set of details about the event.
-
-Handlers are very simple - in fact, you could get away with registering
-Object.new as a handler.
-
-To function, handlers only require one method: handle - which takes
-two options. an event name (e.g. :incoming_message) and a hash
-of the aforementioned attributes / details. This data can then be processed.
-Alternatively, if a handler has a "handle_[event_name]" method (e.g.
-handle_incoming_message), it will instead be called. Also, if client=
-is implemented this will be called when the client is setup containing
-a reference to said client. This is used to that the handler can
-respond to actions.
-
-Like Rack for HTTP, Marvin provides a fair amount of example
-handlers for simple stuff inside IRC.
+It's been heavily influenced by rack in terms of design, making it easy
+to do things like chain handlers, write your own functionality and most
+of all making it easy to implement.
 
 h2. Getting Started
 
 The easiest way to get started with Marvin is by installing the Marvin gem. To
 do this, make sure Github is added to your gem sources (and you are using
-rubygems >= 1.2.0):
+rubygems >= 1.2.0) (by default, substitute username for Sutto):
 
   $ gem sources -a http://gems.github.com 
   $ sudo gem install username-marvin
+  
 
 Once you have installed the gem, you should have access to the "marvin" command:
 
@@ -52,30 +37,47 @@ You can create a new marvin folder:
 Then simply edit your settings in the +config/settings.yml+
 
   default:
-    name: "My Marvin Bot"
-    server: irc.freenode.net
-    port: 6667
-    channel: "#marvin-testing"
+    name: Marvin
     use_logging: false
     datastore_location: tmp/datastore.json
   development:
     user: MarvinBot
     name: MarvinBot
-    nick:  MarvinBot3000
-  production:
-    deployed: false
+    nick:  Marvin
 
-You can use the defaults or configure it. By default your marvin bot will not 
-do any logging. You will need to set that up. From this point you can begin
-running the bot as a daemon or as a console application:
+You can use the defaults or configure it. The datastore location
+specifies a relative path where a simple json-backed key value
+store will store persistent information for your client (if chosen).
+Once that's been done, you'll want to setup some connections by editing
++config/connections.yml+, using the following format:
 
-  $ ./script/run
+  "server-address":
+    post: 6667 # Defaults to 6667
+    channels:
+      - "#marvin-testing"
+      - "#relayrelay"
+    nicks:
+      - List
+      - Of
+      - Alternative
+      - Nicks
+  "another-server-address":
+    post: 6667 # Defaults to 6667
+    channels:
+      - "#helloworld"
 
-The bot should join the specified channel and will resond to some simple
+Which will let marvin connect to multiple servers - autojoining the specific rooms.
+Next, to get started you can simply type:
+
+  $ ./script/client
+
+The bot should join the specified channel and will respond to some simple
 commands by default:
 
   *YourName*: MarvinBot3000: hello
   *MarvinBot3000*: YourName: Hola!
+  
+As defined in handlers/hello_world.rb
 
 h2. Marvin::Base - A handler starting point
 
@@ -98,13 +100,15 @@ openstruct version of the details. e.g.
 Or the like. Also, the halt! method can be called in any subclass to
 halt the handler callback chain.
 
+You also get access to the class method +on_numeric+ which makes
+it relatively easy to respond to a specific numeric reply.
+
 h2. Marvin::CommandHandler - Ridiculously easy Bots
 
 With Marvin::CommandHandler, you get to define seriously
 simple classes which can act as a simple bot. It takes
 great inspiration from "MatzBot":http://github.com/defunkt/matzbot/tree/master
-which was actually one of the main inspirations for
-creating marvin.
+to make it as easy as possible to make a simple bot
 
 To write a CommandHandler, you simply create a subclass
 (ala ActiveRecord::Base), define a few methods and then
@@ -120,7 +124,15 @@ just use the "exposes" class method. e.g.
 Where data is an array of parameters. exposed methods will be called
 when they match the following pattern:
 
-  Botname: <exposed-method> <space-seperated-list-meaning-data>
+  Botname: *exposed-method* *space-seperated-list-meaning-data*
+  
+i.e., the above handler could be called in IRC as such:
+
+  YourBotsName: hello
+  
+or, even easier, by PM'ing the bot with:
+  
+  hello
 
 h2. Marvin::MiddleMan - Introducing middleware
 
@@ -128,9 +140,10 @@ Marvin::MiddleMan lets you insert middleware between handlers
 and you're client - letting you do things such as translating
 all messages on the fly. It's build to be extensible and is
 relatively simple to use. On any Marvin::Base subclass (baring
-the MiddleMan itself), you can simple use the normal methods
-of registering a handler with one exception - you now pass
-one argument, the class reference to your middleman class.
+the MiddleMan itself), using a middle man is easy - you simply
+call the register! class method with an option argument. e.g:
+
+  HelloWorld.register! Marvin::MiddleMan
 
 h2. Marvin::DataStore - A dead simple persistent hash store
 
@@ -149,7 +162,14 @@ If you're inside a Marvin::Base subclass it's even easier. You can get a cattr_a
 style accessor for free - just use the "uses_datastore" method. e.g:
 
   class X < Marvin::Base
-    uses_datastore "datastore-global-key", :cattr_name
+    uses_datastore "datastore-global-key", :something
   end
   
-Then, self.cattr_name will point to the data store instance.
+Then, self.something will point to the data store - letting you do
+things like:
+
+  def hello(data)
+    (self.something[from] ||= 0) += 1
+  end
+  
+which will persist the count between each session.
