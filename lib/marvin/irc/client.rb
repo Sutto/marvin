@@ -90,10 +90,11 @@ module Marvin::IRC
       if settings.is_a?(Hash)
         EventMachine.epoll
         EventMachine::run do
-          settings.each do |server, options|
-            channels = (options["channels"] || []).to_a
-            port     = (options["port"] || 6667)
-            connect server, port, channels
+          settings.each do |name, options|
+            settings = options.symbolize_keys!
+            settings[:server] ||= name
+            settings.reverse_merge!(:port => 6667, :channels => [])
+            connect settings
           end
         end
       else
@@ -101,11 +102,10 @@ module Marvin::IRC
       end
     end
     
-    def self.connect(server, port, channels = [], extra_opts = {})
-      logger.info "Connecting to #{server}:#{port} - Channels: #{channels.join(", ")}"
-      opts = {:channels => channels, :server => server, :port => port}.merge(extra_opts)
-      EventMachine::connect(server, port, Marvin::IRC::Client::EMConnection, opts)
-      logger.info "Connection created for #{server}:#{port}"
+    def self.connect(opts = {})
+      logger.info "Connecting to #{opts[:server]}:#{opts[:port]} - Channels: #{opts[:channels].join(", ")}"
+      EventMachine::connect(opts[:server], opts[:port], EMConnection, opts)
+      logger.info "Connection created for #{opts[:server]}:#{opts[:port]}"
     end
     
     def self.stop

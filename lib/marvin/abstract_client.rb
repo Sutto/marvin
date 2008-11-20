@@ -8,11 +8,11 @@ module Marvin
     include Marvin::Dispatchable
     
     def initialize(opts = {})
-      self.server           = opts.delete(:server)
-      self.port             = opts.delete(:port)
-      self.default_channels = opts.delete(:channels)
-      self.nicks            = (opts.delete(:nicks) || []).to_a
-      self.pass             = opts.delete(:pass)
+      self.server           = opts[:server]
+      self.port             = opts[:port]
+      self.default_channels = opts[:channels]
+      self.nicks            = opts[:nicks] || []
+      self.pass             = opts[:pass]
     end
     
     cattr_accessor :events, :configuration, :logger, :is_setup, :connections
