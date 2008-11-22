@@ -54,12 +54,12 @@ module Marvin::IRC::Server
     
     def rpl(number, *args)
       code = Marvin::IRC::Replies["RPL_#{number.to_s.upcase}"]
-      return command(code, *args)
+      command(code, *args)
     end
     
     def err(number, *args)
       code = Marvin::IRC::Replies["ERR_#{number.to_s.upcase}"]
-      return command(code, *args)
+      command(code, *args)
     end
     
     def command(name, *args)
@@ -67,6 +67,17 @@ module Marvin::IRC::Server
       formatted = [name.to_s.upcase, *args].join(" ")
       formatted = ":#{opts[:prefix]} #{formatted}" if opts[:prefix]
       send_line formatted
+    end
+    
+    def host_name
+      return @host_name unless @host_name.blank?
+      sock_addr = @connection.get_peername
+      begin
+        @host_name = Socket.getnameinfo(sock_addr, Socket::NI_NAMEREQD).first
+      rescue
+        @host_name = Socket.getnameinfo(sock_addr).first
+      end
+      return @host_name
     end
   
   end

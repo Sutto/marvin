@@ -77,6 +77,10 @@ module Marvin::IRC::Server
       return @topic
     end
     
+    def mode(user)
+      @operators.include?(user) ? "@" : ""
+    end
+    
     private
     
     def needs_op?

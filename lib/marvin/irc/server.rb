@@ -26,7 +26,7 @@ module Marvin
       end
       
       # Store each channel
-      ChannelStore = NamedStore(:names, :channel)
+      ChannelStore = NamedStore.new(:names, :channel)
       
       # call start_server w/ the default options
       # and inside an EM::run block.
