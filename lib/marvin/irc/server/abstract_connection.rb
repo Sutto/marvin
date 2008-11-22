@@ -49,6 +49,25 @@ module Marvin::IRC::Server
       end
       
     end
+    
+    private
+    
+    def rpl(number, *args)
+      code = Marvin::IRC::Replies["RPL_#{number.to_s.upcase}"]
+      return command(code, *args)
+    end
+    
+    def err(number, *args)
+      code = Marvin::IRC::Replies["ERR_#{number.to_s.upcase}"]
+      return command(code, *args)
+    end
+    
+    def command(name, *args)
+      opts = args.extract_options!
+      formatted = [name.to_s.upcase, *args].join(" ")
+      formatted = ":#{opts[:prefix]} #{formatted}" if opts[:prefix]
+      send_line formatted
+    end
   
   end
 end

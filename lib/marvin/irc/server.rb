@@ -2,12 +2,31 @@ module Marvin
   module IRC
     module Server
       
+      # Server utilities
+      autoload :NamedStore,         'marvin/irc/server/named_store'
+      autoload :Channel,            'marvin/irc/server/channel'
       # The actual network connection
       autoload :BaseConnection,     'marvin/irc/server/base_connection'
       # An our implementations of protocol-specific stuff.
       autoload :AbstractConnection, 'marvin/irc/server/abstract_connection'
       autoload :UserConnection,     'marvin/irc/server/user_connection'
       autoload :ServerConnection,   'marvin/irc/server/server_connection'
+      
+      # Store each user
+      UserStore = NamedStore.new(:nicks, :user) do
+        def nick_taken?(nick)
+          has_key?(nick)
+        end
+        
+        def each_user_except(user)
+          self.each_user do |u|
+            yield u unless user == u 
+          end
+        end
+      end
+      
+      # Store each channel
+      ChannelStore = NamedStore(:names, :channel)
       
       # call start_server w/ the default options
       # and inside an EM::run block.
