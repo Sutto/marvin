@@ -34,3 +34,29 @@ LINES.each do |line|
   puts ""
   
 end
+
+puts ""
+puts ""
+puts "==============="
+puts "| SPEED TESTS |"
+puts "==============="
+puts ""
+
+width = PARSERS.map { |p| p.name.length }.max + 2
+
+ITERATIONS = 1000
+
+Benchmark.bm(width) do |b|
+  PARSERS.each do |parser|
+    b.report("#{parser.name}: ") do
+      LINES.each do |l|
+        ITERATIONS.times do
+          e = parser.new(l).to_event
+          unless e.nil?
+            e.to_hash # Get a hash
+          end
+        end
+      end
+    end
+  end
+end

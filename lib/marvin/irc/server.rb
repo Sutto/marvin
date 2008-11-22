@@ -19,7 +19,7 @@ module Marvin
       
       # Starts the server with a set of given options
       def self.start_server(opts = {})
-        EventMachine::start_server (opts[:host] || "localhost"), (opts[:port] || 6667), BaseConnection, opts
+        EventMachine::start_server((opts[:host] || "localhost"), (opts[:port] || 6667), BaseConnection, opts)
       end
       
     end
