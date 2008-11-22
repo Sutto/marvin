@@ -3,5 +3,11 @@ module Marvin::IRC::Server
     
     attr_accessor :nick, :host, :ident, :prefix
     
+    # Notify is essentially command
+    # BUT it requires that the prefix is
+    # set.
+    def notify(command, *args)
+    end
+    
   end
 end
