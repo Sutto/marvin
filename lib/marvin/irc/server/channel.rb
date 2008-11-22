@@ -60,19 +60,19 @@ module Marvin::IRC::Server
     end
     
     def message(user, message)
-      @members.each { |m| m.notify :privmsg, @name, message, :prefix => user.prefix unless user == m }
-      dispatch :outgoing_message, :target => @name, :user => user, :message => message
+      @members.each { |m| m.notify :privmsg, @name, ":#{message}", :prefix => user.prefix unless user == m }
+      dispatch :outgoing_message, :target => self, :user => user, :message => message
     end
     
     def notice(user, message)
-      @members.each { |m| m.notify :notice, @name, message, :prefix => user.prefix unless user == m }
-      dispatch :outgoing_notice, :target => @name, :user => user, :message => message
+      @members.each { |m| m.notify :notice, @name, ":#{message}", :prefix => user.prefix unless user == m }
+      dispatch :outgoing_notice, :target => self, :user => user, :message => message
     end
     
     def topic(user = nil, t = nil)
       return @topic if t.blank?
       @topic = t
-      @members.each { |m| m.notify :topic, @name, t, :prefix => user.prefix }
+      @members.each { |m| m.notify :topic, @name, ":#{t}", :prefix => user.prefix }
       dispatch :outgoing_topic, :target => @name, :user => user, :topic => t
       return @topic
     end

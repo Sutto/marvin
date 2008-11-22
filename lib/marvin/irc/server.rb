@@ -11,6 +11,8 @@ module Marvin
       autoload :AbstractConnection, 'marvin/irc/server/abstract_connection'
       autoload :UserConnection,     'marvin/irc/server/user_connection'
       autoload :ServerConnection,   'marvin/irc/server/server_connection'
+      # Extensions for each part
+      autoload :User,               'marvin/irc/server/user'
       
       # Store each user
       UserStore = NamedStore.new(:nicks, :user) do
