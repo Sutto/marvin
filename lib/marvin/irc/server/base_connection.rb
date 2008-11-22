@@ -7,7 +7,7 @@ module Marvin
         
         # Our initialize method
         def initialize(opts = {})
-          super()
+          super0
           @buffer = []
         end
         

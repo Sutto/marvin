@@ -2,7 +2,7 @@ module Marvin::IRC::Server
   class AbstractConnection
     include Marvin::Dispatchable
     
-    cattr_accessor :connections, :logger
+    cattr_accessor :connections, :logger, :alive
     self.connections = []
     self.logger = Marvin::Logger
     
@@ -26,11 +26,14 @@ module Marvin::IRC::Server
     end
     
     def process_connect
-      # STUB!
+      @alive = true
+      dispatch :client_connected, :client => self
     end
     
     def process_disconnect
       @@connections.delete(self)
+      @alive = false
+      dispatch :client_disconnected, :client => self
     end
     
     class << self
@@ -69,15 +72,15 @@ module Marvin::IRC::Server
       send_line formatted
     end
     
-    def host_name
-      return @host_name unless @host_name.blank?
+    def peer_name
+      return @peer_name unless @peer_name.blank?
       sock_addr = @connection.get_peername
       begin
-        @host_name = Socket.getnameinfo(sock_addr, Socket::NI_NAMEREQD).first
+        @peer_name = Socket.getnameinfo(sock_addr, Socket::NI_NAMEREQD).first
       rescue
-        @host_name = Socket.getnameinfo(sock_addr).first
+        @peer_name = Socket.getnameinfo(sock_addr).first
       end
-      return @host_name
+      return @peer_name
     end
   
   end

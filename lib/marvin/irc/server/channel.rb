@@ -23,7 +23,7 @@ module Marvin::IRC::Server
     
     def add(user)
       @operators << user if needs_op?
-      @members[user.nick] = user
+      @members << user
     end
     
     def remove(user)
