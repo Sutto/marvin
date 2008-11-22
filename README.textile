@@ -79,6 +79,14 @@ commands by default:
   
 As defined in handlers/hello_world.rb
 
+h2. Thanks
+
+Thanks goes out to the following people / projects:
+
+* Jeff Rafter - contributed code and doc changes, now one of the co-developers.
+* epitron / halogrium - For the ragel state machine used in Marvin::Parsers::RagelParser
+* The creator of Ruby-IRCD - the server component is heavily influenced by / part derivative of said work.
+
 h2. Marvin::Base - A handler starting point
 
 The first, Marvin::Base provides a base set of methods (e.g. say,
