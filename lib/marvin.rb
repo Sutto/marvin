@@ -8,6 +8,14 @@ require 'marvin/core_ext'
 require 'marvin/exceptions'
 
 module Marvin
+  module VERSION
+    MAJOR = 0
+    MINOR = 1
+    PATCH = 20081120
+    
+    STRING = [MAJOR, MINOR, PATCH].join(".")
+  end
+  
   autoload :Util,             'marvin/util'
   autoload :Dispatchable,     'marvin/dispatchable'
   autoload :AbstractClient,   'marvin/abstract_client'
@@ -32,14 +40,8 @@ module Marvin
   
   Settings.setup # Load Settings etc.
   
-end
-
-def p(text)
-  res = Marvin::Parsers::SimpleParser.parse(text)
-  if res.blank?
-    puts "Unrecognized Result"
-  else
-    STDOUT.puts "Event: #{res.to_incoming_event_name}"
-    STDOUT.puts "Args:  #{res.to_hash.inspect}"
+  def self.version
+    VERSION::STRING
   end
+  
 end

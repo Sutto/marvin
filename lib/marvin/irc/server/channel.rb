@@ -2,7 +2,14 @@ module Marvin::IRC::Server
   class Channel
     include Marvin::Dispatchable
     
+    cattr_accessor :logger
+    self.logger = Marvin::Logger
+    
     attr_accessor :name, :members, :name, :topic, :operators, :mode
+    
+    def inspect
+      "#<Marvin::IRC::Server::Channel name='#{name}' topic='#{@topic}' members=[#{self.members.map { |m| m.nick.inspect}.join(", ")}]>"
+    end
     
     def initialize(name)
       @name      = name
@@ -10,6 +17,7 @@ module Marvin::IRC::Server
       @operators = []
       @topic     = ""
       @mode      = ""
+      logger.info "Created the channel #{name}"
       dispatch :channel_created, :channel => self
     end
     
@@ -22,6 +30,7 @@ module Marvin::IRC::Server
     end
     
     def add(user)
+      logger.info "Adding user #{user.nick} to #{@name}"
       @operators << user if needs_op?
       @members << user
     end
@@ -36,12 +45,13 @@ module Marvin::IRC::Server
       return false if member?(user)
       # Otherwise, we add a user
       add user
-      @member.each { |m| m.notify :join, user.nick, :prefix => user.prefix }
+      @members.each { |m| m.notify :join, user.nick, :prefix => user.prefix }
       dispatch :outgoing_join, :target => @name, :nick => user.nick
       return true
     end
     
     def part(user, message = nil)
+      logger.debug "Getting part from #{user.inspect} w/ #{message}"
       return false if !member?(user)
       @members.each { |m| m.notify :part, @name, user.nick, message, :prefix => user.prefix }
       remove user

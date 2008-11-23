@@ -5,10 +5,15 @@ module Marvin
     module Server
       class BaseConnection < EventMachine::Protocols::LineAndTextProtocol
         
+        attr_accessor :port, :host, :started_at
+        
         # Our initialize method
         def initialize(opts = {})
-          super0
+          super
           @buffer = []
+          @port = opts[:port]
+          @host = opts[:host]
+          @started_at = opts[:started_at] || Time.now
         end
         
         attr_accessor :connection_implementation, :buffer

@@ -12,7 +12,7 @@ module Marvin
     
     DispatchedEvents = Struct.new(:name, :options)
     
-    def initialize
+    def initialize(opts = {})
       super
       self.incoming_commands = []
       self.outgoing_commands = []

@@ -1,10 +1,10 @@
 module Marvin
   class Loader
     
-    cattr_accessor :setup_block
-    
-    cattr_accessor :start_hooks, :stop_hooks
+    cattr_accessor :start_hooks, :stop_hooks, :setup_block, :type
     self.stop_hooks, self.start_hooks = [], []
+    
+    self.type = :client
     
     def self.before_connecting(&blk)
       self.setup_block = blk
@@ -31,8 +31,13 @@ module Marvin
     
     def load_settings
       Marvin::Settings.setup
-      Marvin::Settings.default_client.configuration = Marvin::Settings.to_hash
-      Marvin::Settings.default_client.setup
+      case Marvin::Loader.type
+      when :client
+        Marvin::Settings.default_client.configuration = Marvin::Settings.to_hash
+        Marvin::Settings.default_client.setup
+      when :server
+      when :console
+      end
     end
     
     def pre_connect_setup
@@ -42,22 +47,23 @@ module Marvin
     end
     
     def run!
-      Marvin::Options.parse!
+      Marvin::Options.parse! unless self.type == :console
       self.setup_defaults
       self.load_settings
       self.load_handlers
       self.pre_connect_setup
       self.start_hooks.each { |h| h.call }
-      Marvin::Settings.default_client.run
+      Marvin::Settings.default_client.run if self.type == :client
     end
     
     def stop!
-      Marvin::Settings.default_client.stop
+      Marvin::Settings.default_client.stop if self.type == :client
       self.stop_hooks.each { |h| h.call }
       Marvin::DataStore.dump!
     end
     
-    def self.run!
+    def self.run!(type = :client)
+      self.type = type.to_sym
       self.new.run!
     end
     

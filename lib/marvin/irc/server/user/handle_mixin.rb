@@ -13,11 +13,8 @@ module Marvin::IRC::Server::User::HandleMixin
 
   def handle_incoming_nick(opts = {})
     nick = opts[:new_nick]
-    if !nick.blank? && !UserStore.nick_taken?(nick.downcase)
-      if @nick.nil?
-        logger.debug "Welcoming new user, assuming their nick is complete"
-        welcome_if_complete!
-      else
+    if !nick.blank? && !Marvin::IRC::Server::UserStore.nick_taken?(nick.downcase)
+      if !(new_nick = @nick.nil?)
         logger.debug "Notifying all users of nick change: #{@nick} => #{nick}"
         # Get all users and let them now we've changed nick from @nick to nick
         users = [self]
@@ -28,14 +25,15 @@ module Marvin::IRC::Server::User::HandleMixin
         dispatch :outgoing_nick, :nick => @nick, :new_nick => nick
       end
       # Update the store values
-      UserStore.delete(@nick.downcase) unless @nick.blank?
-      UserStore[nick.downcase] = self
+      Marvin::IRC::Server::UserStore.delete(@nick.downcase) unless @nick.blank?
+      Marvin::IRC::Server::UserStore[nick.downcase] = self
       # Change the nick and reset the number of attempts
       @nick = nick
       @nick_attempts = 0
       # Finally, update the prefix.
       update_prefix!
-    elsif UserStore[nick.downcase] != self
+      welcome_if_complete! if new_nick
+    elsif Marvin::IRC::Server::UserStore[nick.downcase] != self
       # The nick is taken
       # TODO: Remove hard coded nick attempts limit
       if @nick_attempts > 5
@@ -56,13 +54,13 @@ module Marvin::IRC::Server::User::HandleMixin
     opts[:target].split(",").each do |channel|
       # If the channel name is invalud, let the user known and dispatch
       # the correct event.
-      if channel !~ CHANNEL
+      if channel !~ Marvin::IRC::Server::UserConnection::CHANNEL
         logger.debug "Attempted to join invalid channel name '#{channel}'"
         err :NOSUCHCHANNEL, channel, ":That channel doesn't exist"
         dispatch :invalid_channel_name, :channel => channel, :client => self
         return
       end
-      chan = (ChannelStore[channel.downcase] ||= Channel.new(channel))
+      chan = (Marvin::IRC::Server::ChannelStore[channel.downcase] ||= Marvin::IRC::Server::Channel.new(channel))
       if chan.join(self)
         rpl :TOPIC, channel, ":#{chan.topic}"
         rpl :NAMREPLY, "=", channel, ":#{chan.members.map { |m| m.nick }.join(" ")}"
@@ -101,8 +99,8 @@ module Marvin::IRC::Server::User::HandleMixin
 
   def handle_incoming_part(opts = {})
     t = opts[:target].downcase
-    if !(chan = ChannelStore[t]).blank?
-      if chan.part(user, opts[:message])
+    if !(chan = Marvin::IRC::Server::ChannelStore[t]).blank?
+      if chan.part(self, opts[:message])
         @channels.delete(chan)
       else
         err :NOTONCHANNEL, opts[:target], ":Not a member of that channel"
@@ -121,7 +119,7 @@ module Marvin::IRC::Server::User::HandleMixin
   
   def handle_incoming_topic(opts = {})
     return if @prefix.blank? || opts[:target].blank?
-    c = ChannelStore[opts[:target].downcase]
+    c = Marvin::IRC::Server::ChannelStore[opts[:target].downcase]
     return if c.blank?
     if !@channels.include?(c)
       err :NOTONCHANNEL, opts[:target], ":Not a member of that channel"
@@ -136,7 +134,5 @@ module Marvin::IRC::Server::User::HandleMixin
       c.topic self, opts[:message].strip
     end
   end
-  
-  
   
 end

@@ -13,7 +13,7 @@ module Marvin
     class << self
       
       def root
-        defined?(MARVIN_ROOT) ? MARVIN_ROOT : File.dirname(__FILE__) / "../.."
+        File.expand_path(defined?(MARVIN_ROOT) ? MARVIN_ROOT : File.dirname(__FILE__) / "../..")
       end
       
       def setup(options = {})

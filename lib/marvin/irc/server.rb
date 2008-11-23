@@ -4,15 +4,6 @@ module Marvin
       
       # Server utilities
       autoload :NamedStore,         'marvin/irc/server/named_store'
-      autoload :Channel,            'marvin/irc/server/channel'
-      # The actual network connection
-      autoload :BaseConnection,     'marvin/irc/server/base_connection'
-      # An our implementations of protocol-specific stuff.
-      autoload :AbstractConnection, 'marvin/irc/server/abstract_connection'
-      autoload :UserConnection,     'marvin/irc/server/user_connection'
-      autoload :ServerConnection,   'marvin/irc/server/server_connection'
-      # Extensions for each part
-      autoload :User,               'marvin/irc/server/user'
       
       # Store each user
       UserStore = NamedStore.new(:nicks, :user) do
@@ -30,6 +21,16 @@ module Marvin
       # Store each channel
       ChannelStore = NamedStore.new(:names, :channel)
       
+      autoload :Channel,            'marvin/irc/server/channel'
+      # The actual network connection
+      autoload :BaseConnection,     'marvin/irc/server/base_connection'
+      # An our implementations of protocol-specific stuff.
+      autoload :AbstractConnection, 'marvin/irc/server/abstract_connection'
+      autoload :UserConnection,     'marvin/irc/server/user_connection'
+      autoload :ServerConnection,   'marvin/irc/server/server_connection'
+      # Extensions for each part
+      autoload :User,               'marvin/irc/server/user'
+      
       # call start_server w/ the default options
       # and inside an EM::run block.
       def self.run
@@ -40,6 +41,7 @@ module Marvin
       
       # Starts the server with a set of given options
       def self.start_server(opts = {})
+        opts[:started_at] ||= Time.now
         EventMachine::start_server((opts[:host] || "localhost"), (opts[:port] || 6667), BaseConnection, opts)
       end
       

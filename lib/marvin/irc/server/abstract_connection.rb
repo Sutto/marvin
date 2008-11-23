@@ -27,6 +27,8 @@ module Marvin::IRC::Server
     
     def process_connect
       @alive = true
+      # Send the welcome notice / auth command.
+      command :NOTICE, "AUTH", ":Marvin v#{Marvin.version} initialized, welcome."
       dispatch :client_connected, :client => self
     end
     
