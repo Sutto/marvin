@@ -1,4 +1,4 @@
-BASE_DIR = File.expand_path(File.join(File.dirname(__FILE__), "..")
+BASE_DIR = File.expand_path(File.join(File.dirname(__FILE__), ".."))
 
 require 'rubygems'
 require 'shoulda'
