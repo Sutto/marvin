@@ -45,7 +45,7 @@ module Marvin::IRC::Server
       return false if member?(user)
       # Otherwise, we add a user
       add user
-      @members.each { |m| m.notify :join, user.nick, :prefix => user.prefix }
+      @members.each { |m| m.notify :join, @name, :prefix => user.prefix }
       dispatch :outgoing_join, :target => @name, :nick => user.nick
       return true
     end
@@ -81,6 +81,7 @@ module Marvin::IRC::Server
     
     def topic(user = nil, t = nil)
       return @topic if t.blank?
+      logger.info "Getting topic for '#{@name}' - #{t.inspect}"
       @topic = t
       @members.each { |m| m.notify :topic, @name, ":#{t}", :prefix => user.prefix }
       dispatch :outgoing_topic, :target => @name, :user => user, :topic => t

@@ -62,7 +62,7 @@ module Marvin::IRC::Server::User::HandleMixin
       end
       chan = (Marvin::IRC::Server::ChannelStore[channel.downcase] ||= Marvin::IRC::Server::Channel.new(channel))
       if chan.join(self)
-        rpl :TOPIC, channel, ":#{chan.topic}"
+        rpl :TOPIC, channel, ":#{chan.topic.blank? ? "There is no topic" :  nchan.topic}"
         rpl :NAMREPLY, "=", channel, ":#{chan.members.map { |m| m.nick }.join(" ")}"
         rpl :ENDOFNAMES, channel, ":End of /NAMES list."
         @channels << chan

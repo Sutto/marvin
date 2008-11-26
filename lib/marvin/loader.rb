@@ -54,6 +54,12 @@ module Marvin
       self.pre_connect_setup
       self.start_hooks.each { |h| h.call }
       Marvin::Settings.default_client.run if self.type == :client
+      case self.type
+      when :client
+        Marvin::Settings.default_client.run
+      when :server
+        Marvin::IRC::Server.run
+      end
     end
     
     def stop!

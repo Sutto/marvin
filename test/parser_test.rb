@@ -1,5 +1,10 @@
 require File.join(File.dirname(__FILE__), 'test_helper')
 
+# In reality this tests several different classes:
+# 1) The parser itself
+# 2) The Command class
+# 3) The two different types of prefixes
+# 4) The Event class
 class ParserTest < Test::Unit::TestCase
   @@parser = Marvin::Parsers::SimpleParser
   

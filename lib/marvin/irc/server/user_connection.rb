@@ -76,20 +76,19 @@ module Marvin::IRC::Server
       @connection.kill_connection!
     end
     
-    private
+    protected
     
     def welcome_if_complete!
       update_prefix!
       # Next, send the MOTD and other misc. stuff
       return if @welcomed || @prefix.blank?
-      logger.warn "Nick: #{self.nick} => #{@nick}"
       rpl :WELCOME,   @nick, ":Welcome to Marvin Server - #{@prefix}"
-      rpl :YOURHOST, @nick, ":Your host is #{server_host}, running version #{Marvin.version}"
-      rpl :CREATED,  @nick, ":This server was created #{@connection.started_at}"
-      rpl :MYINFO,   @nick, ":#{server_host} #{Marvin.version} #{USER_MODES} #{CHANNEL_MODES}"
-      rpl :MOTDSTART, ":- MOTD"
-      rpl :MOTD,      ":- Welcome to Marvin Server, a Ruby + EventMachine ircd."
-      rpl :ENDOFMOTD, ":- End of /MOTD command."
+      rpl :YOURHOST,  @nick, ":Your host is #{server_host}, running version #{Marvin.version}"
+      rpl :CREATED,   @nick, ":This server was created #{@connection.started_at}"
+      rpl :MYINFO,    @nick, ":#{server_host} #{Marvin.version} #{USER_MODES} #{CHANNEL_MODES}"
+      rpl :MOTDSTART, @nick, ":- MOTD"
+      rpl :MOTD,      @nick, ":- Welcome to Marvin Server, a Ruby + EventMachine ircd."
+      rpl :ENDOFMOTD, @nick, ":- End of /MOTD command."
       @welcomed = true
     end
     
@@ -107,6 +106,21 @@ module Marvin::IRC::Server
     
     def server_port
       @connection.port
+    end
+    
+    def rpl(number, *args)
+      numeric Marvin::IRC::Replies["RPL_#{number.to_s.upcase}"], *args
+    end
+    
+    def err(number, *args)
+      numeric Marvin::IRC::Replies["ERR_#{number.to_s.upcase}"], *args
+    end
+    
+    def numeric(number, *args)
+      args << {} unless args[-1].is_a?(Hash)
+      args[-1][:prefix] ||= server_host
+      args.unshift(@nick) unless args.first == @nick
+      command(number.to_s, *args)
     end
     
   end

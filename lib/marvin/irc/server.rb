@@ -35,14 +35,21 @@ module Marvin
       # and inside an EM::run block.
       def self.run
         EventMachine::run do
-          #start_server
+          Marvin::Logger.info "Starting server..."
+          start_server :bind_addr => "0.0.0.0"
         end
       end
       
       # Starts the server with a set of given options
       def self.start_server(opts = {})
         opts[:started_at] ||= Time.now
-        EventMachine::start_server((opts[:host] || "localhost"), (opts[:port] || 6667), BaseConnection, opts)
+        opts[:host]       ||= self.host_name
+        opts[:port]       ||= 6667
+        EventMachine::start_server(opts[:bind_addr] || opts[:host], opts[:port], BaseConnection, opts)
+      end
+      
+      def self.host_name
+        @@host_name ||= Socket.gethostname
       end
       
     end

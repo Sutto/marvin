@@ -22,6 +22,7 @@ module Marvin
         # Not that we have a conditional check to setup
         # the correct connection
         def receive_line(line)
+          Marvin::Logger.debug "<< #{line}"
           if !@connection_implementation.nil?
             @connection_implementation.receive_line(line)
           elsif line[0..3] == "USER"
@@ -38,6 +39,7 @@ module Marvin
         end
         
         def send_line(line)
+          Marvin::Logger.debug ">> #{line.strip}"
           line += "\r\n" unless line[-2..-1] == "\r\n"
           send_data line
         end
@@ -55,6 +57,7 @@ module Marvin
         # Do things on the connection implementation
         def post_init
           super
+          send_line "NOTICE AUTH :Marvin Server v#{Marvin.version} initialized, welcome."
         end
         
       end
