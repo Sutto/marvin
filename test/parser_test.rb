@@ -1,7 +1,7 @@
 require File.join(File.dirname(__FILE__), 'test_helper')
 
 class ParserTest < Test::Unit::TestCase
-  @@parser = Marvin::Parsers::SimpleParser
+  @@parser = Marvin::Parsers::RagelParser
   
   context "When parsing a LIST" do
     setup { @parsed = @@parser.new("LIST #twilight_zone,#42") }
