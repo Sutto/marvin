@@ -118,6 +118,14 @@ module Marvin::IRC
       self.stopped = true
     end
     
+    def self.add_reconnect(opts = {})
+      Marvin::Logger.warn "Adding entry to reconnect to #{opts[:server]}:#{opts[:port]} in 15 seconds"
+      EventMachine::add_timer(15) do
+        Marvin::Logger.warn "Attempting to reconnect to #{opts[:server]}:#{opts[:port]}"
+        Marvin::IRC::Client.connect(opts)
+      end
+    end
+    
     # Registers a callback handle that will be periodically run.
     def periodically(timing, event_callback)
       callback = proc { self.dispatch event_callback.to_sym }

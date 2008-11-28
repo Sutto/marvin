@@ -56,5 +56,9 @@ module Marvin
       end
     end
     
+    def self.add_reconnect(opts = {})
+      Marvin::Logger.info "Added reconnect with options: #{opts.inspect}"
+    end
+    
   end
 end

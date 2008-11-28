@@ -8,6 +8,7 @@ module Marvin
     include Marvin::Dispatchable
     
     def initialize(opts = {})
+      self.original_opts    = opts.dup # Copy the options so we can use them to reconnect.
       self.server           = opts[:server]
       self.port             = opts[:port]
       self.default_channels = opts[:channels]
@@ -16,7 +17,7 @@ module Marvin
     end
     
     cattr_accessor :events, :configuration, :logger, :is_setup, :connections
-    attr_accessor  :channels, :nickname, :server, :port, :nicks, :pass
+    attr_accessor  :channels, :nickname, :server, :port, :nicks, :pass, :disconnect_expected, :original_opts
     
     # Set the default values for the variables
     self.events                 = []
@@ -43,7 +44,12 @@ module Marvin
       logger.info "Handling disconnect for #{self.server}:#{self.port}"
       self.connections.delete(self) if self.connections.include?(self)
       dispatch :client_disconnected
-      Marvin::Loader.stop! if self.connections.blank?
+      unless self.disconnect_expected
+        logger.warn "Lost connection to server - adding reconnect"
+        self.class.add_reconnect self.original_opts
+      else
+        Marvin::Loader.stop! if self.connections.blank?
+      end
     end
     
     # Sets the current class-wide settings of this IRC Client
@@ -185,6 +191,7 @@ module Marvin
     def join(channel)
       channel = Marvin::Util.channel_name(channel)
       # Record the fact we're entering the room.
+      # TODO: Refactor to only add the channel when we receive confirmation we've joined.
       self.channels << channel
       command :JOIN, channel
       logger.info "Joined channel #{channel}"
@@ -203,6 +210,7 @@ module Marvin
     end
     
     def quit(reason = nil)
+      self.disconnect_expected = true
       logger.info "Preparing to part from #{self.channels.size} channels"
       self.channels.to_a.each do |chan|
         logger.info "Parting from #{chan}"
