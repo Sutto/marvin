@@ -2,7 +2,7 @@ module Marvin
   class ExceptionTracker
   
     cattr_accessor :logger
-    self.logger = Marvin::Logger.logger
+    self.logger = Marvin::Logger
   
     def self.log(e)
       logger.fatal "Exception raised inside Marvin Instance."

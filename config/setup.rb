@@ -9,7 +9,11 @@ Marvin::Loader.before_connecting do
   # Example Handler use.
   # LoggingHandler.register! if Marvin::Settings.use_logging
   
-  HelloWorld.register!
-  DebugHandler.register!
+  if Marvin::Loader.type == :client
+    Marvin::Distributed::DispatchHandler.register!
+  else
+    HelloWorld.register!
+    DebugHandler.register!
+  end
   
 end

@@ -23,7 +23,7 @@ module Marvin
           logger.info "Started - Joining thread."
           DRb.thread.join
         rescue
-          logger.fatal "Error starting Marvin::Distributed::RingServer - please ensure another instance isn't already running."
+          logger.fatal "Error starting ring server - please ensure another instance isn't already running."
         end
       end
       

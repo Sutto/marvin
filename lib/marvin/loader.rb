@@ -35,6 +35,8 @@ module Marvin
       when :client
         Marvin::Settings.default_client.configuration = Marvin::Settings.to_hash
         Marvin::Settings.default_client.setup
+      when :distributed_client
+        Marvin::Settings.default_client = Marvin::Distributed::DRbClient
       when :server
       when :console
       end
@@ -61,7 +63,7 @@ module Marvin
       when :ring_server
         Marvin::Distributed::RingServer.run
       when :distributed_client
-        #Marvin::Distributed::Client.run
+        Marvin::Distributed::DRbClient.run
       end
     end
     
