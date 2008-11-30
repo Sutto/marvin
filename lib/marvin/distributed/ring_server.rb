@@ -26,8 +26,8 @@ module Marvin
       def self.run
         begin
           logger.info "Starting up DRb"
-          DRb.start_service
-          logger.info "Creating TupleSpace & Ring Server Instances"
+          drb_server = DRb.start_service
+          logger.info "Creating TupleSpace & Ring Server Instances - Running on #{DRb.uri}"
           self.new
           logger.info "Started - Joining thread."
           DRb.thread.join
