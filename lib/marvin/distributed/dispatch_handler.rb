@@ -5,6 +5,8 @@ DRb.start_service
 
 module Marvin
   module Distributed
+    
+    # Handler to provide 
     class DispatchHandler < Marvin::Base
       
       LOOKUP_TIMEOUT = 0.5
@@ -19,7 +21,8 @@ module Marvin
       def ring_server
         if @@rs.nil? && (@lookup_attempts ||= 6) > 5
           @lookup_attempts = 0
-          @@rs = Rinda::RingFinger.finger.lookup_ring(1)
+          @@rs = Rinda::RingFinger.finger.lookup_ring(LOOKUP_TIMEOUT)
+          logger.info "Found new ring server => #{@@rs.__drburi}"
         elsif @@rs.nil?
           @lookup_attempts += 1
         end
@@ -46,7 +49,6 @@ module Marvin
         tuple = [:marvin_event, name, options, self.client]
         begin
           (@queued_messages ||= []) << tuple
-          logger.warn self.ring_server.inspect
           if self.ring_server.nil?
             size = @queued_messages.size
             if size > 0 && size % 25 == 0
