@@ -18,6 +18,7 @@ module Marvin
   
   autoload :Util,             'marvin/util'
   autoload :Dispatchable,     'marvin/dispatchable'
+  autoload :Distributed,      'marvin/distributed'
   autoload :AbstractClient,   'marvin/abstract_client'
   autoload :Base,             'marvin/base'
   autoload :ClientMixin,      'marvin/client_mixin'
