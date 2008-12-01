@@ -92,7 +92,7 @@ module Marvin
     
     def kill_all_from(file)
       pids = pids_from(file)
-      pids.each { |p| Process.kill("SIGINT", p) unless p == Process.pid }
+      pids.each { |p| Process.kill("-TERM", p) unless p == Process.pid }
       FileUtils.rm_f(file)
     rescue
       # Likely couldn't kill the process
