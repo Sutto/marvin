@@ -1,3 +1,5 @@
+require 'fileutils'
+
 module Marvin
   class Loader
     
@@ -48,6 +50,54 @@ module Marvin
       self.setup_block.call unless self.setup_block.blank?
     end
     
+    def alive?(pid)
+      return Process.getpgid(pid) != -1
+    rescue Errno::ESRCH
+      return false
+    end
+    
+    def pid_file_for(type)
+      Marvin::Settings.root / "tmp/pids/marvin-#{type.to_s.underscore}.pid"
+    end
+    
+    def pids_from(file)
+      return [] unless File.exist?(file)
+      pids = File.read(file)
+      pids = pids.split("\n").map { |l| l.strip.to_i(10) }.select { |p| alive?(p) }
+    end
+    
+    def write_pid
+      f = pid_file_for(self.type)
+      pids = pids_from(f)
+      pids << Process.pid unless pids.include?(Process.pid)
+      File.open(f, "w+") do |f|
+        f.puts pids.join("\n")
+      end
+    end
+    
+    def remove_pid
+      f = Marvin::Settings.root / "tmp/pids/marvin-#{self.type.to_s.underscore}.pid"
+      FileUtils.rm_f(f)
+    end
+    
+    def kill_all(type = :all)
+      if type == :all
+        files = Dir[Marvin::Settings.root / "tmp/pids/*.pid"]
+        files.each { |f| kill_all_from f }
+      elsif type.is_a?(Symbol)
+        f = pid_file_for(type)
+        kill_all_from f
+      end
+    end
+    
+    def kill_all_from(file)
+      pids = pids_from(file)
+      pids.each { |p| Process.kill("SIGINT", p) unless p == Process.pid }
+      FileUtils.rm_f(file)
+    rescue
+      # Likely couldn't kill the process
+    end
+    
     def run!
       Marvin::Options.parse! unless self.type == :console
       self.setup_defaults
@@ -55,6 +105,7 @@ module Marvin
       self.load_handlers
       self.pre_connect_setup
       self.start_hooks.each { |h| h.call }
+      self.write_pid
       case self.type
       when :client
         Marvin::Settings.default_client.run
@@ -69,6 +120,7 @@ module Marvin
     
     def stop!
       Marvin::Settings.default_client.stop if self.type == :client
+      remove_pid
       self.stop_hooks.each { |h| h.call }
       Marvin::DataStore.dump!
     end
