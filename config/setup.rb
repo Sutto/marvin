@@ -1,6 +1,8 @@
-# Register all of the handlers you wish to use
-# when the clien connects.
-Marvin::Loader.before_connecting do
+# Is loaded on setup / when handlers need to be
+# registered. Use it to register handlers / do
+# any repeatable setup that will happen before
+# any connections are created
+Marvin::Loader.before_run do
   
   # E.G.
   # MyHandler.register! (Marvin::Base subclass) or

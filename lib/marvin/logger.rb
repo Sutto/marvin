@@ -17,7 +17,6 @@ module Marvin
     
     end
     
-    
     LEVELS = {
       :fatal => 7,
       :error => 6,

@@ -3,126 +3,52 @@ require 'fileutils'
 module Marvin
   class Loader
     
-    cattr_accessor :start_hooks, :stop_hooks, :setup_block, :type
-    self.stop_hooks, self.start_hooks = [], []
+    # A Controller is any class e.g. a client / server
+    # which is provides the main functionality of the
+    # current client.
+    CONTROLLERS = {
+      :client             => Marvin::Settings.default_client,
+      :server             => Marvin::IRC::Server,
+      :ring_server        => Marvin::Distributed::RingServer,
+      :distributed_client => Marvin::Distributed::DRbClient
+    }
     
+    
+    cattr_accessor :hooks, :boot, :type
+    self.hooks = {}
     self.type = :client
     
+    # Old style of registering a block to be run on startup
+    # for doing setup etc. now replaced by before_run
     def self.before_connecting(&blk)
-      self.setup_block = blk
+      Marvin::Logger.warn "Marvin::Loader.before_connecting is deprecated, please use before_run instead."
+      before_run(&blk)
     end
     
-    def setup_defaults
-      Marvin::Logger.setup
+    def self.append_hook(type, &blk)
+      self.hooks_for(type) << blk unless blk.blank?
     end
     
+    def self.hooks_for(type)
+      (self.hooks[type.to_sym] ||= [])
+    end
+    
+    def self.invoke_hooks!(type)
+      hooks_for(type).each { |hook| hook.call }
+    end
+    
+    # Append a call back to be run at a specific stage.
+    
+    # Register a hook to be run before the controller
+    # has started running.
     def self.before_run(&blk)
-      self.start_hooks << blk unless blk.blank?
+      append_hook(:before_run, &blk)
     end
     
+    # Register a hook to be run after the controller
+    # has stopped.
     def self.after_stop(&blk)
-      self.stop_hooks << blk unless blk.blank?
-    end
-    
-    def load_handlers
-      handlers = Dir[Marvin::Settings.root / "handlers/**/*.rb"].map { |h| h[0..-4] }
-      handlers.each do |handler|
-        require handler
-      end
-    end
-    
-    def load_settings
-      Marvin::Settings.setup
-      case Marvin::Loader.type
-      when :client
-        Marvin::Settings.default_client.configuration = Marvin::Settings.to_hash
-        Marvin::Settings.default_client.setup
-      when :distributed_client
-        Marvin::Settings.default_client = Marvin::Distributed::DRbClient
-      when :server
-      when :console
-      end
-    end
-    
-    def pre_connect_setup
-      Marvin::DataStore.load!
-      require(Marvin::Settings.root / "config/setup")
-      self.setup_block.call unless self.setup_block.blank?
-    end
-    
-    def alive?(pid)
-      return Process.getpgid(pid) != -1
-    rescue Errno::ESRCH
-      return false
-    end
-    
-    def pid_file_for(type)
-      Marvin::Settings.root / "tmp/pids/marvin-#{type.to_s.underscore}.pid"
-    end
-    
-    def pids_from(file)
-      return [] unless File.exist?(file)
-      pids = File.read(file)
-      pids = pids.split("\n").map { |l| l.strip.to_i(10) }.select { |p| alive?(p) }
-    end
-    
-    def write_pid
-      f = pid_file_for(self.type)
-      pids = pids_from(f)
-      pids << Process.pid unless pids.include?(Process.pid)
-      File.open(f, "w+") do |f|
-        f.puts pids.join("\n")
-      end
-    end
-    
-    def remove_pid
-      f = Marvin::Settings.root / "tmp/pids/marvin-#{self.type.to_s.underscore}.pid"
-      FileUtils.rm_f(f)
-    end
-    
-    def kill_all(type = :all)
-      if type == :all
-        files = Dir[Marvin::Settings.root / "tmp/pids/*.pid"]
-        files.each { |f| kill_all_from f }
-      elsif type.is_a?(Symbol)
-        f = pid_file_for(type)
-        kill_all_from f
-      end
-    end
-    
-    def kill_all_from(file)
-      pids = pids_from(file)
-      pids.each { |p| Process.kill("-TERM", p) unless p == Process.pid }
-      FileUtils.rm_f(file)
-    rescue
-      # Likely couldn't kill the process
-    end
-    
-    def run!
-      Marvin::Options.parse! unless self.type == :console
-      self.setup_defaults
-      self.load_settings
-      self.load_handlers
-      self.pre_connect_setup
-      self.start_hooks.each { |h| h.call }
-      self.write_pid
-      case self.type
-      when :client
-        Marvin::Settings.default_client.run
-      when :server
-        Marvin::IRC::Server.run
-      when :ring_server
-        Marvin::Distributed::RingServer.run
-      when :distributed_client
-        Marvin::Distributed::DRbClient.run
-      end
-    end
-    
-    def stop!
-      Marvin::Settings.default_client.stop if self.type == :client
-      remove_pid
-      self.stop_hooks.each { |h| h.call }
-      Marvin::DataStore.dump!
+      append_hook(:after_stop, &blk)
     end
     
     def self.run!(type = :client)
@@ -133,6 +59,53 @@ module Marvin
     def self.stop!
       self.new.stop!
     end
+    
+    def run!
+      Marvin::Options.parse! unless self.type == :console
+      Marvin::Logger.setup
+      self.load_settings
+      require(Marvin::Settings.root / "config/setup")
+      self.load_handlers
+      self.class.invoke_hooks!   :before_run
+      attempt_controller_action! :run
+    end
+    
+    def stop!
+      self.class.invoke_hooks!   :before_stop
+      attempt_controller_action! :stop
+      self.class.invoke_hooks!   :after_stop
+    end
+    
+    protected
+    
+    # Get the controller for the current type if
+    # it exists and attempt to class a given action.
+    def attempt_controller_action!(action)
+      klass = CONTROLLERS[self.type]
+      klass.send(action) unless klass.blank? || !klass.respond_to?(action, true)
+    end
+    
+    # Load all of the handler's in the handlers subfolder
+    # of a marvin installation.
+    def load_handlers
+      Dir[Marvin::Settings.root / "handlers/**/*.rb"].each { |handler| require handler }
+    end
+    
+    def load_settings
+      Marvin::Settings.setup
+      case Marvin::Loader.type
+      # Perform client / type specific setup.
+      when :client
+        Marvin::Settings.default_client.configuration = Marvin::Settings.to_hash
+        Marvin::Settings.default_client.setup
+      when :distributed_client
+        Marvin::Settings.default_client = Marvin::Distributed::DRbClient
+      end
+    end
+    
+    # Register to the Marvin::DataStore methods
+    before_run { Marvin::DataStore.load! }
+    after_stop { Marvin::DataStore.dump! }
     
   end
 end
