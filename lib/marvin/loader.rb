@@ -1,7 +1,9 @@
 require 'fileutils'
+require 'singleton'
 
 module Marvin
   class Loader
+    include Singleton
     
     # A Controller is any class e.g. a client / server
     # which is provides the main functionality of the
@@ -46,18 +48,19 @@ module Marvin
     end
     
     # Register a hook to be run after the controller
-    # has stopped.
+    # has stopped. Note that this will not guarantee
+    # all processing has completed.
     def self.after_stop(&blk)
       append_hook(:after_stop, &blk)
     end
     
     def self.run!(type = :client)
       self.type = type.to_sym
-      self.new.run!
+      self.instance.run!
     end
     
-    def self.stop!
-      self.new.stop!
+    def self.stop!(force = false)
+      self.instance.stop!(force)
     end
     
     def run!
@@ -70,10 +73,13 @@ module Marvin
       attempt_controller_action! :run
     end
     
-    def stop!
-      self.class.invoke_hooks!   :before_stop
-      attempt_controller_action! :stop
-      self.class.invoke_hooks!   :after_stop
+    def stop!(force = false)
+      if force || !@attempted_stop
+        self.class.invoke_hooks!   :before_stop
+        attempt_controller_action! :stop
+        self.class.invoke_hooks!   :after_stop
+        @attempted_stop = true
+      end
     end
     
     protected
@@ -104,8 +110,8 @@ module Marvin
     end
     
     # Register to the Marvin::DataStore methods
-    before_run { Marvin::DataStore.load! }
-    after_stop { Marvin::DataStore.dump! }
+    before_run { Marvin::DataStore.load! if Marvin::Loader.type == :client }
+    after_stop { Marvin::DataStore.dump! if Marvin::Loader.type == :client }
     
   end
 end

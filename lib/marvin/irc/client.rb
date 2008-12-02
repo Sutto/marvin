@@ -46,6 +46,8 @@ module Marvin::IRC
   # handler as the only argument.
   class Client < Marvin::AbstractClient
     cattr_accessor :stopped
+    self.stopped = false
+    
     attr_accessor :em_connection
     
     class EMConnection < EventMachine::Protocols::LineAndTextProtocol
@@ -84,10 +86,12 @@ module Marvin::IRC
     
     # Starts the EventMachine loop and hence starts up the actual
     # networking portion of the IRC Client.
-    def self.run
+    def self.run(force = false)
+      return if self.stopped && !force
       self.setup # So we have options etc
       settings = YAML.load_file(Marvin::Settings.root / "config/connections.yml")
       if settings.is_a?(Hash)
+        # Use epoll if available
         EventMachine.epoll
         EventMachine::run do
           settings.each do |name, options|
@@ -105,7 +109,6 @@ module Marvin::IRC
     def self.connect(opts = {})
       logger.info "Connecting to #{opts[:server]}:#{opts[:port]} - Channels: #{opts[:channels].join(", ")}"
       EventMachine::connect(opts[:server], opts[:port], EMConnection, opts)
-      logger.info "Connection created for #{opts[:server]}:#{opts[:port]}"
     end
     
     def self.stop
