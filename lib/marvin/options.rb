@@ -6,7 +6,8 @@ module Marvin
     def self.parse!
       options = {
         :verbose   => Marvin::Settings.verbose,
-        :log_level => Marvin::Settings.log_level.to_s
+        :log_level => Marvin::Settings.log_level.to_s,
+        :daemon    => false
       }
       
       ARGV.options do |o|
@@ -19,12 +20,20 @@ module Marvin
         o.on("-l", "--level=[level]", String, "The log level to use",
              "Default: #{options[:log_level]}") {|options[:log_level]|}
         o.on("-v", "--verbose", "Be verbose (print to stdout)") {|options[:verbose]|}
+        o.on("-d", "--daemon",  "Run as a daemon (drop the PID)") {|options[:daemon]|}
+        o.on("-k", "--kill", "Kill all of the current type / the running instances") do |kill|
+           if kill
+            Marvin::Daemon.kill_all(Marvin::Loader.type)
+            exit
+          end
+        end
+        
         o.separator   ""
         o.on_tail("-h", "--help", "Show this message.") { puts o; exit }
-        
         o.parse!
       end
       
+      Marvin::Settings.daemon    = options[:daemon]
       Marvin::Settings.log_level = options[:log_level].to_sym
       Marvin::Settings.verbose   = options[:verbose]
     end

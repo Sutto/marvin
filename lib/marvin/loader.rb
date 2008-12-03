@@ -12,9 +12,18 @@ module Marvin
       :client             => Marvin::Settings.default_client,
       :server             => Marvin::IRC::Server,
       :ring_server        => Marvin::Distributed::RingServer,
-      :distributed_client => Marvin::Distributed::DRbClient
+      :distributed_client => Marvin::Distributed::DRbClient,
+      :console            => nil
     }
     
+    # For each of the known types, define a method
+    # as Marvin::Loader.type? so we can easily do
+    # things like conditional registers.
+    class << self
+      CONTROLLERS.keys.each do |type|
+        define_method(:"#{type}?") { Marvin::Loader.type == type }
+      end
+    end
     
     cattr_accessor :hooks, :boot, :type
     self.hooks = {}
@@ -27,14 +36,20 @@ module Marvin
       before_run(&blk)
     end
     
+    # Append a hook for a given type of hook in order
+    # to be called later on via invoke_hooks!
     def self.append_hook(type, &blk)
       self.hooks_for(type) << blk unless blk.blank?
     end
     
+    # Return all of the existing hooks or an empty
+    # for a given hook type.
     def self.hooks_for(type)
       (self.hooks[type.to_sym] ||= [])
     end
     
+    # Invoke (call) all of the hooks for a given
+    # type.
     def self.invoke_hooks!(type)
       hooks_for(type).each { |hook| hook.call }
     end
@@ -64,7 +79,9 @@ module Marvin
     end
     
     def run!
+      self.register_signals
       Marvin::Options.parse! unless self.type == :console
+      Marvin::Daemon.daemonize! if Marvin::Settings.daemon?
       Marvin::Logger.setup
       self.load_settings
       require(Marvin::Settings.root / "config/setup")
@@ -80,6 +97,7 @@ module Marvin
         self.class.invoke_hooks!   :after_stop
         @attempted_stop = true
       end
+      Marvin::Daemon.cleanup! if Marvin::Settings.daemon?
     end
     
     protected
@@ -106,6 +124,15 @@ module Marvin
         Marvin::Settings.default_client.setup
       when :distributed_client
         Marvin::Settings.default_client = Marvin::Distributed::DRbClient
+      end
+    end
+    
+    def register_signals
+      ["INT", "TERM"].each do |sig|
+        trap sig do
+          Marvin::Loader.stop!
+          exit
+        end
       end
     end
     

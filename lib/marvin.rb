@@ -32,6 +32,7 @@ module Marvin
   autoload :DataStore,        'marvin/data_store'
   autoload :ExceptionTracker, 'marvin/exception_tracker'
   autoload :Options,          'marvin/options'
+  autoload :Daemon,           'marvin/daemon'
   # Parsers
   autoload :AbstractParser,   'marvin/abstract_parser'
   autoload :Parsers,          'marvin/parsers.rb'

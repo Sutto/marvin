@@ -73,6 +73,7 @@ module Marvin
   
     def write(message, level = self.level)
       self.file.puts message
+      self.file.flush
       STDOUT.puts colourize(message, level) if self.verbose
     end
   

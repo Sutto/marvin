@@ -1,25 +1,9 @@
 #!/usr/bin/env ruby
 require 'rubygems'
 
-if File.exist?(File.dirname(__FILE__) + "/../lib/marvin.rb")
-  $:.unshift(File.dirname(__FILE__) + "/../lib/")
-end
-
+$:.unshift(File.dirname(__FILE__) + "/../lib/") if File.exist?(File.dirname(__FILE__) + "/../lib/marvin.rb")
 MARVIN_ROOT = File.join(File.dirname(__FILE__), "..")
-IS_DAEMON = ARGV.include?("--is-daemon")
 
 # And Require Marvin.
 require 'marvin'
-
-["INT", "TERM"].each do |sig|
-  
-  # Trap a given signal and run all
-  # of our callbacks etc,
-  trap sig do
-    Marvin::Loader.stop!
-    exit
-  end
-  
-end
-
-Marvin::Loader.run!
+Marvin::Loader.run! :client

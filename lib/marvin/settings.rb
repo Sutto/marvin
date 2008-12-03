@@ -5,12 +5,17 @@ module Marvin
   class Settings
     
     cattr_accessor :environment, :configuration, :is_setup, :default_client,
-                   :handler_folder, :default_parser, :log_level, :verbose
+                   :handler_folder, :default_parser, :log_level, :verbose, :daemon
                    
     self.verbose   = false
     self.log_level = :info
+    self.daemon    = false
     
     class << self
+      
+      def daemon?
+        self.daemon
+      end
       
       def root
         File.expand_path(defined?(MARVIN_ROOT) ? MARVIN_ROOT : File.dirname(__FILE__) / "../..")
@@ -19,10 +24,6 @@ module Marvin
       def setup(options = {})
         return if self.is_setup
         self.setup!(options)
-      end
-      
-      def daemon?
-        defined?(IS_DAEMON) && IS_DAEMON
       end
       
       def setup!(options = {})

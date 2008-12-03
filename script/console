@@ -4,6 +4,6 @@ libs = ["-r irb/completion", "-r lib/marvin", "-r lib/marvin/console"]
 
 cmd = "irb #{libs.join(" ")} --simple-prompt"
 
-puts "Loading Marvin console.."
+puts "Loading Marvin console..."
 
 exec cmd
