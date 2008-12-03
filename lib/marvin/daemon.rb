@@ -32,7 +32,11 @@ module Marvin
       
       def cleanup!
         f = Marvin::Settings.root / "tmp/pids/marvin-#{Marvin::Loader.type.to_s.underscore}.pid"
-        FileUtils.rm_f(f)
+        FileUtils.rm_f(f) if (pids_from(f) - Process.pid).blank?
+      end
+      
+      def pids_for_type(type)
+        pids_from(pid_file_for(type))
       end
       
       protected

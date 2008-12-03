@@ -33,6 +33,7 @@ module Marvin
   autoload :ExceptionTracker, 'marvin/exception_tracker'
   autoload :Options,          'marvin/options'
   autoload :Daemon,           'marvin/daemon'
+  autoload :Status,           'marvin/status'
   # Parsers
   autoload :AbstractParser,   'marvin/abstract_parser'
   autoload :Parsers,          'marvin/parsers.rb'

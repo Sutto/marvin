@@ -9,6 +9,7 @@ module Marvin
       class << self
         
         @@handlers = []
+        attr_accessor :stopped
         
         def register_handler(handler)
           @@handlers << handler unless handler.nil? || !handler.respond_to?(:handle)
@@ -36,12 +37,17 @@ module Marvin
         # Starts up a drb processor / client, and walks through the process of dealing
         # with it / processing events.
         def run
+          self.stopped = false
           Marvin::Logger.info "Starting up DRb Client"
           DRb.start_service
           # Loop through, making sure we have a valid
           # RingFinger and then process events as they
           # appear.
           enter_loop!
+        end
+        
+        def stop
+          self.stopped = true
         end
         
         def ring_server
@@ -53,11 +59,11 @@ module Marvin
         
         def enter_loop!
           Marvin::Logger.info "Entering processing loop"
-          loop do
+          while !self.stopped
             begin
               unless self.ring_server.blank?
-                event = self.ring_server.take([:marvin_event, nil, nil, nil])
-                dispatch(*event[1..-1])
+                event = self.ring_server.take([:marvin_event, nil, nil, nil], 5)
+                dispatch(*event[1..-1]) unless event.blank?
               end
             rescue
               # Reset the ring server on event of connection refused etc.
