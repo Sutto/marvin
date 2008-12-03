@@ -31,7 +31,7 @@ module Marvin
           STDOUT.puts ""
         end
         
-        if ARGV.include?("-f") || ARGV.include?("--full")
+        if (ARGV.include?("-f") || ARGV.include?("--full")) && !pids[:ring_server].empty?
           require 'rinda/ring'
           DRb.start_service
           STDOUT.puts " Distributed Status"
@@ -62,7 +62,7 @@ module Marvin
               STDOUT.puts ""
             end
           rescue
-            STDOUT.puts "Ring server not found."
+            STDOUT.puts " Ring server not found."
             STDOUT.puts ""
           end
         end
