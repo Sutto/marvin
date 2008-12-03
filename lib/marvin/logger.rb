@@ -6,7 +6,7 @@ module Marvin
     class << self
       
       def setup
-        log_path = Marvin::Settings.root / "log/#{Marvin::Settings.environment}.log"
+        log_path = Marvin::Settings.root / "log/#{Marvin::Loader.type.to_s.dasherize}-#{Marvin::Settings.environment}.log"
         self.logger ||= new(log_path, Marvin::Settings.log_level, Marvin::Settings.verbose)
       end
       
