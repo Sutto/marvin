@@ -56,9 +56,7 @@ module Marvin
               STDOUT.puts ""
               STDOUT.puts " Unprocessed Message Counts:"
               STDOUT.puts " ---------------------------"
-              mapping.each do |k, v|
-                STDOUT.puts " #{k.ljust width}  => #{v}"
-              end
+              mapping.each { |k, v| STDOUT.puts " #{k.ljust width}  => #{v}" }
               STDOUT.puts ""
             end
           rescue
