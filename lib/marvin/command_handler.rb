@@ -41,18 +41,15 @@ module Marvin
       unless command_name.nil?
         logger.debug "Command Exists - processing"
         # Dispatch the command.
-        self.send(command_name, data.to_a) if self.respond_to?(command_name)
+        self.send(command_name, data.split(" ")) if self.respond_to?(command_name)
       end
     end
     
     def extract_command_name(command)
       prefix_length = self.command_prefix.to_s.length
       has_prefix = command[0...prefix_length] == self.command_prefix.to_s
-      logger.debug "Debugging, prefix is #{prefix_length} characters, has prefix? = #{has_prefix}"
       if has_prefix
-        # Normalize the method name
         method_name = command[prefix_length..-1].to_s.underscore.to_sym
-        logger.debug "Computed method name is #{method_name.inspect}"
         return method_name if self.exposed_methods.to_a.include?(method_name)
       end
     end

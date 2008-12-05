@@ -44,26 +44,43 @@ class Marvin < Thor
     end
   end
   
+  map "cl" => :client, "st" => :status, "rs" => :ring_server,
+      "dc" => :distributed_client, "co" => :console
+  
   desc "start [PATH]", "starts client at the given path"
   def start(path = ".")
     @dest = File.expand_path(path)
-    if File.exist?(source(@dest, "script/client"))
-      Dir.chdir(@dest) { exec "script/client" }
-    else
-      STDOUT.puts "Woops! #{@dest.gsub(" ", "\\ ")} doesn't look to be a marvin directory."
-      exit!
-    end
+    start_script(:client)
   end
   
   desc "status [PATH]", "shows status of marvin app at a given location"
   def status(path = ".")
     @dest = File.expand_path(path)
-    if File.exist?(source(@dest, "script/status"))
-      Dir.chdir(@dest) { exec "script/status" }
-    else
-      STDOUT.puts "Woops! #{@dest.gsub(" ", "\\ ")} doesn't look to be a marvin directory."
-      exit!
-    end
+    start_script(:status)
+  end
+  
+  desc "client [PATH]", "starts a client instance from the given location"
+  def client(path = ".")
+    @dest = File.expand_path(path)
+    start_script(:client)
+  end
+  
+  desc "ring_server [PATH]", "starts a ring server from the given location"
+  def ring_server(path = ".")
+    @dest = File.expand_path(path)
+    start_script(:ring_server)
+  end
+  
+  desc "distributed_client [PATH]", "starts a distributed client from the given location"
+  def distributed_client(path = ".")
+    @dest = File.expand_path(path)
+    start_script(:distributed_client)
+  end
+  
+  desc "console [PATH]", "starts a marvin console from the given location"
+  def console(path = ".")
+    @dest = File.expand_path(path)
+    start_script(:console)
   end
   
   private
@@ -92,7 +109,21 @@ class Marvin < Thor
     STDOUT.puts text
   end
   
+  def marvin_repo?(path, type = client)
+    File.directory?(source(path, "script")) && File.exist?(source(path, "script/#{type}"))
+  end
+  
+  def start_script(name)
+    if marvin_repo?(@dest, name)
+      Dir.chdir(@dest) { exec "script/#{name}" }
+    else
+      STDOUT.puts "Woop! #{@dest.gsub(" ", "\\ ")} isn't a marvin app."
+    end
+  end
+  
 end
+
+STDOUT.puts "Marvin - IRC Library / Framework for Ruby"
 
 # Check if we have arguments, we run the normal
 # thor task otherwise we just print the help
