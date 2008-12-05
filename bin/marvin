@@ -94,4 +94,11 @@ class Marvin < Thor
   
 end
 
-Marvin.start
+# Check if we have arguments, we run the normal
+# thor task otherwise we just print the help
+# message.
+if ARGV.empty?
+  Marvin.new.help
+else
+  Marvin.start
+end
