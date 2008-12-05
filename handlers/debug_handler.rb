@@ -1,5 +1,5 @@
-# Used for debugging stuff - trying
-# adding misc stuff to play around with it
+# Use this class to debug stuff as you 
+# go along - e.g. dump events etc.
 class DebugHandler < Marvin::Base
   
 end

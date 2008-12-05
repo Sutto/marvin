@@ -8,14 +8,23 @@ Marvin::Loader.before_run do
   # MyHandler.register! (Marvin::Base subclass) or
   # Marvin::Settings.default_client.register_handler my_handler (a handler instance)
   
-  # Example Handler use.
+  # Register in ruby
+  #
   # LoggingHandler.register! if Marvin::Settings.use_logging
   
-  if Marvin::Loader.type == :client
-    Marvin::Distributed::DispatchHandler.register!
-  else
-    HelloWorld.register!
-    DebugHandler.register!
-  end
+  # Conditional registration - load the distributed dispatcher
+  # if an actual client, otherwise use the normal handlers.
+  #
+  # if Marvin::Loader.distributed_client?
+  #   HelloWorld.register!
+  #   DebugHandler.register!
+  # else
+  #   Marvin::Distributed::DispatchHandler.register!
+  # end
+  
+  # And any other code here that will be run before the client
+  
+  HelloWorld.register!
+  DebugHandler.register!
   
 end

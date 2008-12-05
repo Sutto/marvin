@@ -9,6 +9,11 @@ begin
     s.authors     = ["Darcy Laycock"]
     s.files       = FileList["[A-Z]*.*", "{bin,generators,lib,test,spec,script,handlers}/**/*"] + ["config/setup.rb", "config/settings.yml.sample", "config/connections.yml.sample"]
     s.executables = "marvin"
+    # Our dependencies
+    s.add_dependency "json"
+    s.add_dependency "activesupport", ">= 2.1.0"
+    s.add_dependency "eventmachine",  ">= 0.12.0"
+    s.add_dependency "thor",          ">= 0.9.7"
   end
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
