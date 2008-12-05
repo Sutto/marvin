@@ -48,35 +48,34 @@ class Marvin < Thor
       "dc" => :distributed_client, "co" => :console
   
   desc "start [PATH]", "starts client at the given path"
-  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional
+  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional, :kill => :boolean
   def start(path = ".")
     @dest = File.expand_path(path)
     start_script(:client)
   end
   
   desc "status [PATH]", "shows status of marvin app at a given location"
-  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional
   def status(path = ".")
     @dest = File.expand_path(path)
     start_script(:status)
   end
   
   desc "client [PATH]", "starts a client instance from the given location"
-  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional
+  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional, :kill => :boolean
   def client(path = ".")
     @dest = File.expand_path(path)
     start_script(:client)
   end
   
   desc "ring_server [PATH]", "starts a ring server from the given location"
-  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional
+  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional, :kill => :boolean
   def ring_server(path = ".")
     @dest = File.expand_path(path)
     start_script(:ring_server)
   end
   
   desc "distributed_client [PATH]", "starts a distributed client from the given location"
-  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional
+  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional, :kill => :boolean
   def distributed_client(path = ".")
     @dest = File.expand_path(path)
     start_script(:distributed_client)
@@ -121,6 +120,7 @@ class Marvin < Thor
   def start_script(name)
     if marvin_repo?(@dest, name)
       extra_args = []
+      extra_args << "-k" if options[:kill]
       extra_args << "-v" if options[:verbose]
       extra_args << "-d" if options[:daemon]
       extra_args << "--level=#{options[:level]}" if options[:level]
