@@ -76,6 +76,9 @@ module Marvin
       end
       
       def uses_datastore(datastore_name, local_name)
+        if Marvin::Loader.type == :distributed_client
+          Marvin::Logger.warn "Using datastores inside of a distributed client is a bad idea, mmmkay?"
+        end
         cattr_accessor local_name.to_sym
         self.send("#{local_name}=", Marvin::DataStore.new(datastore_name))
         rescue Exception => e

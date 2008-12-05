@@ -4,7 +4,7 @@ require 'eventmachine'
 module Marvin
   class Settings
     
-    cattr_accessor :environment, :configuration, :is_setup, :default_client,
+    cattr_accessor :environment, :configuration, :is_setup, :default_client, :distributed_namespace,
                    :handler_folder, :default_parser, :log_level, :verbose, :daemon
                    
     self.verbose   = false
@@ -24,6 +24,10 @@ module Marvin
       def setup(options = {})
         return if self.is_setup
         self.setup!(options)
+      end
+      
+      def distributed_namespace
+        @@distributed_namespace ||= :default
       end
       
       def setup!(options = {})

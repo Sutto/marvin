@@ -12,10 +12,10 @@ module Marvin
       def initialize
         self.tuple_space = Rinda::TupleSpace.new
         if Marvin::Settings.log_level == :debug
-          observer = self.tuple_space.notify('write', [:marvin_event, nil, nil, nil])
+          observer = self.tuple_space.notify('write', [:marvin_event, Marvin::Settings.distributed_namespace, nil, nil, nil])
           Thread.start do
             observer.each do |i|
-              event_name, args = i[1][1..2]
+              event_name, args = i[1][2..3]
               Marvin::Logger.logger.debug "Marvin event added - #{event_name.inspect} w/ #{args.inspect}"
             end
           end

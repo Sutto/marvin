@@ -1,183 +1,105 @@
 h1. Marvin
 
-Marvin is a simple IRC Framework for Rails suitable for building things
-such as simple IRC bots. Extracted from real use - we'd originally used
-a heavily modified version of MatzBot - it's been built to service a
-particular need.
+Marvin is a ruby irc framework / library built on top of event machine.
+It's been build from scratch to be evented - you build "handlers" which
+are called whenever an event occurs.
 
-h2. Background
-
-The library is designed to be event driven in that it:
-  
-  # Uses the EventMachine library for all network connections
-  # It uses an architecture based on event listeners - called 'handlers'
-
-It's been heavily influenced by rack in terms of design, making it easy
-to do things like chain handlers, write your own functionality and most
-of all making it easy to implement.
+A single client instance can handle multiple IRC connections (and will
+automatically reconnect in the case that a connection is lost). Distributed
+support (e.g. 1 client => multiple handler backends) is built in out of
+the box on top of DRb.
 
 h2. Getting Started
 
-The easiest way to get started with Marvin is by installing the Marvin gem. To
-do this, make sure Github is added to your gem sources (and you are using
-rubygems >= 1.2.0) (by default, substitute username for Sutto):
+Starting out with Marvin is simple. You can either go the "edge" route -
+cloning from the GitHub repository (in this case, [here](http://github.com/sutto/marvin))
+and then running the following:
 
-  $ gem sources -a http://gems.github.com 
-  $ sudo gem install username-marvin
+  $ rake gemspec
+  $ gem build marvin.gemspec
+  $ sudo gem install marvin.gem
+
+Or, for a generally more stable release you can install it from the GitHub gem
+server (requiring Rubygems >= 1.2.0 with the GitHub sources added), by running
+the following:
+
+  $ sudo gem install Sutto-marvin
   
+Installing the gem will make available a new executable - "+marvin+" - which is
+used as an easy way to do a variety of tasks. To get started, you can create
+a project located at given path using the following command:
 
-Once you have installed the gem, you should have access to the "marvin" command:
-
-  $ marvin --help
+  $ marvin create path-to-my-bot
   
-You can create a new marvin folder:
+Once that's done, you'll have a blank slate loaded with the default marvin handlers -
++HelloWorld+ (which will respond to any addressed "hello"'s) and an empty debug handler
+which you can use for generic debugging. To run the new app, you can use either of the
+following:
 
-  $ marvin create my_marvin_project
+  $ cd path-to-my-bot && script/client
   
-Then simply edit your settings in the +config/settings.yml+
+or, alternatively,
 
-  default:
-    name: Marvin
-    use_logging: false
-    datastore_location: tmp/datastore.json
-  development:
-    user: MarvinBot
-    name: MarvinBot
-    nick:  Marvin
-
-You can use the defaults or configure it. The datastore location
-specifies a relative path where a simple json-backed key value
-store will store persistent information for your client (if chosen).
-Once that's been done, you'll want to setup some connections by editing
-+config/connections.yml+, using the following format:
-
-  "server-address":
-    post: 6667 # Defaults to 6667
-    channels:
-      - "#marvin-testing"
-      - "#relayrelay"
-    nicks:
-      - List
-      - Of
-      - Alternative
-      - Nicks
-  "another-server-address":
-    post: 6667 # Defaults to 6667
-    channels:
-      - "#helloworld"
-
-Which will let marvin connect to multiple servers - autojoining the specific rooms.
-Next, to get started you can simply type:
-
-  $ ./script/client
-
-The bot should join the specified channel and will respond to some simple
-commands by default:
-
-  *YourName*: MarvinBot3000: hello
-  *MarvinBot3000*: YourName: Hola!
+  $ marvin client path-to-my-bot
   
-As defined in handlers/hello_world.rb
+There are a couple of options available for the client (as well as the marvin library),
+Each of which can be found by appending the "--help" option to the command.
+
+Once your client has been started (assuming the name wasn't taken / it could connect),
+simply join the chat room your bot was instructed to join and say the following (substiting
+BotNick for the nick name your bot connected with):
+
+  BotNick: hello
+  
+Or even easier, by PM'ing the bot with:
+
+  hello
+  
+Assuming all went well, your bot should reply back with something akin to (where YourNick)
+if the nickname you connected with):
+
+  YourNick: Hola from process with pid 12342
+
+h2. Distributed Bots
+
+One of the relatively unique features of Marvin is the ability to write bots
+which use DRb and Rinda which can grow with relative ease.
+
+It's important to keep in mind that keeping state is discouraged in this case
+as it can not be ensured that clients are still active or that you will always
+get messages from the same client.
+
+For a start, take a look at the default +config/setup.rb+ file which contains
+an example of registering handlers on a distributed client as well as setting
+up the distributed handler which needs to be setup on the main client.
+
+By default, the messages will be dispatched to the first discovered tuple
+space (using Rinda::RingFinger) and will be of the format:
+
+  [:marvin_format, :your_namespace, :message_name, {:message => "options"}, client_reference]
+  
+You can change the namespace (which defaults to +:default+) by setting +Marvin::Settings.distributed_namespace+
+
+Running a distributed client requires three things:
+
+* 1 Ring server instance (+script/ring_server+ or +marvin ring_server+ or +marvin rs+)
+* 1+ Client instances (+script/client+ or +marvin client+ or +marvin cl+)
+* 1+ Distributed Client instances (+script/distributed_client+ or +marvin distributed_client+ or +marvin dc+)
+
+Each of which takes the default options of:
+* -v - Be verbose and print to STDOUT if not daemonized
+* -level=something - set level, defaults to info
+* -d - daemonize the process
+* -k - kill all daemonized instances of this specific kind
+
+h2. Example Bots
+
+Coming soon.
 
 h2. Thanks
 
-Thanks goes out to the following people / projects:
+Thanks go to:
 
 * Jeff Rafter - contributed code and doc changes, now one of the co-developers.
 * epitron / halogrium - For the ragel state machine used in Marvin::Parsers::RagelParser
 * The creator of Ruby-IRCD - the server component is heavily influenced by / part derivative of said work.
-
-h2. Marvin::Base - A handler starting point
-
-The first, Marvin::Base provides a base set of methods (e.g. say,
-reply etc etc.) which make writing a client easier. You can simply
-inherit from Marvin::Base, write some logic and then use the class
-method on_event to define responses to events. The passed in meta
-data for each event is then usable via options.attribute_name - an
-openstruct version of the details. e.g.
-
-  class NinjaStuff < Marvin::Base
-    on_event :incoming_message do
-      do_something
-    end
-    def do_something
-      reply options.message # Will echo back the message
-    end
-  end
-    
-Or the like. Also, the halt! method can be called in any subclass to
-halt the handler callback chain.
-
-You also get access to the class method +on_numeric+ which makes
-it relatively easy to respond to a specific numeric reply.
-
-h2. Marvin::CommandHandler - Ridiculously easy Bots
-
-With Marvin::CommandHandler, you get to define seriously
-simple classes which can act as a simple bot. It takes
-great inspiration from "MatzBot":http://github.com/defunkt/matzbot/tree/master
-to make it as easy as possible to make a simple bot
-
-To write a CommandHandler, you simply create a subclass
-(ala ActiveRecord::Base), define a few methods and then
-just use the "exposes" class method. e.g.
-
-  class MySecondExample < Marvin::CommandHandler
-    exposes :hello
-    def hello(data)
-      reply "Hello!"
-    end
-  end
-    
-Where data is an array of parameters. exposed methods will be called
-when they match the following pattern:
-
-  Botname: *exposed-method* *space-seperated-list-meaning-data*
-  
-i.e., the above handler could be called in IRC as such:
-
-  YourBotsName: hello
-  
-or, even easier, by PM'ing the bot with:
-  
-  hello
-
-h2. Marvin::MiddleMan - Introducing middleware
-
-Marvin::MiddleMan lets you insert middleware between handlers
-and you're client - letting you do things such as translating
-all messages on the fly. It's build to be extensible and is
-relatively simple to use. On any Marvin::Base subclass (baring
-the MiddleMan itself), using a middle man is easy - you simply
-call the register! class method with an option argument. e.g:
-
-  HelloWorld.register! Marvin::MiddleMan
-
-h2. Marvin::DataStore - A dead simple persistent hash store
-
-Want to save data between when you stop and start your IRC
-Client? With Marvin, it's really, really simple - Marvin::DataStore
-offers a simple syntax for persistent data stores.
-
-New datastores can be created with Marvin::DataStore.new("global-store-key").
-From there, you have a hash to do whatever the hell you want. Just
-make sure the data you store is JSON-serializable.
-
-When you start - stop a server (via Marvin::Loader.run! and Marvin::Loader.stop!)
-you're data will be loaded from and written to disk accordingly.
-
-If you're inside a Marvin::Base subclass it's even easier. You can get a cattr_access
-style accessor for free - just use the "uses_datastore" method. e.g:
-
-  class X < Marvin::Base
-    uses_datastore "datastore-global-key", :something
-  end
-  
-Then, self.something will point to the data store - letting you do
-things like:
-
-  def hello(data)
-    (self.something[from] ||= 0) += 1
-  end
-  
-which will persist the count between each session.

@@ -62,8 +62,8 @@ module Marvin
           while !self.stopped
             begin
               unless self.ring_server.blank?
-                event = self.ring_server.take([:marvin_event, nil, nil, nil], 5)
-                dispatch(*event[1..-1]) unless event.blank?
+                event = self.ring_server.take([:marvin_event, Marvin::Settings.distributed_namespace, nil, nil, nil], 2)
+                dispatch(*event[2..-1]) unless event.blank?
               end
             rescue
               # Reset the ring server on event of connection refused etc.

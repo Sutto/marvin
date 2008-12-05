@@ -4,6 +4,9 @@
 # any connections are created
 Marvin::Loader.before_run do
   
+  # Want a non-default namespace? Choose something simple
+  # Marvin::Settings.distributed_namespace = :some_namespace
+  
   # E.G.
   # MyHandler.register! (Marvin::Base subclass) or
   # Marvin::Settings.default_client.register_handler my_handler (a handler instance)

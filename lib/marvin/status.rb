@@ -39,18 +39,18 @@ module Marvin
           begin
             rs = Rinda::RingFinger.finger.lookup_ring(3)
             STDOUT.puts " Ring Server:        #{rs.__drburi}"
-            items = rs.read_all([:marvin_event, nil, nil, nil])
+            items = rs.read_all([:marvin_event, Marvin::Settings.distributed_namespace, nil, nil, nil])
             STDOUT.puts " Unprocessed Items:  #{items.size}"
             STDOUT.puts ""
             unless items.empty?
-              start_time = items.first[2][:dispatched_at]
+              start_time = items.first[3][:dispatched_at]
               STDOUT.puts  " Earliest Item:     #{start_time ? start_time.strftime("%I:%M%p %d/%m/%y") : "Never"}"
-              end_time   = items.last[2][:dispatched_at]
+              end_time   = items.last[3][:dispatched_at]
               STDOUT.puts  " Latest Item:       #{end_time ? end_time.strftime("%I:%M%p %d/%m/%y") : "Never"}"
               mapping = {}
               items.each do |i|
-                mapping[i[1].inspect] ||= 0
-                mapping[i[1].inspect] += 1
+                mapping[i[2].inspect] ||= 0
+                mapping[i[2].inspect] += 1
               end
               width = mapping.keys.map { |k| k.length }.max
               STDOUT.puts ""

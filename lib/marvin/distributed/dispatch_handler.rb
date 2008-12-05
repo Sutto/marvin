@@ -46,7 +46,7 @@ module Marvin
       # TODO: Improve it to dump messages to disk at a predefined limit.
       def dispatch(name, options)
         options[:dispatched_at] ||= Time.now
-        tuple = [:marvin_event, name, options, self.client]
+        tuple = [:marvin_event, Marvin::Settings.distributed_namespace, name, options, self.client]
         begin
           (@queued_messages ||= []) << tuple
           if self.ring_server.nil?
