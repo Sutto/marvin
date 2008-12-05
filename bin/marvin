@@ -46,10 +46,24 @@ class Marvin < Thor
   
   desc "start [PATH]", "starts client at the given path"
   def start(path = ".")
+    @dest = File.expand_path(path)
+    if File.exist?(source(@dest, "script/client"))
+      Dir.chdir(@dest) { exec "script/client" }
+    else
+      STDOUT.puts "Woops! #{@dest.gsub(" ", "\\ ")} doesn't look to be a marvin directory."
+      exit!
+    end
   end
   
-  desc "start [PATH]", "shows status of marvin app at a given location"
+  desc "status [PATH]", "shows status of marvin app at a given location"
   def status(path = ".")
+    @dest = File.expand_path(path)
+    if File.exist?(source(@dest, "script/status"))
+      Dir.chdir(@dest) { exec "script/status" }
+    else
+      STDOUT.puts "Woops! #{@dest.gsub(" ", "\\ ")} doesn't look to be a marvin directory."
+      exit!
+    end
   end
   
   private
