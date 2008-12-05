@@ -1,71 +1,83 @@
 #!/usr/bin/env ruby
 require 'rubygems'
 require 'fileutils'
+require "thor"
 
-LOCATION_ROOT = File.join(File.dirname(__FILE__), "..")
-DEST = ARGV[1] || "./marvin"
-
-def j(*args); File.join(*args); end
-
-def copy(f, t = nil)
-  t = f if t.nil?
-  File.open(j(DEST, t), "w+") do |file|
-    file.puts File.read(j(LOCATION_ROOT, f))
+class Marvin < Thor
+  
+  GEM_ROOT = File.expand_path(File.join(File.dirname(__FILE__), ".."))
+  
+  attr_accessor :dest
+  
+  # Map default help tasks.
+  map ["-h", "-?", "--help", "-D"] => :help
+  
+  desc "create [PATH]", "creates a new marvin app at the given path"
+  method_options :verbose => :boolean
+  def create(path)
+    @dest    = File.expand_path(path)
+    @verbose = options[:verbose]
+    if File.directory?(@dest)
+      STDOUT.puts "The given directory, \"#{path}\", already exists."
+      exit! 1
+    else
+      say "Creating Marvin app"
+      say " => Making directories"
+      mkdir   @dest
+      mkdir   source(@dest, "script")
+      mkdir   source(@dest, "config")
+      mkdir   source(@dest, "handlers")
+      mkdir_p source(@dest, "tmp/pids")
+      mkdir   source(@dest, "log")
+      mkdir   source(@dest, "lib")
+      say " => Copying files..."
+      copy "config/setup.rb"
+      copy "config/connections.yml.sample", "config/connections.yml"
+      copy "config/settings.yml.sample",    "config/settings.yml"
+      copy "handlers/hello_world.rb"
+      copy "handlers/debug_handler.rb"
+      %w(client console distributed_client ring_server status).each do |c|
+        copy "script/#{c}"
+        FileUtils.chmod 0755, source(@dest, "script/#{c}")
+      end
+      say "Done!"
+    end
   end
+  
+  desc "start [PATH]", "starts client at the given path"
+  def start(path = ".")
+  end
+  
+  desc "start [PATH]", "shows status of marvin app at a given location"
+  def status(path = ".")
+  end
+  
+  private
+  
+  def source(*args)
+    File.expand_path(File.join(*args))
+  end
+  
+  def copy(from, to = from)
+    s, d = source(GEM_ROOT, from), source(@dest, to)
+    say " --> cp #{s.gsub(" ", "\\ ")} #{d.gsub(" ", "\\ ")}" if @verbose
+    FileUtils.cp_r(s, d)
+  end
+  
+  def mkdir(path)
+    say " --> mkdir #{path.gsub(" ", "\\ ")}" if @verbose
+    FileUtils.mkdir path
+  end
+  
+  def mkdir_p(path)
+    say " --> mkdir #{path.gsub(" ", "\\ ")}" if @verbose
+    FileUtils.mkdir_p path
+  end
+  
+  def say(text)
+    STDOUT.puts text
+  end
+  
 end
 
-puts "Marvin - A Ruby IRC Library / Framework"
-if ARGV.include?("-h") || ARGV.include?("--help")
-  puts "Usage: marvin create <name> - Creates a marvin directory at name or ./marvin"
-  puts "       marvin (in a Marvin dir) - Starts it, equiv. to script/marvin"
-  exit
-end
-
-if ARGV.length >= 1 && !["start", "stop", "run", "restart"].include?(ARGV[0])
-  if ARGV[0].to_s.downcase != "create"
-    puts "'#{ARGV[0]}' isn't a valid command. - Please use #{__FILE__} --help"
-    exit(1)
-  end
-  if File.exist?(DEST) && File.directory?(DEST)
-    puts "The folder '#{DEST}' already exists."
-    exit(1)
-  end
-  # Generate it.
-  FileUtils.mkdir(DEST)
-  ["log", "tmp", "config", "handlers", "script"].each do |folder|
-    FileUtils.mkdir(j(DEST, folder))
-  end
-  
-  puts "Writing Settings file"
-  copy "config/settings.yml.sample", "config/settings.yml"
-  
-  puts "Writing Connections file"
-  copy "config/connections.yml.sample", "config/connections.yml"
-  
-  puts "Writing setup.rb"
-  copy "config/setup.rb"
-  
-  puts "Copying start scripts"
-  copy "script/client"
-  copy "script/daemon-runner"
-  FileUtils.chmod 0755, j(DEST, "script/client")
-  FileUtils.chmod 0755, j(DEST, "script/daemon-runner")
-  
-  puts "Copying example handlers"
-  copy "handlers/hello_world.rb"
-  copy "handlers/debug_handler.rb"
-  
-  puts "Done!"
-elsif ARGV.length >= 1
-  if !File.exist?("script/daemon-runner")
-    puts "Woops! This isn't a marvin directory."
-    exit(1)
-  end
-  exec "script/daemon-runner #{ARGV.map {|a| a.include?(" ") ? "\"#{a}\"" : a }.join(" ")}"
-else
-  if !File.exist?("script/client")
-    puts "Woops! This isn't a marvin directory."
-    exit(1)
-  end
-  exec "script/client"
-end
+Marvin.start
