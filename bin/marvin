@@ -75,7 +75,8 @@ class Marvin < Thor
   end
   
   desc "distributed_client [PATH]", "starts a distributed client from the given location"
-  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional, :kill => :boolean
+  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional,
+                 :kill => :boolean, :nodes => :numeric
   def distributed_client(path = ".")
     @dest = File.expand_path(path)
     start_script(:distributed_client)
@@ -124,7 +125,21 @@ class Marvin < Thor
       extra_args << "-v" if options[:verbose]
       extra_args << "-d" if options[:daemon]
       extra_args << "--level=#{options[:level]}" if options[:level]
-      Dir.chdir(@dest) { exec("script/#{name}", *extra_args) }
+      if options[:daemon] && options[:nodes]
+        nodes = options[:nodes]
+      else
+        nodes = 1
+      end
+      Dir.chdir(@dest) do
+        # Lets you start a number of different processes.
+        # uses system if there are more than 1 nodes, exec
+        # otherwise.
+        if nodes > 1
+          nodes.times { system("script/#{name}", *extra_args) }
+        else
+          exec("script/#{name}", *extra_args)
+        end
+      end
     else
       STDOUT.puts "Woop! #{@dest.gsub(" ", "\\ ")} isn't a marvin app."
     end
