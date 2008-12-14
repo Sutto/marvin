@@ -62,7 +62,7 @@ module Marvin::IRC::Server::User::HandleMixin
       end
       chan = (Marvin::IRC::Server::ChannelStore[channel.downcase] ||= Marvin::IRC::Server::Channel.new(channel))
       if chan.join(self)
-        rpl :TOPIC, channel, ":#{chan.topic.blank? ? "There is no topic" :  nchan.topic}"
+        rpl :TOPIC, channel, ":#{chan.topic.blank? ? "There is no topic" :  chan.topic}"
         rpl :NAMREPLY, "=", channel, ":#{chan.members.map { |m| m.nick }.join(" ")}"
         rpl :ENDOFNAMES, channel, ":End of /NAMES list."
         @channels << chan
@@ -123,7 +123,7 @@ module Marvin::IRC::Server::User::HandleMixin
     return if c.blank?
     if !@channels.include?(c)
       err :NOTONCHANNEL, opts[:target], ":Not a member of that channel"
-    elsif opts[:message].nil?
+    elsif opts[:topic].blank?
       t = c.topic
       if t.blank?
         rpl :NOTOPIC, c.name, ":No topic is set"
@@ -131,7 +131,7 @@ module Marvin::IRC::Server::User::HandleMixin
         rpl :TOPIC, c.name, ":#{t}"
       end
     else
-      c.topic self, opts[:message].strip
+      c.topic self, opts[:topic].strip
     end
   end
   
