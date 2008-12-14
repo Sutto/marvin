@@ -21,6 +21,7 @@ module Marvin
       # Store each channel
       ChannelStore = NamedStore.new(:names, :channel)
       
+      autoload :RemoteInterface,    'marvin/irc/server/remote_interface'
       autoload :Channel,            'marvin/irc/server/channel'
       # The actual network connection
       autoload :BaseConnection,     'marvin/irc/server/base_connection'
@@ -34,6 +35,7 @@ module Marvin
       # call start_server w/ the default options
       # and inside an EM::run block.
       def self.run
+        Marvin::IRC::Server::RemoteInterface.start
         EventMachine::run do
           Marvin::Logger.info "Starting server..."
           start_server :bind_addr => "0.0.0.0"

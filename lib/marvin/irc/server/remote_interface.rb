@@ -13,14 +13,17 @@ module Marvin
       # a running server instance. Used for things such as
       # posting status updated directly on the server.
       class RemoteInterface
+        include DRbUndumped
         
         def self.start
+          DRb.start_service
           instance = self.new # Create the new instance
           rs = Rinda::RingFinger.primary
           unless rs.blank?
             renewer = Rinda::SimpleRenewer.new
-            tuple   = [:marvin_server, Marvin::Settings.distributed_namespace, self]
+            tuple   = [:marvin_server, Marvin::Settings.distributed_namespace, instance]
             Marvin::Logger.info "Publishing information about service to the tuplespace"
+            Marvin::Logger.debug "Pushing #{tuple.inspect}"
             rs.write(tuple, renewer)
           end
         end
@@ -32,7 +35,7 @@ module Marvin
         
         # Returns the names of all channels
         def channel_names
-          Marvin::IRC::Server::ChannelStore.values.map { |c| c.name.dup }
+          Marvin::IRC::Server::ChannelStore.keys
         end
         
         # Returns the channel with the given name.
