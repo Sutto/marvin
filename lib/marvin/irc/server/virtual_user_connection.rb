@@ -9,7 +9,6 @@ module Marvin::IRC::Server
     def initialize(nick)
       self.nick     = nick
       self.channels = []
-
     end
     
     def prefix
@@ -35,9 +34,23 @@ module Marvin::IRC::Server
       return nil if channel !~ CHANNEL
       chan = (Marvin::IRC::Server::ChannelStore[channel.downcase] ||= Marvin::IRC::Server::Channel.new(channel))
       if chan.join(self)
-        self.channels << channel
+        @channels << channel
         return chan
       end
+    end
+    
+    class << self
+      
+      def claimed?(nick)
+        Marvin::IRC::Server::UserStore.virtual?(nick)
+      end
+      
+      def claim(nick)
+        unless Marvin::IRC::Server::UserStore[nick.downcase].blank?
+          return(Marvin::IRC::Server::UserStore[nick.downcase] ||= Marvin::IRC::Server::VirtualUserConnection.new(nick))
+        end
+      end
+      
     end
     
     private
