@@ -67,6 +67,13 @@ class Marvin < Thor
     start_script(:client)
   end
   
+  desc "server [PATH]", "starts a server instance from the given location"
+  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional, :kill => :boolean
+  def server(path = ".")
+    @dest = File.expand_path(path)
+    start_script(:server)
+  end
+  
   desc "ring_server [PATH]", "starts a ring server from the given location"
   method_options :verbose => :boolean, :daemon => :boolean, :level => :optional, :kill => :boolean
   def ring_server(path = ".")
