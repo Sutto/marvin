@@ -3,6 +3,7 @@ module Marvin::IRC::Server
     USER_MODES    = "aAbBcCdDeEfFGhHiIjkKlLmMnNopPQrRsStUvVwWxXyYzZ0123459*@"
     CHANNEL_MODES = "bcdefFhiIklmnoPqstv"
     CHANNEL       = /^[\&\#]+/
+    
     include User::HandleMixin
     
     attr_accessor :nick, :host, :user, :prefix, :password, :mode,
@@ -93,7 +94,7 @@ module Marvin::IRC::Server
     end
     
     def update_prefix!
-      @prefix = "#{@nick}!~#{@user}@#{peer_name}" if details_complete?
+      @prefix = "#{@nick}!n=#{@user}@#{peer_name}" if details_complete?
     end
     
     def details_complete?
