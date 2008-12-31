@@ -15,6 +15,8 @@ module Marvin::IRC::Server::User::HandleMixin
     nick = opts[:new_nick]
     if !nick.blank? && !Marvin::IRC::Server::UserStore.nick_taken?(nick.downcase)
       if !(new_nick = @nick.nil?)
+        logger.info "Reclaiming nick (if taken)"
+        Marvin::IRC::Server::UserStore.reclaim(nick)
         logger.debug "Notifying all users of nick change: #{@nick} => #{nick}"
         # Get all users and let them now we've changed nick from @nick to nick
         users = [self]
