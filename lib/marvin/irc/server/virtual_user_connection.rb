@@ -12,17 +12,28 @@ module Marvin::IRC::Server
     end
     
     def prefix
-      "#{@nick}!n=relayrelayuser@relayrelay.com"
+      "#{@nick}!n=rruser@relayrelay.com"
+    end
+    
+    def notify(*args)
+      Marvin::Logger.debug "Virtual User #{self.nick} got notify w/ #{args.inspect}"
     end
     
     # Notify the remote handler we've received a message
-    def message(user, message)
-      dispatch :received_message, :user => user, :message => message, :target => self
+    def message(user, message, virtual = false)
+      dispatch :received_message, :user => user, :message => message, :target => self unless virtual
     end
     
-    def send_message(target, contents)
+    def send_message(target, message)
       t = target_from(target)
-      return t.blank? ? nil : t.message(self, contents)
+      Marvin::Logger.debug "DRb Message from #{self.nick} to #{t.inspect}: #{message.inspect}"
+      if t.blank?
+        Marvin::Logger.debug "Target not found"
+        return nil
+      else
+        Marvin::Logger.debug "Sending message to #{t.inspect}"
+        return t.message(self, message, true)
+      end
     end
     
     def reclaim!
@@ -61,7 +72,7 @@ module Marvin::IRC::Server
         c = join(target) if c.nil? || !c.member?(self)
         return c
       else
-        return Marvin::IRC::Server::UserStore[target.downcase]
+        return Marvin::IRC::Server::UserStore[target.downcase] ||= Marvin::IRC::Server::VirtualUserConnection.new(target)
       end
     end
     

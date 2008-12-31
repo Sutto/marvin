@@ -59,6 +59,7 @@ module Marvin
         opts[:host]       ||= self.host_name
         opts[:port]       ||= 6667
         EventMachine::start_server(opts[:bind_addr] || opts[:host], opts[:port], BaseConnection, opts)
+        Marvin::Logger.info "Server started"
       end
       
       def self.host_name

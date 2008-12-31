@@ -30,9 +30,15 @@ module Marvin::IRC::Server
     
     # Notification messages
     
-    def message(user, message)
-      notify :PRIVMSG, @nick, ":#{message}", :prefix => user.prefix
-      dispatch :outgoing_message, :user => user, :message => message, :target => self
+    def send_message(target, message)
+      t = target_from(target)
+      logger.debug "Sending #{t.inspect} #{message.inspect} from #{self.inspect}"
+      t.message(self, message) unless t.blank?
+    end
+    
+    def message(user, message, virtual = false)
+      notify :PRIVMSG, @nick, ":#{message}", :prefix => user.prefix, :virtual => virtual
+      dispatch :outgoing_message, :user => user, :message => message, :target => self, :virtual => virtual
     end
     
     def notice(user, message)

@@ -69,9 +69,13 @@ module Marvin::IRC::Server
       check_emptyness!
     end
     
-    def message(user, message)
-      @members.each { |m| m.notify :privmsg, @name, ":#{message}", :prefix => user.prefix unless user == m }
-      dispatch :outgoing_message, :target => self, :user => user, :message => message
+    def message(user, message, virtual = false)
+      @members.each do |m|
+        if virtual || user != m
+          m.notify(:privmsg, @name, ":#{message}", :prefix => user.prefix, :virtual => virtual)
+        end
+      end
+      dispatch :outgoing_message, :target => self, :user => user, :message => message, :virtual => virtual
     end
     
     def notice(user, message)

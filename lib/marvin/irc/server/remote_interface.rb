@@ -23,7 +23,7 @@ module Marvin
             renewer = Rinda::SimpleRenewer.new
             tuple   = [:marvin_server, Marvin::Settings.distributed_namespace, instance]
             Marvin::Logger.info "Publishing information about service to the tuplespace"
-            Marvin::Logger.debug "Pushing #{tuple.inspect}"
+            Marvin::Logger.debug "Pushing #{tuple.inspect} to #{rs.__drburi}"
             rs.write(tuple, renewer)
           rescue
             Marvin::Logger.warn "No ring server found - remote interface not running"
@@ -48,6 +48,9 @@ module Marvin
         # Send an action from a user to a specific
         # channel, using from nick as a facade.
         def message(from_nick, target, contents)
+          u = (Marvin::IRC::Server::UserStore[from_nick.to_s.downcase] ||= VirtualUserConnection.new(from_nick))
+          Marvin::Logger.info "#{from_nick} (#{u.inspect}) messaging #{target}: #{contents}"
+          u.send_message(target, contents) unless u.blank?
         end
         
       end
