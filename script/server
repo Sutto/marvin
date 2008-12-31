@@ -1,12 +1,4 @@
 #!/usr/bin/env ruby
-require 'rubygems'
-#!/usr/bin/env ruby
-require 'rubygems'
-
-$:.unshift(File.dirname(__FILE__) + "/../lib/") if File.exist?(File.dirname(__FILE__) + "/../lib/marvin.rb")
-MARVIN_ROOT = File.join(File.dirname(__FILE__), "..")
-
-# And Require Marvin.
-require 'marvin'
+require File.join(File.dirname(__FILE__), "..", "config", "boot")
 Marvin::Loader.run! :server
 
