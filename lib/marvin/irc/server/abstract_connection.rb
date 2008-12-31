@@ -55,6 +55,11 @@ module Marvin::IRC::Server
       
     end
     
+    def dispatch(name, opts = {})
+      opts[:connection] ||= self
+      super
+    end
+    
     private
     
     def command(name, *args)

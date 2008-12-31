@@ -27,7 +27,16 @@ Marvin::Loader.before_run do
   
   # And any other code here that will be run before the client
   
-  HelloWorld.register!
-  DebugHandler.register!
+  #HelloWorld.register!
+  #DebugHandler.register!
+  
+  if Marvin::Loader.server?
+   rails_dir = "/Users/sutto/Code/RelayRelay/PowWow"
+   ENV['RAILS_ENV'] ||= "development"
+   require File.join(rails_dir, 'config/environment')
+   require File.join(rails_dir, 'lib/marvin_event_processor')
+   # Register our super-dooper processer thingy
+   Marvin::IRC::Server::UserConnection.register_handler MarvinEventProcessor.new
+  end
   
 end

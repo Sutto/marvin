@@ -6,6 +6,8 @@ require File.join(File.dirname(__FILE__), 'test_helper')
 # 3) The two different types of prefixes
 # 4) The Event class
 class ParserTest < Test::Unit::TestCase
+  
+  # The default parser
   @@parser = Marvin::Parsers::SimpleParser
   
   context "When parsing a LIST" do

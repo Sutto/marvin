@@ -41,7 +41,7 @@ module Marvin
       unless command_name.nil?
         logger.debug "Command Exists - processing"
         # Dispatch the command.
-        self.send(command_name, data.split(" ")) if self.respond_to?(command_name)
+        self.send(command_name, data.to_s.split(" ")) if self.respond_to?(command_name)
       end
     end
     

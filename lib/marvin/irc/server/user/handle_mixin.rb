@@ -19,7 +19,7 @@ module Marvin::IRC::Server::User::HandleMixin
         # Get all users and let them now we've changed nick from @nick to nick
         users = [self]
         @channels.each do |c|
-          users += c.members.values
+          users += c.members
         end
         users.uniq.each { |u| u.notify :NICK, nick, :prefix => prefix }
         dispatch :outgoing_nick, :nick => @nick, :new_nick => nick

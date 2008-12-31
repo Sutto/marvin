@@ -1,12 +1,12 @@
-# "irc.freenode.net":
-#     port: 6667
-#     channels:
-#       - "#marvin-testing"
-#       - "#relayrelay"
-
-"localhost":
+"irc.freenode.net":
     port: 6667
     channels:
-      - "#webjam"
-      - "#eotw"
-      - "#general"
+      - "#marvin-testing"
+      - "#relayrelay"
+
+# "localhost":
+#     port: 6667
+#     channels:
+#       - "#webjam"
+#       - "#eotw"
+#       - "#general"

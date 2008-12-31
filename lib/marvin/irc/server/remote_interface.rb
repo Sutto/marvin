@@ -18,13 +18,15 @@ module Marvin
         def self.start
           DRb.start_service
           instance = self.new # Create the new instance
-          rs = Rinda::RingFinger.primary
-          unless rs.blank?
+          begin
+            rs = Rinda::RingFinger.primary
             renewer = Rinda::SimpleRenewer.new
             tuple   = [:marvin_server, Marvin::Settings.distributed_namespace, instance]
             Marvin::Logger.info "Publishing information about service to the tuplespace"
             Marvin::Logger.debug "Pushing #{tuple.inspect}"
             rs.write(tuple, renewer)
+          rescue
+            Marvin::Logger.warn "No ring server found - remote interface not running"
           end
         end
         

@@ -55,6 +55,7 @@ module Marvin
               logger.warn "Dispatch handler queue is currently holding #{size} items"
             end
           else
+            logger.debug "Writing #{@queued_messages.size} message to the ring server"
             @queued_messages.dup.each do |t|
               ring_server.write(t)
               @queued_messages.delete(t)
