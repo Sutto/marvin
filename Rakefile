@@ -9,7 +9,9 @@ begin
     s.homepage    = "http://blog.ninjahideout.com/"
     s.description = "Marvin is a Ruby IRC library / framework for ultimate awesomeness and with an evented design."
     s.authors     = ["Darcy Laycock"]
-    s.files       = FileList["[A-Z]*.*", "{bin,generators,lib,test,spec,script,handlers}/**/*"] + ["config/setup.rb", "config/settings.yml.sample", "config/connections.yml.sample"]
+    # Non-standard files to be included.
+    extras        = ["config/setup.rb", "config/boot.rb", "config/settings.yml.sample", "config/connections.yml.sample"]
+    s.files       = FileList["[A-Z]*.*", "{bin,generators,lib,test,spec,script,handlers}/**/*"] + extras
     s.executables = "marvin"
     # Our dependencies
     s.add_dependency "json"

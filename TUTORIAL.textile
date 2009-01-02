@@ -1,0 +1,54 @@
+h1. A Quick Introduction to Marvin
+
+Welcome young one - in today's lesson we're going to learn
+how to build a simple IRC bot using "Marvin":http://github.com/Sutto/marvin.
+If you haven't built an IRC bot before, there is a great
+deal of things you can do - ranging from consuming content (e.g.
+analysing logs of IRC rooms, seeing who swears the most)
+as well as other things such as bridges between other
+protocols (twitter => irc bridges) and all sorts of fancy stuff.
+
+h3. What is this marvin thingy-majiggy?
+
+Marvin is an IRC Library / Framework (it can be used either way)
+built with an evented design on top of DRb, EventMachine and a bunch
+of other stuff for Ruby. it's currently got a fairly complete client
+and a very incomplete server implementation.
+
+h2. Step #1 - Getting Marvin
+
+There are currently two different ways to get marvin - via the
+GitHub gem sources or directly from the source.
+
+To install from the GitHub gem source, simply use:
+
+  sudo gem install Sutto-marvin -s http://gems.github.com
+  
+Alternatively, you can directly clone the repository. To do this, you'll need to run the
+following:
+
+  git clone git://github.com/Sutto/marvin.git
+  cd marvin
+  sudo ./script/install
+  
+Once that's done, not only will you now have a handy "marvin" gem which you
+can require but you will also have a handy executable of the same name which
+you can use.
+
+h2. Step #2 - Creating a Skeleton App
+
+By default, marvin currently uses a simple skeleton app (not unlike
+Ruby on Rails) as a starting point. To get started, you simply use
+the "marvin create" command with a path to / folder name (which must not
+yet exist) into which you wish to create the folder. For example, if I wanted
+to create a new irc bot called "BlorkBot", I could do the following:
+
+  marvin create BlorkBot
+  
+And a new directory with the basic structure called "BlorkBot" will be created
+under the current directory. To get started, you can then open your editor and
+browse the given folder. Of this generated structure, there are only two folders
+you need to worry about for the moment - config and handlers.
+
+h2. Step #3 - Basic configuration
+  
