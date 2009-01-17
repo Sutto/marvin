@@ -15,6 +15,24 @@ module Marvin
       class RemoteInterface
         include DRbUndumped
         
+        # Attempts to find a running IRC server,
+        # returning an instance of it if it exists.
+        def self.primary
+          DRb.start_service
+          begin
+            rs = Rinda::RingFinger.primary
+            server = rs.read_all([:marvin_server, Marvin::Settings.distributed_namespace, nil])
+            if server.empty?
+              return nil
+            else
+              # Return the first element in the list of servers, getting it's servers instance.
+              return server.first.last
+            end
+          rescue
+            return nil
+          end
+        end
+        
         def self.start
           DRb.start_service
           instance = self.new # Create the new instance

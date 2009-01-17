@@ -137,8 +137,10 @@ module Marvin
     end
     
     # Register to the Marvin::DataStore methods
-    before_run { Marvin::DataStore.load! if Marvin::Loader.type == :client }
-    after_stop { Marvin::DataStore.dump! if Marvin::Loader.type == :client }
+    if Marvin::Loader.client?
+      before_run { Marvin::DataStore.load! }
+      after_stop { Marvin::DataStore.dump! }
+    end
     
   end
 end
