@@ -13,7 +13,7 @@ module Marvin
       :server             => Marvin::IRC::Server,
       :ring_server        => Marvin::Distributed::RingServer,
       :distributed_client => Marvin::Distributed::DRbClient,
-      :console            => nil
+      :console            => Marvin::Console
     }
     
     # For each of the known types, define a method
@@ -80,11 +80,11 @@ module Marvin
     
     def run!
       self.register_signals
-      Marvin::Options.parse! unless self.type == :console
+      Marvin::Options.parse!
       Marvin::Daemon.daemonize! if Marvin::Settings.daemon?
       Marvin::Logger.setup
       self.load_settings
-      require(Marvin::Settings.root / "config/setup")
+      require(Marvin::Settings.root / "config" / "setup")
       self.load_handlers
       self.class.invoke_hooks!   :before_run
       attempt_controller_action! :run

@@ -1,9 +1,3 @@
 #!/usr/bin/env ruby
-
-libs = ["-r irb/completion", "-r lib/marvin", "-r lib/marvin/console"]
-
-cmd = "irb #{libs.join(" ")} --simple-prompt"
-
-puts "Loading Marvin console..."
-
-exec cmd
+require File.join(File.dirname(__FILE__), "..", "config", "boot")
+Marvin::Loader.run! :console

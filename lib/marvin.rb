@@ -21,6 +21,7 @@ module Marvin
   autoload :Distributed,      'marvin/distributed'
   autoload :AbstractClient,   'marvin/abstract_client'
   autoload :Base,             'marvin/base'
+  autoload :Console,          'marvin/console'
   autoload :ClientMixin,      'marvin/client_mixin'
   autoload :Settings,         'marvin/settings'
   autoload :Logger,           'marvin/logger'
