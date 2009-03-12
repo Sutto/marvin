@@ -10,8 +10,8 @@ require 'marvin/exceptions'
 module Marvin
   module VERSION
     MAJOR = 0
-    MINOR = 1
-    PATCH = 20081120
+    MINOR = 3
+    PATCH = 0
     
     STRING = [MAJOR, MINOR, PATCH].join(".")
   end
@@ -22,6 +22,7 @@ module Marvin
   autoload :AbstractClient,   'marvin/abstract_client'
   autoload :Base,             'marvin/base'
   autoload :Console,          'marvin/console'
+  autoload :CoreCommands,     'marvin/core_commands'
   autoload :ClientMixin,      'marvin/client_mixin'
   autoload :Settings,         'marvin/settings'
   autoload :Logger,           'marvin/logger'

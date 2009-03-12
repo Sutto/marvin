@@ -1,3 +1,5 @@
+require 'set'
+
 module Marvin
   
   # A Simple Marvin handler based on processing
@@ -5,15 +7,19 @@ module Marvin
   class CommandHandler < Base
     
     class_inheritable_accessor :exposed_methods, :command_prefix
+    cattr_accessor :descriptions, :last_description, :exposed_method_names
     
-    self.command_prefix  = ""
-    self.exposed_methods = []
+    self.command_prefix       = ""
+    self.exposed_methods      = Set.new
+    self.descriptions         = {}
+    self.exposed_method_names = Set.new
     
     class << self
       
       def exposes(*args)
-        self.exposed_methods ||= []
-        self.exposed_methods += args.map { |a| a.to_sym }.flatten
+        names = args.map { |a| a.to_sym }.flatten
+        self.exposed_methods      += names
+        self.exposed_method_names += names
       end
       
     end
@@ -52,6 +58,21 @@ module Marvin
         method_name = command[prefix_length..-1].to_s.underscore.to_sym
         return method_name if self.exposed_methods.to_a.include?(method_name)
       end
+    end
+    
+    class << self
+      
+      def desc(desc)
+        self.last_description = desc
+      end
+      
+      def method_added(name)
+        unless last_description.blank?
+          descriptions[name.to_sym] = self.last_description
+          self.last_description = nil
+        end
+      end
+      
     end
     
   end

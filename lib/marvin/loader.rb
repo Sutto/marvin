@@ -138,7 +138,10 @@ module Marvin
     
     # Register to the Marvin::DataStore methods
     if Marvin::Loader.client?
-      before_run { Marvin::DataStore.load! }
+      before_run do
+        Marvin::CoreCommands.register!
+        Marvin::DataStore.load!
+      end
       after_stop { Marvin::DataStore.dump! }
     end
     

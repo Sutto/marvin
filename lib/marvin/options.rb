@@ -18,9 +18,9 @@ module Marvin
         o.separator   ""
         o.separator   ""
         o.on("-l", "--level=[level]", String, "The log level to use",
-             "Default: #{options[:log_level]}") {|options[:log_level]|}
-        o.on("-v", "--verbose", "Be verbose (print to stdout)") {|options[:verbose]|}
-        o.on("-d", "--daemon",  "Run as a daemon (drop the PID)") {|options[:daemon]|}
+             "Default: #{options[:log_level]}") {|v| options[:log_level] = v}
+        o.on("-v", "--verbose", "Be verbose (print to stdout)") {|v| options[:verbose] = v}
+        o.on("-d", "--daemon",  "Run as a daemon (drop the PID)") {|v| options[:daemon] = v}
         o.on("-k", "--kill", "Kill all of the current type / the running instances") do |kill|
            if kill
             Marvin::Daemon.kill_all(Marvin::Loader.type)
