@@ -34,7 +34,7 @@ module Marvin
       :error => 33, # yellow
       :warn  => 35, # magenta
       :info  => 32, # green
-      :debug => 34   # white
+      :debug => 34  # white
     }
   
     attr_accessor :level, :file, :verbose

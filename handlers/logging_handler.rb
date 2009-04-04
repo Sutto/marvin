@@ -21,6 +21,7 @@ class LoggingHandler < Marvin::CommandHandler
   
   exposes :listen, :earmuffs
   
+  desc "Makes me listen up and take not of what you're saying."
   def listen(data)
     unless listening?
       @listening = true
@@ -30,6 +31,7 @@ class LoggingHandler < Marvin::CommandHandler
     end
   end
   
+  desc "Sends me off into a corner with my ear muffs so you can have your discussions in peace"
   def earmuffs(data)
     if listening?
       @listening = false

@@ -20,5 +20,12 @@ module Marvin
         end
       end
     end
+    
+    exposes :about
+    desc "Displays the current marvin and ruby versions."
+    def about(*args)
+      reply "Marvin v#{Marvin::VERSION::STRING} running on Ruby #{RUBY_VERSION} (#{RUBY_PLATFORM})"
+    end
+    
   end
 end
