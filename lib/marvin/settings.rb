@@ -36,9 +36,8 @@ module Marvin
         self.default_client ||= Marvin::IRC::Client
         self.default_parser ||= Marvin::Parsers::SimpleParser
         loaded_yaml = YAML.load_file(root / "config/settings.yml")
-        loaded_options = loaded_yaml["default"].
-                           merge(loaded_yaml[self.environment]).
-                           merge(options)
+        env_settings = loaded_yaml[self.environment] || {}
+        loaded_options = loaded_yaml["default"].merge(env_settings).merge(options)
         self.configuration.merge!(loaded_options)
         self.configuration.symbolize_keys!
         mod = Module.new do

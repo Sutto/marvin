@@ -124,7 +124,8 @@ module Marvin
         @nicks = []
         @nicks << self.configuration.nick
         @nicks += self.configuration.nicks.to_a unless self.configuration.nicks.blank?
-        @nicks_loaded
+        @nicks.compact!
+        @nicks_loaded = true
       end
       return @nicks
     end
