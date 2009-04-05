@@ -9,24 +9,30 @@ module Marvin
     
     on_event :incoming_message do
       if should_log?
-        log_incoming(self.client.host_with_port, options.nick, options.target, options.message)
-        log_message(self.client.host_with_port, options.nick, options.target, options.message)
+        log_incoming(@server, options.nick, options.target, options.message)
+        log_message(@server, options.nick, options.target, options.message)
       end
     end
     
     on_event :outgoing_message do
       if should_log?
-        log_outgoing(self.client.host_with_port, options.nick, options.target, options.message)
-        log_message(self.client.host_with_port, options.nick, options.target, options.message)
+        log_outgoing(@server, @nick, options.target, options.message)
+        log_message(@server, @nick, options.target, options.message)
       end
     end
     
     on_event :client_connected do
+      @server = self.client.host_with_port
+      @nick   = self.client.nickname
       setup_logging
     end
 
     on_event :client_disconnected do
       teardown_logging
+    end
+    
+    on_event :outgoing_nick do
+      @nick = options.new_nick
     end
     
     # Called when the client connects, over ride it to
