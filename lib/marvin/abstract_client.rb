@@ -114,6 +114,10 @@ module Marvin
       @default_channels = channels.to_a.map { |c| c.to_s }
     end
     
+    def host_with_port
+      @host_with_port ||= "#{self.server}:#{self.port}"
+    end
+    
     def nicks
       if @nicks.blank? && !@nicks_loaded
         logger.info "Setting default nick list"

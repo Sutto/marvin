@@ -11,7 +11,7 @@ module Marvin
   module VERSION
     MAJOR = 0
     MINOR = 3
-    PATCH = 0
+    PATCH = 2
     
     STRING = [MAJOR, MINOR, PATCH].join(".")
   end
@@ -26,6 +26,7 @@ module Marvin
   autoload :ClientMixin,      'marvin/client_mixin'
   autoload :Settings,         'marvin/settings'
   autoload :Logger,           'marvin/logger'
+  autoload :LoggingHandler,   'marvin/logging_handler'
   autoload :IRC,              'marvin/irc'
   autoload :TestClient,       'marvin/test_client'
   autoload :Loader,           'marvin/loader'
