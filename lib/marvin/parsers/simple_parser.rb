@@ -28,7 +28,7 @@ module Marvin
         return if prefix_text.blank?
         prefix_text = prefix_text[1..-1] # Remove the leading :
         # I think I just vomitted in my mouth a little...
-        if prefix_text =~ /^([A-Za-z0-9\-\[\]\\\`\^\{\}]+)(\!\~?([^@]+))?(@(.*))?$/
+        if prefix_text =~ /^([A-Za-z0-9\-\[\]\\\`\^\{\}\_]+)(\!\~?([^@]+))?(@(.*))?$/
           prefix = Prefixes::HostMask.new($1, $3, $5)
         else
           prefix = Prefixes::Server.new(prefix_text.strip)
