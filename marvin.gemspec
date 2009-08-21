@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{marvin}
-  s.version = "0.3.4"
+  s.version = "0.4.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Darcy Laycock"]
-  s.date = %q{2009-08-21}
+  s.date = %q{2009-08-22}
   s.default_executable = %q{marvin}
   s.description = %q{Marvin is a Ruby IRC library / framework for ultimate awesomeness and with an evented design.}
   s.email = %q{sutto@sutto.net}
