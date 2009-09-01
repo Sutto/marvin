@@ -1,6 +1,5 @@
 default:
   name: Marvin
-  use_logging: false
   nicks:
     - MarvinBot1000
     - MarvinBot2000

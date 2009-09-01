@@ -11,8 +11,7 @@ Marvin::Loader.before_run do
   # MyHandler.register! (Marvin::Base subclass) or
   # Marvin::Settings.default_client.register_handler my_handler (a handler instance)
   
-  # Register in ruby
-  #
+  # Register based on some setting you've added. e.g.:
   # LoggingHandler.register! if Marvin::Settings.use_logging
   
   # Conditional registration - load the distributed dispatcher
