@@ -32,7 +32,6 @@ module Marvin
   autoload :Loader,           'marvin/loader'
   autoload :MiddleMan,        'marvin/middle_man'
   autoload :DRBHandler,       'marvin/drb_handler'
-  autoload :DataStore,        'marvin/data_store'
   autoload :ExceptionTracker, 'marvin/exception_tracker'
   autoload :Options,          'marvin/options'
   autoload :Daemon,           'marvin/daemon'

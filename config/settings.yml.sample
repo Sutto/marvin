@@ -1,7 +1,6 @@
 default:
   name: Marvin
   use_logging: false
-  datastore_location: tmp/datastore.json
   nicks:
     - MarvinBot1000
     - MarvinBot2000

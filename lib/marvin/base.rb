@@ -74,17 +74,7 @@ module Marvin
         return if self == Marvin::Base # Only do it for sub-classes.
         parent.register_handler self.new
       end
-      
-      def uses_datastore(datastore_name, local_name)
-        if Marvin::Loader.type == :distributed_client
-          Marvin::Logger.warn "Using datastores inside of a distributed client is a bad idea, mmmkay?"
-        end
-        cattr_accessor local_name.to_sym
-        self.send("#{local_name}=", Marvin::DataStore.new(datastore_name))
-        rescue Exception => e
-          logger.debug "Exception in datastore declaration - #{e.inspect}"
-      end
-      
+    
     end
     
     # Given an incoming message, handle it appropriatly.
