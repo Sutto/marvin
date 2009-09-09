@@ -96,7 +96,7 @@ module Marvin
       register_event :ison,     :ISON,     :nick
       # Add the default numeric event
       register_event :numeric, :numeric, :code, :data
-      # And a few others reserved for special purposed
+      # And a few others reserved for special purposes
       register_event :action,  :action,  :message
       register_event :ctcp,    :ctcp,    :message
       
