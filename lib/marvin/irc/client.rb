@@ -89,11 +89,11 @@ module Marvin::IRC
     def self.run(force = false)
       return if self.stopped && !force
       self.setup # So we have options etc
-      settings = YAML.load_file(Marvin::Settings.root / "config/connections.yml")
+      settings = YAML.load_file(Marvin::Settings.root / "config" / "connections.yml")
       if settings.is_a?(Hash)
         # Use epoll if available
         EventMachine.epoll
-        EventMachine::run do
+        EventMachine.run do
           settings.each do |name, options|
             settings = options.symbolize_keys!
             settings[:server] ||= name
@@ -108,7 +108,7 @@ module Marvin::IRC
     
     def self.connect(opts = {})
       logger.info "Connecting to #{opts[:server]}:#{opts[:port]} - Channels: #{opts[:channels].join(", ")}"
-      EventMachine::connect(opts[:server], opts[:port], EMConnection, opts)
+      EventMachine.connect(opts[:server], opts[:port], EMConnection, opts)
     end
     
     def self.stop
@@ -116,14 +116,14 @@ module Marvin::IRC
       logger.debug "Telling all connections to quit"
       self.connections.dup.each { |connection| connection.quit }
       logger.debug "Telling Event Machine to Stop"
-      EventMachine::stop_event_loop
+      EventMachine.stop_event_loop
       logger.debug "Stopped."
       self.stopped = true
     end
     
     def self.add_reconnect(opts = {})
       Marvin::Logger.warn "Adding entry to reconnect to #{opts[:server]}:#{opts[:port]} in 15 seconds"
-      EventMachine::add_timer(15) do
+      EventMachine.add_timer(15) do
         Marvin::Logger.warn "Attempting to reconnect to #{opts[:server]}:#{opts[:port]}"
         Marvin::IRC::Client.connect(opts)
       end
@@ -131,8 +131,7 @@ module Marvin::IRC
     
     # Registers a callback handle that will be periodically run.
     def periodically(timing, event_callback)
-      callback = proc { self.dispatch event_callback.to_sym }
-      EventMachine::add_periodic_timer(timing, &callback)
+      EventMachine.add_periodic_timer(timing) { dispatch(event_callback.to_sym) }
     end
     
   end

@@ -1,75 +1,48 @@
 require 'ostruct'
 
 module Marvin
-  # A Client Handler
   class Base
+    is :loggable
     
-    cattr_accessor :logger
-    # Set the default logger
-    self.logger ||= Marvin::Logger
+    @@handlers = Hash.new do |h,k|
+      h[k] = Hash.new { |h2, k2| h2[k2] = [] }
+    end
     
     attr_accessor :client, :target, :from, :options, :logger
-    class_inheritable_accessor :registered_handlers
-    self.registered_handlers = {}
-    
-    def initialize
-      self.registered_handlers ||= {}
-      self.logger ||= Marvin::Logger
-    end
     
     class << self
       
-      def event_handlers_for(message_name, direct = true)
-        return [] if self == Marvin::Base
-        rh = (self.registered_handlers ||= {})
-        rh[self.name] ||= {}
-        rh[self.name][message_name] ||= []
-        if direct
-          found_handlers = rh[self.name][message_name]
-          found_handlers += self.superclass.event_handlers_for(message_name)
-          return found_handlers
-        else
-          return rh[self.name][message_name]
+      # Returns an array of all handlers associated with
+      # a specific event name (e.g. :incoming_message)
+      def event_handlers_for(message_name)
+        message_name = message_name.to_sym
+        items = []
+        klass = self
+        while klass != Class
+          items += @@handlers[klass][message_name]
+          klass = klass.superclass
         end
+        items
       end
       
-      # Registers a block or method to be called when
-      # a given event is occured.
-      # == Examples
-      #
-      #   on_event :incoming_message, :process_commands
-      # 
-      # Will call process_commands the current object
-      # every time incoming message is called.
-      #
-      #   on_event :incoming_message do
-      #     Marvin::Logger.debug ">> #{options.inspect}"
-      #   end
-      #
-      # Will invoke the block every time an incoming message
-      # is processed.
+      # Registers a block to be used as an event handler. The first
+      # argument is always the name of the event and the second
+      # is either a method name (e.g. :my_awesome_method) or
+      # a block (which is instance_evaled)
       def on_event(name, method_name = nil, &blk)
-        # If the name is set and it responds to :to_sym
-        # and no block was passed in.
-        blk = proc { self.send(method_name.to_sym) } if method_name.respond_to?(:to_sym) && blk.blank?
-        self.event_handlers_for(name, false) << blk
+        blk = proc { self.send(method_name) } if method_name.present?
+        @@handlers[self][method_name] << blk
       end
       
+      # Like on_event but instead of taking an event name it takes
+      # either a number or a name - corresponding to an IRC numeric
+      # reply.
       def on_numeric(value, method_name = nil, &blk)
-        if value.is_a?(Numeric)
-          new_value = "%03d" % value
-        else
-          new_value = Marvin::IRC::Replies[value]
-        end
-        if new_value.nil?
-          logger.error "The numeric '#{value}' was undefined"
-        else
-          blk = proc { self.send(method_name.to_sym) } if method_name.respond_to?(:to_sym) && blk.blank?
-          self.event_handlers_for(:"incoming_numeric_#{new_value}", false) << blk
-        end
+        value = value.is_a?(Numeric) ? ("%03d" % value) : Marvin::IRC::Replies[value]
+        on_event(:"incoming_numeric_#{new_value}", method_name, &blk) if value.present?
       end
       
-      # Register's in the IRC Client callback chain.
+      # Register this specific handler on the IRC handler.
       def register!(parent = Marvin::Settings.default_client)
         return if self == Marvin::Base # Only do it for sub-classes.
         parent.register_handler self.new
@@ -77,45 +50,57 @@ module Marvin
     
     end
     
-    # Given an incoming message, handle it appropriatly.
+    # Given an incoming message, handle it appropriately by getting all
+    # associated event handlers. It also logs any exceptions (aslong as
+    # they raised by halt)
     def handle(message, options)
-      begin
-        self.setup_defaults(options)
-        h = self.class.event_handlers_for(message)
-        h.each { |handle| self.instance_eval(&handle) }
-      rescue Exception => e
-        logger.fatal "Exception processing handle #{message}"
-        Marvin::ExceptionTracker.log(e)
-      end
+      setup_details(options)
+      h = self.class.event_handlers_for(message)
+      h.each { |eh| self.instance_eval(&eh) }
+    rescue Exception => e
+      # Pass on halt_handler_processing events.
+      raise e if e.is_a?(Marvin::HaltHandlerProcessing)
+      logger.fatal "Exception processing handler for #{message.inspect}"
+      Marvin::ExceptionTracker.log(e)
+    ensure
+      reset_details
     end
     
+    # The default handler for numerics. mutates them into a more
+    # friendly version of themselves. It will also pass through
+    # the original incoming_numeric event.
     def handle_incoming_numeric(opts)
-      self.handle(:incoming_numeric, opts)
-      name = :"incoming_numeric_#{options.code}"
-      events = self.class.event_handlers_for(name)
-      logger.debug "Dispatching #{events.size} events for #{name}"
-      events.each { |eh| self.instance_eval(&eh) }
+      handle(:incoming_numeric, opts)
+      handle(:"incoming_numeric_#{opts[:code]}", opts)
     end
     
-    def say(message, target = self.target)
-      client.msg target, message
+    # msg sends the given text to the current target, be it
+    # either a channel or a specific user.
+    def msg(message, target = self.target)
+      client.msg(target, message)
     end
     
-    def pm(target, message)
-      say(target, message)
+    alias say msg
+    
+    # A conditional version of message that will only send the message
+    # if the target / from is a user. To do this, it uses from_channel?
+    def pm(message, target)
+      say(message, target) unless from_channel?(target)
     end
     
+    # Replies to a message. if it was received in a channel, it will
+    # use the standard irc "Name: text" convention for replying whilst
+    # if it was in a direct message it sends it as is.
     def reply(message)
       if from_channel?
-        say "#{self.from}: #{message}"
+        say("#{from}: #{message}")
       else
-        say message, self.from # Default back to pm'ing the user
+        say(message, from)
       end
     end
     
     def ctcp(message)
-      return if from_channel? # Must be from user
-      say "\01#{message}\01", self.from
+      say("\01#{message}\01", from) if !from_channel?
     end
     
     # Request information
@@ -123,29 +108,41 @@ module Marvin
     # reflects whether or not the current message / previous message came
     # from a user via pm.
     def from_user?
-      self.target && !from_channel?
+      target && !from_channel?
     end
     
-    # Determines whether the previous message was inside a channel.
-    def from_channel?
-      self.target && [?#, ?&].include?(self.target[0])
+    # Determines whether a given target (defaulting to the target of the
+    # last message was in a channel)
+    def from_channel?(target = self.target)
+      target && target =~ /^[\&\#]/
     end
     
     def addressed?
-      self.from_user? || options.message =~ /^#{self.client.nickname.downcase}:\s+/i
+      from_user? || options.message =~ /^#{client.nickname.downcase}:\s+/i
     end
     
-    def setup_defaults(options)
-      self.options = options.is_a?(OpenStruct) ? options : OpenStruct.new(options)
-      self.target  = options[:target] if options.has_key?(:target)
-      self.from    = options[:nick]   if options.has_key?(:nick)
+    protected
+    
+    # Initializes details for the current cycle - in essence, this makes the
+    # details of the current request available.
+    def setup_details(options)
+      @options = options.is_a?(OpenStruct) ? options : OpenStruct.new(options)
+      @target  = options[:target] if options.has_key?(:target)
+      @from    = options[:nick] if options.has_key?(:nick)
     end
     
-    # Halt's on the handler, used to prevent
-    # other handlers also responding to the same
-    # message more than once.
+    def reset_details
+      @options = nil
+      @target = nil
+      @from = nil
+    end
+    
+    # Halt can be called during the handle / process. Doing so
+    # prevents any more handlers in the handler chain from being
+    # called. It's kind of like return but it works across all
+    # handlers, not just the current one.
     def halt!
-      raise HaltHandlerProcessing
+      raise Marvin::HaltHandlerProcessing
     end
     
   end

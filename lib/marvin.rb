@@ -23,7 +23,7 @@ module Marvin
   
   autoload :AbstractParser,   'marvin/abstract_parser'
   autoload :Parsers,          'marvin/parsers'
-  autoload :CommandHandler, 'marvin/command_handler'
+  autoload :CommandHandler,   'marvin/command_handler'
   
   manifest do |m, l|
     Settings.root = File.dirname(__FILE__)

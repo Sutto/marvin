@@ -4,7 +4,7 @@ module Marvin
   class AbstractParser
     
     def self.parse(line)
-      return self.new(line.strip).to_event
+      self.new(line.strip).to_event
     end
     
     attr_accessor :line, :command, :event
@@ -12,13 +12,13 @@ module Marvin
     # Instantiates a parser instance, attempts to 
     # parse it for it's command and it's event.
     def initialize(line)
-      self.line = line
-      self.command = self.class.parse!(line)
-      self.event = self.command.to_event unless self.command.blank?
+      @line    = line
+      @command = self.class.parse!(line)
+      @event   = @command.to_event unless @command.blank?
     end
     
     def to_event
-      self.event
+      @event
     end
     
     private
