@@ -10,7 +10,6 @@ module Marvin
     # current client.
     CONTROLLERS = {
       :client             => Marvin::Settings.default_client,
-      :server             => Marvin::IRC::Server,
       :ring_server        => Marvin::Distributed::RingServer,
       :distributed_client => Marvin::Distributed::DRbClient,
       :console            => Marvin::Console
