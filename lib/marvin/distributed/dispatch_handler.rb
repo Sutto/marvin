@@ -34,7 +34,6 @@ module Marvin
       # Takes an incoming messsage and does all the fancy
       # Stuff with it.
       def handle(message, options)
-        # Don't forward lines for the moment to halve the traffic.
         return if message == :incoming_line
         super(message, options)
         dispatch(message, options)

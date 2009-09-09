@@ -61,8 +61,8 @@ module Marvin
           Marvin::Logger.info "Entering processing loop"
           while !self.stopped
             begin
-              unless self.ring_server.blank?
-                event = self.ring_server.take([:marvin_event, Marvin::Settings.distributed_namespace, nil, nil, nil], 2)
+              unless ring_server.blank?
+                event = ring_server.take([:marvin_event, Marvin::Settings.distributed_namespace, nil, nil, nil], 2)
                 dispatch(*event[2..-1]) unless event.blank?
               end
             rescue
