@@ -42,13 +42,13 @@ module Marvin
     
     def process_disconnect
       logger.info "Handling disconnect for #{self.server}:#{self.port}"
-      connections.delete(self) if connections.include?(self)
+      connections.delete(self)
       dispatch :client_disconnected
       unless @disconnect_expected
         logger.warn "Lost connection to server - adding reconnect"
-        self.class.add_reconnect self.original_opts
+        self.class.add_reconnect @original_opts
       else
-        Marvin::Loader.stop! if self.connections.blank?
+        Marvin::Loader.stop! if connections.blank?
       end
     end
     
@@ -59,19 +59,19 @@ module Marvin
       @@configuration = config.is_a?(OpenStruct) ? config : OpenStruct.new(config.to_hash)
     end
     
+    def self.setup?
+      @setup ||= false
+    end
+    
     # Initializes class-wide settings and those that
     # are required such as the logger. by default, it
     # will convert the channel option of the configuration
     # to be channels - hence normalising it into a format
     # that is more widely used throughout the client.
     def self.setup
-      return if self.is_setup
-      if configuration.logger.blank?
-        require 'logger'
-        configuration.logger = Marvin::Logger.logger
-      end
-      self.logger = self.configuration.logger
-      self.is_setup = true
+      return if setup?
+      # TODO: Handle setup here.
+      @setup = true
     end
     
     ## Handling all of the the actual client stuff.
@@ -92,16 +92,15 @@ module Marvin
     def handle_client_connected(opts = {})
       logger.info "About to handle client connected"
       # If the pass is set
-      unless self.pass.blank?
+      unless pass.blank?
         logger.info "Sending pass for connection"
-        command :pass, self.pass
+        command :pass, pass
       end
       # IRC Connection is establish so we send all the required commands to the server.
       logger.info "Setting default nickname"
-      default_nickname = self.nicks.shift
-      nick default_nickname
+      nick nicks.shift
       logger.info "sending user command"
-      command :user, self.configuration.user, "0", "*", Marvin::Util.last_param(self.configuration.name)
+      command :user, configuration.user, "0", "*", Marvin::Util.last_param(self.configuration.name)
     rescue Exception => e
       Marvin::ExceptionTracker.log(e)
     end
@@ -130,138 +129,9 @@ module Marvin
       return @nicks
     end
     
-    # The default response for PING's - it simply replies
-    # with a PONG.
-    def handle_incoming_ping(opts = {})
-      logger.info "Received Incoming Ping - Handling with a PONG"
-      pong(opts[:data])
-    end
-    
-    # TODO: Get the correct mapping for a given
-    # Code.
-    def handle_incoming_numeric(opts = {})
-      case opts[:code]
-        when Marvin::IRC::Replies[:RPL_WELCOME]
-          handle_welcome
-        when Marvin::IRC::Replies[:ERR_NICKNAMEINUSE]
-          handle_nick_taken
-        when Marvin::IRC::Replies[:RPL_TOPIC]
-          handle_channel_topic
-      end
-      code = opts[:code].to_i
-      args = Marvin::Util.arguments(opts[:data])
-      dispatch :incoming_numeric_processed, :code => code, :data => args
-    end
-    
-    def handle_welcome
-      logger.info "Welcome received from server"
-      # If a password is specified, we will attempt to message
-      # NickServ to identify ourselves.
-      say ":IDENTIFY #{self.configuration.password}", "NickServ" unless configuration.password.blank?
-      # Join the default channels IF they're already set
-      # Note that Marvin::IRC::Client.connect will set them AFTER this stuff is run.
-      default_channels.each { |c| join(c) }
-    end
-    
-    # The default handler for when a users nickname is taken on
-    # on the server. It will attempt to get the nicknickname from
-    # the nicknames part of the configuration (if available) and
-    # will then call #nick to change the nickname.
-    def handle_nick_taken
-      logger.info "Nickname '#{nickname}' on #{server} taken, trying next." 
-      logger.info "Available Nicknames: #{nicks.empty? ? "None" : nicks.join(", ")}"
-      if !nicks.empty?
-        logger.info "Getting next nickname to switch"
-        next_nick = nicks.shift # Get the next nickname
-        logger.info "Attemping to set nickname to '#{next_nick}'"
-        nick next_nick
-      else
-        logger.fatal "No Nicknames available - QUITTING"
-        quit
-      end
-    end
-    
-    def handle_channel_topic
-      # TODO: Check if the channel is one we attempted to join.
-      # If it is, we move it from the 'pending_channels' list to
-      # the list of channels we are currently in.
-    end
-    
-    ## General IRC Functions
-    
-    # Sends a specified command to the server.
-    # Takes name (e.g. :privmsg) and all of the args.
-    # Very simply formats them as a string correctly
-    # and calls send_data with the results.
-    def command(name, *args)
-      # First, get the appropriate command
-      name = name.to_s.upcase
-      args = args.flatten.compact
-      send_line "#{name} #{args.join(" ").strip}\r\n"
-    end
-    
-    def join(channel)
-      channel = Marvin::Util.channel_name(channel)
-      # Record the fact we're entering the room.
-      # TODO: Refactor to only add the channel when we receive confirmation we've joined.
-      channels << channel
-      command :JOIN, channel
-      logger.info "Joined channel #{channel}"
-      dispatch :outgoing_join, :target => channel
-    end
-    
-    def part(channel, reason = nil)
-      channel = Marvin::Util.channel_name(channel)
-      if channels.include?(channel)
-        command :part, channel, Marvin::Util.last_param(reason)
-        dispatch :outgoing_part, :target => channel, :reason => reason
-        logger.info "Parted from room #{channel}#{reason ? " - #{reason}" : ""}"
-      else
-        logger.warn "Tried to part from #{channel} when no JOIN was recorded."
-      end
-    end
-    
-    def quit(reason = nil)
-      @disconnect_expected = true
-      logger.info "Preparing to part from #{channels.size} channels"
-      channels.to_a.each do |chan|
-        logger.info "Parting from #{chan}"
-        part chan, reason
-      end
-      logger.info "Parted from all channels, quitting"
-      command  :quit
-      dispatch :outgoing_quit
-      # Remove the connections from the pool
-      connections.delete(self)
-      logger.info  "Quit from server"
-    end
-    
-    def msg(target, message)
-      command :privmsg, target, Marvin::Util.last_param(message)
-      logger.info "Message sent to #{target}: #{message}"
-      dispatch :outgoing_message, :target => target, :message => message
-    end
-    
-    def action(target, message)
-      action_text = Marvin::Util.last_param "\01ACTION #{message.strip}\01"
-      command :privmsg, target, action_text
-      dispatch :outgoing_action, :target => target, :message => message
-      logger.info "Action sent to #{target} - #{message}"
-    end
-    
-    def pong(data)
-      command :pong, data
-      dispatch :outgoing_pong
-      logger.info "PONG sent to #{data}"
-    end
-    
-    def nick(new_nick)
-      logger.info "Changing nickname to #{new_nick}"
-      command :nick, new_nick
-      @nickname = new_nick
-      dispatch :outgoing_nick, :new_nick => new_nick
-      logger.info "Nickname changed to #{new_nick}"
-    end
+    # Break it down into a couple of different files.
+    require 'marvin/client/default_handlers'
+    require 'marvin/client/actions'
     
   end
 end
