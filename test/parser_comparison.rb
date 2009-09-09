@@ -12,7 +12,7 @@ LINES = [
   ":SuttoL!n=SuttoL@li6-47.members.linode.com PRIVMSG #relayrelay :testing...",
   ":wolfe.freenode.net 004 MarvinBot3000 wolfe.freenode.net hyperion-1.0.2b aAbBcCdDeEfFGhHiIjkKlLmMnNopPQrRsStTuUvVwWxXyYzZ01234569*@ bcdefFhiIklmnoPqstv"
 ]
-PARSERS = [Marvin::Parsers::RagelParser, Marvin::Parsers::SimpleParser, Marvin::Parsers::RegexpParser]
+PARSERS = [Marvin::Parsers::RagelParser, Marvin::Parsers::SimpleParser]
 
 LINES.each do |line|
   
