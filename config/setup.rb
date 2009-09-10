@@ -29,6 +29,4 @@ Marvin::Loader.before_run do
   #HelloWorld.register!
   #DebugHandler.register!
   
-  KeikiThwopper.register!
-  
 end
