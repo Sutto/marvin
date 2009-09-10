@@ -8,7 +8,7 @@ require File.join(File.dirname(__FILE__), 'test_helper')
 class ParserTest < Test::Unit::TestCase
   
   # The default parser
-  @@parser = Marvin::Parsers::SimpleParser
+  @@parser = Marvin::Settings.parser
   
   context "When parsing a LIST" do
     setup { @parsed = @@parser.new("LIST #twilight_zone,#42") }

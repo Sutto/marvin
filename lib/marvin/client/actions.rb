@@ -10,8 +10,9 @@ module Marvin
     def command(name, *args)
       # First, get the appropriate command
       name = name.to_s.upcase
-      args = args.flatten.compact
-      send_line "#{name} #{args.join(" ").strip}\r\n"
+      args = args.flatten
+      args << util.last_param(args.pop)
+      send_line "#{name} #{args.compact.join(" ").strip}\r\n"
     end
     
     # Join one or more channels on the current server
@@ -20,7 +21,7 @@ module Marvin
     #   client.join ["#marvin-testing", "#rubyonrails"]
     #   client.join "#marvin-testing", "#rubyonrails"
     def join(*channels_to_join)
-      channels_to_join = channels_to_join.flatten.map { |c| util.channel_name(channel) }
+      channels_to_join = channels_to_join.flatten.map { |c| util.channel_name(c) }
       # If you're joining multiple channels at once, we join them together
       command :JOIN, channels_to_join.join(",")
       channels_to_join.each { |channel| dispatch :outgoing_join, :target => channel }
@@ -35,7 +36,7 @@ module Marvin
       channel = util.channel_name(channel)
       # Send the command anyway, even if we're not a
       # a recorded member something might of happened.
-      command :part, channel, util.last_param(reason)
+      command :part, channel, reason
       if channels.include?(channel)
         dispatch :outgoing_part, :target => channel, :reason => reason
         logger.info "Parted channel #{channel} - #{reason.present? ? reason : "Non given"}"
@@ -58,7 +59,7 @@ module Marvin
         channels.to_a.each { |chan| part(chan, reason) }
         logger.info "Parted from all channels, quitting"
       end
-      command :quit, util.last_param(reason)
+      command :quit, reason
       dispatch :outgoing_quit
       # Remove the connections from the pool
       connections.delete(self)
@@ -70,7 +71,7 @@ module Marvin
     #    msg "#marvin-testing", "Hello there!"
     #    msg "SuttoL", "Hey, I'm playing with marvin!"
     def msg(target, message)
-      command :privmsg, target, util.last_param(message)
+      command :privmsg, target, message
       dispatch :outgoing_message, :target => target, :message => message
       logger.info "Message #{target} - #{message}"
     end
@@ -80,8 +81,7 @@ module Marvin
     #    action "#marvin-testing", "is about to sleep"
     #    action "SuttoL", "is about to sleep"
     def action(target, message)
-      action_text = util.last_param "\01ACTION #{message.strip}\01"
-      command :privmsg, target, action_text
+      command :privmsg, target, "\01ACTION #{message.strip}\01"
       dispatch :outgoing_action, :target => target, :message => message
       logger.info "Action sent to #{target} - #{message}"
     end

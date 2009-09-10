@@ -20,7 +20,8 @@ module Marvin
       # attempt to recognize the command and convert
       # it to an event which can be used for other stuff.
       def to_event
-        if self.code =~ /^\d+$/
+        # If we have a numeric...
+        if @code =~ /^\d+$/
           ev = @@commands[:numeric].dup
           data = @params[0..-2]
           data << "#{@params.last.include?(" ") ? ":" : ""}#{@params.last}"

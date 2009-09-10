@@ -10,9 +10,21 @@ require 'pathname'
 root_directory = Pathname.new(__FILE__).dirname.join("..").expand_path
 require root_directory.join("lib", "marvin")
 
+Marvin::Settings.setup!
+Marvin::Logger.setup!
+
+Marvin::Settings.client = Marvin::TestClient
+
 class Test::Unit::TestCase
 
+  @test_client = nil
+
   protected
+
+  def client(force_new = false)
+    @test_client = Marvin::TestClient.new if force_new || @test_client.nil?
+    @test_client
+  end
   
   # Short hand for creating a class with
   # a given class_eval block.

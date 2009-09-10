@@ -5,7 +5,7 @@ require "marvin/irc/event"
 module Marvin
   class AbstractClient
     
-    include Marvin::Dispatchable
+    is :dispatchable, :loggable
     
     def initialize(opts = {})
       self.original_opts    = opts.dup # Copy the options so we can use them to reconnect.
@@ -16,7 +16,7 @@ module Marvin
       self.pass             = opts[:pass]
     end
     
-    cattr_accessor :events, :configuration, :logger, :is_setup, :connections
+    cattr_accessor :events, :configuration, :is_setup, :connections
     attr_accessor  :channels, :nickname, :server, :port, :nicks, :pass,
                    :disconnect_expected, :original_opts
     
@@ -68,6 +68,8 @@ module Marvin
     def self.setup
       return if setup?
       # TODO: Handle setup here.
+      Marvin::CoreCommands.register!
+      self.configuration = Marvin::Settings
       @setup = true
     end
     

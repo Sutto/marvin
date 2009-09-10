@@ -19,7 +19,7 @@ module Marvin
       logger.info "Setting default nickname"
       nick nicks.shift
       logger.info "Sending user command"
-      command :user, configuration.user, "0", "*", util.last_param(configuration.name)
+      command :user, configuration.user, "0", "*", configuration.name
     rescue Exception => e
       Marvin::ExceptionTracker.log(e)
     end
@@ -57,7 +57,7 @@ module Marvin
       say ":IDENTIFY #{self.configuration.password}", "NickServ" if configuration.password.present?
       # Join the default channels IF they're already set
       # Note that Marvin::IRC::Client.connect will set them AFTER this stuff is run.
-      default_channels.each { |c| join(c) }
+      join default_channels
     end
     
     # The default handler for when a users nickname is taken on

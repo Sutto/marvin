@@ -30,12 +30,14 @@ module Marvin
   
   
   manifest do |m, l|
-    Settings.root = File.dirname(__FILE__)
-    l.register_controller :client,  'Marvin::IRC::Client'
+    Settings.root = File.dirname(File.dirname(__FILE__))
+    l.register_controller :client,  'Marvin::Settings.client'
     l.register_controller :console, 'Marvin::Console'
     # Core Commands handily makes available a set
     # of information about what is running etc.
-    l.before_run { Marvin::CoreCommands.register! if Marvin::Loader.client? }
+    l.before_run do
+       Marvin::Client.setup! if Marvin::Loader.client?
+    end
   end
   
   has_library :util, :abstract_client, :abstract_parser, :irc

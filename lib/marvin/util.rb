@@ -12,7 +12,8 @@ module Marvin
       # appending "#" to the front if it doesn't already
       # start with it.
       def channel_name(name)
-        return name.to_s[0..0] == "#" ? name.to_s : "##{name}"
+        name = name.to_s
+        name =~ /^\#/ ? name : "##{name}"
       end
       alias chan channel_name
       
@@ -26,8 +27,15 @@ module Marvin
       # Specifies the last parameter of a response, used to
       # specify parameters which have spaces etc (for example,
       # the actual message part of a response).
-      def last_param(section)
-        section && ":#{section.to_s.strip}"
+      def last_param(section, ignore_prefix = true)
+        content = section.to_s.strip
+        if content == ""
+          nil
+        elsif content =~ /\s+/ && (ignore_prefix || content !~ /^:/)
+          ":#{content}"
+        else
+          content
+        end
       end
       alias lp last_param
       
