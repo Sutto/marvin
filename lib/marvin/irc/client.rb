@@ -35,6 +35,7 @@ module Marvin::IRC
         @client.receive_line(line)
       rescue Exception => e
         logger.warn "Uncaught exception raised; Likely in Marvin"
+        Marvin::ExceptionTracker.log(e)
       end
       
     end

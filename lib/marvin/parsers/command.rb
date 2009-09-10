@@ -26,11 +26,12 @@ module Marvin
           data = @params[0..-2]
           data << "#{@params.last.include?(" ") ? ":" : ""}#{@params.last}"
           ev.raw_arguments = [self.code.to_s, data.join(" ")]
-        elsif code == "PRIVMSG" && params.last[0] == 1 && params.last[-1] == 1
-          if params.last[0..8] == "\001ACTION: "
-            name, value = :action, params.last[9..-2]
+        elsif code == "PRIVMSG" && params.last =~ /^\001(.*)\001$/
+          results = $1.to_s
+          if results =~ /^ACTION /
+            name, value = :action, results.gsub(/^ACTION /, '')
           else
-            name, value = :ctcp, params.last[1..-2]
+            name, value = :ctcp, results
           end
           self.params[-1] = value
           ev = @@commands[name].dup
@@ -98,8 +99,8 @@ module Marvin
       # Add the default numeric event
       register_event :numeric, :numeric, :code, :data
       # And a few others reserved for special purposes
-      register_event :action,  :action,  :message
-      register_event :ctcp,    :ctcp,    :message
+      register_event :action,  :action,  :target, :message
+      register_event :ctcp,    :ctcp,    :target, :message
       
     end
   end

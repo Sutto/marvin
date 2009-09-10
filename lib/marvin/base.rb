@@ -12,6 +12,14 @@ module Marvin
     
     class << self
       
+      def registered=(value)
+        @registered = !!value
+      end
+      
+      def registered?
+        @registered ||= false
+      end
+      
       # Returns an array of all handlers associated with
       # a specific event name (e.g. :incoming_message)
       def event_handlers_for(message_name)
@@ -31,7 +39,7 @@ module Marvin
       # a block (which is instance_evaled)
       def on_event(name, method_name = nil, &blk)
         blk = proc { self.send(method_name) } if method_name.present?
-        @@handlers[self][method_name] << blk
+        @@handlers[self][name] << blk
       end
       
       # Like on_event but instead of taking an event name it takes
@@ -50,10 +58,14 @@ module Marvin
     
     end
     
+    def handle(message, options)
+      dup._handle(message, options)
+    end
+    
     # Given an incoming message, handle it appropriately by getting all
     # associated event handlers. It also logs any exceptions (aslong as
     # they raised by halt)
-    def handle(message, options)
+    def _handle(message, options)
       setup_details(options)
       h = self.class.event_handlers_for(message)
       h.each { |eh| self.instance_eval(&eh) }
@@ -82,6 +94,10 @@ module Marvin
     
     alias say msg
     
+    def action(message, target = self.target)
+      client.action(target, message)
+    end
+    
     # A conditional version of message that will only send the message
     # if the target / from is a user. To do this, it uses from_channel?
     def pm(message, target)
@@ -108,13 +124,13 @@ module Marvin
     # reflects whether or not the current message / previous message came
     # from a user via pm.
     def from_user?
-      target && !from_channel?
+      !from_channel?
     end
     
     # Determines whether a given target (defaulting to the target of the
     # last message was in a channel)
     def from_channel?(target = self.target)
-      target && target =~ /^[\&\#]/
+      target.present? && target =~ /^[\&\#]/
     end
     
     def addressed?

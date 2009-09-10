@@ -109,6 +109,15 @@ module Marvin
     require 'marvin/client/default_handlers'
     require 'marvin/client/actions'
     
+    # Override the register_handler method to
+    # make sure it marks them as registered.
+    def self.register_handler(handler)
+      if handler.present? && handler.respond_to?(:handle)
+        handler.class.registered = true if handler.class.respond_to?(:registered=)
+        Marvin::Dispatchable.handler_mapping[self] << handler
+      end
+    end
+    
     protected
     
     def util

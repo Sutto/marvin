@@ -26,7 +26,9 @@ Marvin::Loader.before_run do
   
   # And any other code here that will be run before the client
   
-  HelloWorld.register!
-  DebugHandler.register!
+  #HelloWorld.register!
+  #DebugHandler.register!
+  
+  KeikiThwopper.register!
   
 end

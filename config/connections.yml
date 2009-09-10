@@ -1,8 +1,7 @@
 "irc.freenode.net":
-    port: 6667
-    channels:
-      - "#marvin-testing"
-      - "#relayrelay"
+  port: 6667
+  channels:
+    - "#marvin-testing"
 
 # "localhost":
 #     port: 6667
