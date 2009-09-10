@@ -44,8 +44,11 @@ class Test::Unit::TestCase
     return klass
   end
   
-  def assert_dispatched(name, position = -1)
-    assert_equal name, client.dispatched_events[position].first
+  def assert_dispatched(name, position = -1, opts = nil)
+    res = client.dispatched_events[position]
+    assert !res.nil?
+    assert_equal name, res[0]
+    assert_equal opts, res[1] if !opts.nil?
   end
   
   def assert_sent_line(line, position = -1)

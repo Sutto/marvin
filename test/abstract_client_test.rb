@@ -20,18 +20,19 @@ class AbstractClientTest < Test::Unit::TestCase
       assert_resets_client
       client.process_connect
       assert_equal [:client_connected, {}], client.dispatched_events.first
+      assert_dispatched :client_connected, 0, {}
     end
 
     should "dispatch :client_connected as the first event on process_connect" do
       assert_resets_client
       client.default_channels = ["#awesome", "#rock"]
       client.process_connect
-      assert_dispatched :client_connected, -2
+      assert_dispatched :client_connected, -2, {}
       assert_dispatched :outgoing_nick,    -1
-      assert_equal 2,                  client.outgoing_commands.length
+      assert_equal 2, client.outgoing_commands.length
       assert_equal "NICK Haysoos\r\n", client.outgoing_commands[0]
-      assert_send_line "NICK Haysoos\r\n", 0
-      assert_send_line "USER DemoUser 0 \* :Demo Users Name\r\n", 1
+      assert_sent_line "NICK Haysoos\r\n", 0
+      assert_sent_line "USER DemoUser 0 \* :Demo Users Name\r\n", 1
     end
 
     should "dispatch :client_disconnect on process_disconnect" do
@@ -50,7 +51,7 @@ class AbstractClientTest < Test::Unit::TestCase
     should "add an :incoming_line event for each incoming line" do
       assert_resets_client
       client.receive_line "SOME RANDOM LINE THAT HAS ZERO ACTUAL USE"
-      assert_equal [:incoming_line, {:line => "SOME RANDOM LINE THAT HAS ZERO ACTUAL USE"}], client.dispatched_events.first
+      assert_dispatched :incoming_line, 0, :line => "SOME RANDOM LINE THAT HAS ZERO ACTUAL USE"
     end
     
     teardown do
