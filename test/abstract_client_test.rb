@@ -17,37 +17,38 @@ class AbstractClientTest < Test::Unit::TestCase
     end
     
     should "dispatch :client_connected as the first event on process_connect" do
-      assert_equal [], client(true).dispatched_events
+      assert_resets_client
       client.process_connect
       assert_equal [:client_connected, {}], client.dispatched_events.first
     end
 
     should "dispatch :client_connected as the first event on process_connect" do
-      assert_equal [], client(true).dispatched_events
+      assert_resets_client
       client.default_channels = ["#awesome", "#rock"]
       client.process_connect
-      assert_equal :client_connected,  client.dispatched_events[-2].first
-      assert_equal :outgoing_nick,     client.dispatched_events[-1].first
+      assert_dispatched :client_connected, -2
+      assert_dispatched :outgoing_nick,    -1
       assert_equal 2,                  client.outgoing_commands.length
       assert_equal "NICK Haysoos\r\n", client.outgoing_commands[0]
-      assert_equal "USER DemoUser 0 \* :Demo Users Name\r\n", client.outgoing_commands[1]
+      assert_send_line "NICK Haysoos\r\n", 0
+      assert_send_line "USER DemoUser 0 \* :Demo Users Name\r\n", 1
     end
 
     should "dispatch :client_disconnect on process_disconnect" do
-      assert_equal [], client(true).dispatched_events
+      assert_resets_client
       client.process_disconnect
-      
+      assert_dispatched :client_disconnected
     end
     
     should 'attempt to join the default channels on receiving welcome' do
-      assert_equal [], client(true).dispatched_events
+      assert_resets_client
       client.default_channels = ["#awesome", "#rock"]
       client.handle_welcome
-      assert_equal "JOIN #awesome,#rock\r\n", client.outgoing_commands[0]
+      assert_sent_line "JOIN #awesome,#rock\r\n"
     end
 
     should "add an :incoming_line event for each incoming line" do
-      assert_equal [], client(true).dispatched_events
+      assert_resets_client
       client.receive_line "SOME RANDOM LINE THAT HAS ZERO ACTUAL USE"
       assert_equal [:incoming_line, {:line => "SOME RANDOM LINE THAT HAS ZERO ACTUAL USE"}], client.dispatched_events.first
     end

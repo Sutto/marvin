@@ -44,4 +44,16 @@ class Test::Unit::TestCase
     return klass
   end
   
+  def assert_dispatched(name, position = -1)
+    assert_equal name, client.dispatched_events[position].first
+  end
+  
+  def assert_sent_line(line, position = -1)
+    assert_equal line, client.outgoing_commands[position]
+  end
+  
+  def assert_resets_client
+    assert_equal [], client(true).dispatched_events
+  end
+  
 end
