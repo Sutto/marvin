@@ -11,13 +11,13 @@ module Marvin
     attr_accessor :client, :target, :from, :options
     
     class << self
+        
+      def registered?
+        @registered ||= false
+      end
       
       def registered=(value)
         @registered = !!value
-      end
-      
-      def registered?
-        @registered ||= false
       end
       
       # Returns an array of all handlers associated with
@@ -135,6 +135,11 @@ module Marvin
     
     def addressed?
       from_user? || options.message =~ /^#{client.nickname.downcase}:\s+/i
+    end
+    
+    # A Perennial automagical helper for dispatch
+    def registered=(value)
+      self.class.registered = value
     end
     
     protected

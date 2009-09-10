@@ -1,7 +1,7 @@
 class KeikiThwopper < Marvin::Base
   
   FROM_REGEXP  = /^(keiki)/i
-  THWOP_REGEXP = /(t+h+w+o+p+|stab|kill)/i
+  THWOP_REGEXP = /(t+h+w+o+m*p+|stab|kill)/i
   
   MESSAGES = [
     "mwahahahaha",

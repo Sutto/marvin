@@ -54,16 +54,14 @@ module Marvin::IRC
       def run(force = false)
         return if @stopped && !force
         self.setup # So we have options etc
-        settings = YAML.load_file(Marvin::Settings.root / "config" / "connections.yml")
-        if settings.is_a?(Hash)
+        connections_file = Marvin::Settings.root / "config" / "connections.yml"
+        connections = Marvin::Nash.load_file(connections_file) rescue nil
+        if connections.present?
           # Use epoll if available
           EventMachine.epoll
           EventMachine.run do
-            settings.each do |name, options|
-              settings = options.symbolize_keys!
-              settings[:server] ||= name
-              settings.reverse_merge!(:port => 6667, :channels => [])
-              connect settings
+            connections.each_pair do |server, configuration|
+              connect(configuration.merge(:server => server))
             end
             @@stopped = false
           end
@@ -72,10 +70,13 @@ module Marvin::IRC
         end
       end
 
-      def connect(opts = {}, &blk)
-        logger.info "Connecting to #{opts[:server]}:#{opts[:port]} - Channels: #{opts[:channels].join(", ")}"
+      def connect(c, &blk)
+        c = normalize_connection_options(c)
+        raise ArgumentError, "Your connection options must specify a server" if !c.server?
+        raise ArgumentError, "Your connection options must specify a port"   if !c.port?
         real_block = blk.present? ? proc { |c| blk.call(connection.client) } : nil
-        EventMachine.connect(opts[:server], opts[:port], EMConnection, opts, &real_block)
+        logger.info "Connecting to #{c.server}:#{c.port} - Channels: #{c.channels.join(", ")}"
+        EventMachine.connect(c.server, c.port, EMConnection, c, &real_block)
       end
 
       def stop
@@ -88,12 +89,26 @@ module Marvin::IRC
         @@stoped = true
       end
 
-      def add_reconnect(opts = {})
-        logger.warn "Adding entry to reconnect to #{opts[:server]}:#{opts[:port]} in 15 seconds"
+      def add_reconnect(opts)
+        logger.warn "Adding timer to reconnect to #{opts.server}:#{opts.port} in 15 seconds"
         EventMachine.add_timer(15) do
-          logger.warn "Attempting to reconnect to #{opts[:server]}:#{opts[:port]}"
+          logger.warn "Preparing to reconnect to #{opts.server}:#{opts.port}"
           connect(opts)
         end
+      end
+      
+      protected
+      
+      def normalize_connection_options(config)
+        config = Marvin::Nash.new(config) if !config.is_a?(Marvin::Nash)
+        config = config.normalized
+        channels = config.channels
+        if channels.present?
+          config.channels = [*channels].compact.reject { |c| c.blank? }
+        else
+          config.channels = []
+        end
+        return config
       end
       
     end

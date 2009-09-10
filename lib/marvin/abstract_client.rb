@@ -22,10 +22,8 @@ module Marvin
     
     # Set the default values for the variables
     @@events        = []
-    @@configuration = OpenStruct.new
+    @@configuration = Marvin::Nash.new
     @@connections   = []
-    
-    
     
     # Initializes the instance variables used for the
     # current connection, dispatching a :client_connected event
@@ -58,7 +56,8 @@ module Marvin
     # to either an OpenStruct or the results of #to_hash on
     # any other value that is passed in.
     def self.configuration=(config)
-      @@configuration = config.is_a?(OpenStruct) ? config : OpenStruct.new(config.to_hash)
+      config = Marvin::Nash.new(config.to_hash) unless config.is_a?(Marvin::Nash)
+      @@configuration = config.normalized
     end
     
     def self.setup?
@@ -67,9 +66,19 @@ module Marvin
     
     def self.setup
       return if setup?
-      # TODO: Handle setup here.
+      configure
+    end
+    
+    def self.configure
+      config = Marvin::Nash.new
+      config.merge! Marvin::Settings.configuration
+      if block_given?
+        yield(nash = Marvin::Nash.new)
+        config.merge! nash
+      end
+      @@configuration = config
+      # TODO: Remove Duplication
       Marvin::CoreCommands.register!
-      self.configuration = Marvin::Settings
       @setup = true
     end
     
@@ -97,9 +106,10 @@ module Marvin
       if @nicks.blank? && !@nicks_loaded
         logger.info "Setting default nick list"
         @nicks = []
-        @nicks << configuration.nick
-        @nicks += configuration.nicks.to_a unless configuration.nicks.blank?
+        @nicks << configuration.nick if configuration.nick?
+        @nicks += configuration.nicks.to_a if configuration.nicks?
         @nicks.compact!
+        raise "No initial nicks for #{host_with_port}" if @nicks.blank?
         @nicks_loaded = true
       end
       return @nicks
@@ -108,15 +118,6 @@ module Marvin
     # Break it down into a couple of different files.
     require 'marvin/client/default_handlers'
     require 'marvin/client/actions'
-    
-    # Override the register_handler method to
-    # make sure it marks them as registered.
-    def self.register_handler(handler)
-      if handler.present? && handler.respond_to?(:handle)
-        handler.class.registered = true if handler.class.respond_to?(:registered=)
-        Marvin::Dispatchable.handler_mapping[self] << handler
-      end
-    end
     
     protected
     
