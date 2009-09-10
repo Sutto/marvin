@@ -134,7 +134,7 @@ module Marvin
         if cs >= irc_first_final
           command
         else
-          raise UnparseableMessage, "Failed to parse the message: #{input.inspect}"
+          raise UnparseableMessage, "Failed to parse the message: #{line.strip}"
         end
       end
       
