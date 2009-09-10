@@ -12,7 +12,7 @@ module Marvin
         else
           prefix_text = nil
         end
-        command = Marvin::Parsers::Command.new(line + "\r\n")
+        command = Command.new("#{line}\r\n")
         command.prefix = self.extract_prefix(prefix_text)
         head, tail = line.split(":", 2)
         parts = head.split(" ")

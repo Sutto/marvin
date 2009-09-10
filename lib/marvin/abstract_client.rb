@@ -17,13 +17,15 @@ module Marvin
     end
     
     cattr_accessor :events, :configuration, :logger, :is_setup, :connections
-    attr_accessor  :channels, :nickname, :server, :port, :nicks, :pass, :disconnect_expected, :original_opts
+    attr_accessor  :channels, :nickname, :server, :port, :nicks, :pass,
+                   :disconnect_expected, :original_opts
     
     # Set the default values for the variables
-    @@events                 = []
-    @@configuration          = OpenStruct.new
-    @@configuration.channels = []
-    @@connections            = []
+    @@events        = []
+    @@configuration = OpenStruct.new
+    @@connections   = []
+    
+    
     
     # Initializes the instance variables used for the
     # current connection, dispatching a :client_connected event
@@ -63,11 +65,6 @@ module Marvin
       @setup ||= false
     end
     
-    # Initializes class-wide settings and those that
-    # are required such as the logger. by default, it
-    # will convert the channel option of the configuration
-    # to be channels - hence normalising it into a format
-    # that is more widely used throughout the client.
     def self.setup
       return if setup?
       # TODO: Handle setup here.
@@ -80,29 +77,6 @@ module Marvin
       dispatch :incoming_line, :line => line
       event = Marvin::Settings.default_parser.parse(line)
       dispatch(event.to_incoming_event_name, event.to_hash) unless event.nil?
-    end
-    
-    # Default handlers
-    
-    # The default handler for all things initialization-related
-    # on the client. Usually, this will send the user command,
-    # set out nick, join all of the channels / rooms we wish
-    # to be in and if a password is specified in the configuration,
-    # it will also attempt to identify us.
-    def handle_client_connected(opts = {})
-      logger.info "About to handle client connected"
-      # If the pass is set
-      unless pass.blank?
-        logger.info "Sending pass for connection"
-        command :pass, pass
-      end
-      # IRC Connection is establish so we send all the required commands to the server.
-      logger.info "Setting default nickname"
-      nick nicks.shift
-      logger.info "sending user command"
-      command :user, configuration.user, "0", "*", Marvin::Util.last_param(self.configuration.name)
-    rescue Exception => e
-      Marvin::ExceptionTracker.log(e)
     end
     
     def default_channels
@@ -132,6 +106,12 @@ module Marvin
     # Break it down into a couple of different files.
     require 'marvin/client/default_handlers'
     require 'marvin/client/actions'
+    
+    protected
+    
+    def util
+      Marvin::Util
+    end
     
   end
 end

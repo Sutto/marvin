@@ -1,12 +1,11 @@
 module Marvin
   class ExceptionTracker
   
-    cattr_accessor :logger
-    self.logger = Marvin::Logger
+    is :loggable
   
     def self.log(e)
-      logger.fatal "Exception raised inside Marvin Instance."
-      logger.fatal "#{e} - #{e.message}"
+      logger.fatal "Oh noes cap'n - we have an exception!."
+      logger.fatal "#{e.class.name}: #{e.message}"
       e.backtrace.each do |line|
         logger.fatal line
       end

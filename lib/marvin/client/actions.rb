@@ -14,50 +14,73 @@ module Marvin
       send_line "#{name} #{args.join(" ").strip}\r\n"
     end
     
-    def join(channel)
-      channel = Marvin::Util.channel_name(channel)
-      # Record the fact we're entering the room.
-      # TODO: Refactor to only add the channel when we receive confirmation we've joined.
-      channels << channel
-      command :JOIN, channel
-      logger.info "Joined channel #{channel}"
-      dispatch :outgoing_join, :target => channel
+    # Join one or more channels on the current server
+    # e.g.
+    #   client.join "#marvin-testing"
+    #   client.join ["#marvin-testing", "#rubyonrails"]
+    #   client.join "#marvin-testing", "#rubyonrails"
+    def join(*channels_to_join)
+      channels_to_join = channels_to_join.flatten.map { |c| util.channel_name(channel) }
+      # If you're joining multiple channels at once, we join them together
+      command :JOIN, channels_to_join.join(",")
+      channels_to_join.each { |channel| dispatch :outgoing_join, :target => channel }
+      logger.info "Sent JOIN for channels #{channels_to_join.join(", ")}"
     end
     
+    # Parts a channel, with an optional reason
+    # e.g.
+    #    part "#marvin-testing"
+    #    part "#marvin-testing", "Ninjas stole by felafel"
     def part(channel, reason = nil)
-      channel = Marvin::Util.channel_name(channel)
+      channel = util.channel_name(channel)
+      # Send the command anyway, even if we're not a
+      # a recorded member something might of happened.
+      command :part, channel, util.last_param(reason)
       if channels.include?(channel)
-        command :part, channel, Marvin::Util.last_param(reason)
         dispatch :outgoing_part, :target => channel, :reason => reason
-        logger.info "Parted from room #{channel}#{reason ? " - #{reason}" : ""}"
+        logger.info "Parted channel #{channel} - #{reason.present? ? reason : "Non given"}"
       else
-        logger.warn "Tried to part from #{channel} when no JOIN was recorded."
+        logger.warn "Parted channel #{channel} but wasn't recorded as member of channel"
       end
     end
     
-    def quit(reason = nil)
+    # Quites from a server, first parting all channels if a second
+    # argument is passed as true
+    # e.g.
+    #    quit
+    #    quit "Going to grab some z's"
+    def quit(reason = nil, part_before_quit = false)
       @disconnect_expected = true
-      logger.info "Preparing to part from #{channels.size} channels"
-      channels.to_a.each do |chan|
-        logger.info "Parting from #{chan}"
-        part chan, reason
+      # If the user wants to part before quitting, they should
+      # pass a second, true, parameter
+      if part_before_quit
+        logger.info "Preparing to part from channels before quitting"
+        channels.to_a.each { |chan| part(chan, reason) }
+        logger.info "Parted from all channels, quitting"
       end
-      logger.info "Parted from all channels, quitting"
-      command  :quit
+      command :quit, util.last_param(reason)
       dispatch :outgoing_quit
       # Remove the connections from the pool
       connections.delete(self)
-      logger.info  "Quit from server"
+      logger.info  "Quit from #{host_with_port}"
     end
     
+    # Sends a message to a target (either a channel or a user)
+    # e.g.
+    #    msg "#marvin-testing", "Hello there!"
+    #    msg "SuttoL", "Hey, I'm playing with marvin!"
     def msg(target, message)
-      command :privmsg, target, Marvin::Util.last_param(message)
-      logger.info "Message sent to #{target}: #{message}"
+      command :privmsg, target, util.last_param(message)
       dispatch :outgoing_message, :target => target, :message => message
+      logger.info "Message #{target} - #{message}"
     end
     
+    # Does a CTCP action in a channel (equiv. to doing /me in most IRC clients)
+    # e.g.
+    #    action "#marvin-testing", "is about to sleep"
+    #    action "SuttoL", "is about to sleep"
     def action(target, message)
-      action_text = Marvin::Util.last_param "\01ACTION #{message.strip}\01"
+      action_text = util.last_param "\01ACTION #{message.strip}\01"
       command :privmsg, target, action_text
       dispatch :outgoing_action, :target => target, :message => message
       logger.info "Action sent to #{target} - #{message}"
@@ -66,15 +89,15 @@ module Marvin
     def pong(data)
       command :pong, data
       dispatch :outgoing_pong
-      logger.info "PONG sent to #{data}"
+      logger.info "PONG sent to #{host_with_port} w/ data - #{data}"
     end
     
     def nick(new_nick)
-      logger.info "Changing nickname to #{new_nick}"
+      logger.info "Changing nick to #{new_nick}"
       command :nick, new_nick
       @nickname = new_nick
       dispatch :outgoing_nick, :new_nick => new_nick
-      logger.info "Nickname changed to #{new_nick}"
+      logger.info "Nick changed to #{new_nick}"
     end
     
   end

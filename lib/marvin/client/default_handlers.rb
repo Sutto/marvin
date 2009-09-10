@@ -1,6 +1,29 @@
 module Marvin
   class AbstractClient
     
+    # Default handlers
+    
+    # The default handler for all things initialization-related
+    # on the client. Usually, this will send the user command,
+    # set out nick, join all of the channels / rooms we wish
+    # to be in and if a password is specified in the configuration,
+    # it will also attempt to identify us.
+    def handle_client_connected(opts = {})
+      logger.info "About to handle client connected"
+      # If the pass is set
+      unless pass.blank?
+        logger.info "Sending pass for connection"
+        command :pass, pass
+      end
+      # IRC Connection is establish so we send all the required commands to the server.
+      logger.info "Setting default nickname"
+      nick nicks.shift
+      logger.info "Sending user command"
+      command :user, configuration.user, "0", "*", util.last_param(configuration.name)
+    rescue Exception => e
+      Marvin::ExceptionTracker.log(e)
+    end
+    
     # handle a bunch of default events that happen at a connection
     # level instead of a per-app level.
     
@@ -55,10 +78,20 @@ module Marvin
       end
     end
     
-    def handle_channel_topic
-      # TODO: Check if the channel is one we attempted to join.
-      # If it is, we move it from the 'pending_channels' list to
-      # the list of channels we are currently in.
+    # Only record joins when you've successfully joined the channel.
+    def handle_incoming_join(opts = {})
+      if opts[:nick] == @nickname
+        channels << opts[:target]
+        logger.info "Successfully joined channel #{opts[:target]}"
+      end
     end
+    
+    # Make sure we show user server errors
+    def handle_incoming_error(opts = {})
+      if opts[:message].present?
+        logger.info "Got ERROR Message: #{opts[:message]}"
+      end
+    end
+    
   end
 end

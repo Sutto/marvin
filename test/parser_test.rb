@@ -79,7 +79,7 @@ class ParserTest < Test::Unit::TestCase
     end
     
     should "have the correct nick" do
-      assert_equal "RelayBot", @parsed.command.prefix.nickname
+      assert_equal "RelayBot", @parsed.command.prefix.nick
     end
     
     should "have the correct user" do
@@ -136,7 +136,7 @@ class ParserTest < Test::Unit::TestCase
     end
     
     should "have the correct nick" do
-      assert_equal "SuttoL", @parsed.command.prefix.nickname
+      assert_equal "SuttoL", @parsed.command.prefix.nick
     end
     
     should "have the correct user" do

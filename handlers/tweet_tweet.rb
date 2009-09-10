@@ -16,6 +16,4 @@ class TweetTweet < Marvin::Base
   def show_tweet(tweet)
   end
   
-  
-  
 end

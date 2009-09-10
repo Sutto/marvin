@@ -1,11 +1,10 @@
-# Ragel Parser comes from the Arrbot Guys -
-# Kudos to Halogrium and Epitron.
+# Ragel Parser comes from the Arrbot Guys - Kudos to Halogrium and Epitron.
 
 %%{
   machine irc;
   
   action prefix_servername_start {
-    server = Marvin::Parsers::Prefixes::Server.new
+    server = Prefixes::Server.new
   }
   
   action prefix_servername {
@@ -17,11 +16,11 @@
   }
   
   action prefix_hostmask_start {
-    hostmask =  Marvin::Parsers::Prefixes::HostMask.new
+    hostmask =  Prefixes::HostMask.new
   }
   
   action hostmask_nickname {
-    hostmask.nickname << fc
+    hostmask.nick << fc
   }
   
   action hostmask_user {
@@ -127,7 +126,7 @@ module Marvin
         hostmask = nil
         server   = nil
         code     = nil
-        command  = Marvin::Parsers::Command.new(data)
+        command  = Command.new(data)
 
         %% write init;
         %% write exec;

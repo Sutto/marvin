@@ -3,23 +3,23 @@ module Marvin
     module Prefixes
       # A Generic host mask prefix for a message.
       class HostMask
-        attr_accessor :nickname, :user, :host
+        attr_accessor :nick, :user, :host
         
-        def initialize(nickname = nil, user = nil, host = nil)
-          self.nickname = nickname || ""
-          self.user     = user || ""
-          self.host     = host || ""
+        def initialize(nick = nil, user = nil, host = nil)
+          @nick = nick || ""
+          @user = user || ""
+          @host = host || ""
         end
         
         # Convert it to a usable hash.
         def to_hash
-          {:nick => @nickname.freeze, :ident => @user.freeze, :host => @host.freeze}
+          {:nick => @nick.freeze, :ident => @user.freeze, :host => @host.freeze}
         end
         
         # Converts it back to a nicer form / a string.
         def to_s
           str = ""
-          str << @nickname.to_s
+          str << @nick.to_s
           str << "!#{@user}" unless @user.blank?
           str << "@#{@host}" unless @host.blank?
         end
