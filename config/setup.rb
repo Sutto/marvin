@@ -9,7 +9,7 @@ Marvin::Loader.before_run do
   
   # E.G.
   # MyHandler.register! (Marvin::Base subclass) or
-  # Marvin::Settings.default_client.register_handler my_handler (a handler instance)
+  # Marvin::Settings.client.register_handler my_handler (a handler instance)
   
   # Register based on some setting you've added. e.g.:
   # LoggingHandler.register! if Marvin::Settings.use_logging

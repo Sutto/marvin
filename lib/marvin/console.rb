@@ -5,7 +5,7 @@ module Marvin
     
     module BaseExtensions
       def parse(line)
-        Marvin::Settings.default_parser.parse(line)
+        Marvin::Settings.parser.parse(line)
       end
 
       def logger
@@ -13,7 +13,7 @@ module Marvin
       end
 
       def client
-        $client ||= Marvin::Settings.default_client.new(:port => 6667, :server => "irc.freenode.net")
+        $client ||= Marvin::Settings.client.new(:port => 6667, :server => "irc.freenode.net")
       end
 
       class ServerMock < Marvin::IRC::Server::BaseConnection

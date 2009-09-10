@@ -58,7 +58,7 @@ module Marvin
       # Forcefully do the setup routine.
       def setup!
         # Register ourselves as a new handler.
-        Marvin::Settings.default_client.register_handler self.new
+        Marvin::Settings.client.register_handler self.new
         @@setup = true
       end
       

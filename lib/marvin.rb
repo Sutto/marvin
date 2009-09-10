@@ -40,4 +40,6 @@ module Marvin
   
   has_library :util, :abstract_client, :abstract_parser, :irc
   
+  extends_library :settings
+  
 end

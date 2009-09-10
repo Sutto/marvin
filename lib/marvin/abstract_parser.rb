@@ -1,11 +1,5 @@
 module Marvin
-  # An abstract class for an IRC protocol
-  # Parser. Used as a basis for expirimentation.
   class AbstractParser
-    
-    def self.parse(line)
-      self.new(line.strip).to_event
-    end
     
     attr_accessor :line, :command, :event
     
@@ -21,7 +15,11 @@ module Marvin
       @event
     end
     
-    private
+    def self.parse(line)
+      new(line.strip).to_event
+    end
+    
+    protected
     
     def self.parse!(line)
       raise NotImplementedError, "Must be implemented in a subclass"

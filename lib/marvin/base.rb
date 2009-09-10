@@ -43,7 +43,7 @@ module Marvin
       end
       
       # Register this specific handler on the IRC handler.
-      def register!(parent = Marvin::Settings.default_client)
+      def register!(parent = Marvin::Settings.client)
         return if self == Marvin::Base # Only do it for sub-classes.
         parent.register_handler self.new
       end
