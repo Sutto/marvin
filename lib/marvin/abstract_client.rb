@@ -78,7 +78,7 @@ module Marvin
     def receive_line(line)
       dispatch :incoming_line, :line => line
       event = Marvin::Settings.parser.parse(line)
-      dispatch(event.to_incoming_event_name, event.to_hash) unless event.nil?
+      dispatch(event.to_incoming_event_name, event.to_hash) unless event.nil?  
     end
     
     def default_channels

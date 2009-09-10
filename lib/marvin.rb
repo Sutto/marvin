@@ -35,12 +35,9 @@ module Marvin
     l.register_controller :console, 'Marvin::Console'
     # Core Commands handily makes available a set
     # of information about what is running etc.
-    l.before_run do
-       Marvin::Client.setup! if Marvin::Loader.client?
-    end
   end
   
-  has_library :util, :abstract_client, :abstract_parser, :irc
+  has_library :util, :abstract_client, :abstract_parser, :irc, :exception_tracker
   
   extends_library :settings
   

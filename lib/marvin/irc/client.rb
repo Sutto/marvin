@@ -33,6 +33,8 @@ module Marvin::IRC
         line = line.strip
         logger.debug "<< #{line}"
         @client.receive_line(line)
+      rescue Exception => e
+        logger.warn "Uncaught exception raised; Likely in Marvin"
       end
       
     end

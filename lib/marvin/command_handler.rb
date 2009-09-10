@@ -25,7 +25,6 @@ module Marvin
     end
     
     on_event :incoming_message do
-      logger.debug "Incoming message"
       check_for_commands
     end
     

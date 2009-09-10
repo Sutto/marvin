@@ -8,7 +8,7 @@ module Marvin
       h[k] = Hash.new { |h2, k2| h2[k2] = [] }
     end
     
-    attr_accessor :client, :target, :from, :options, :logger
+    attr_accessor :client, :target, :from, :options
     
     class << self
       
@@ -18,7 +18,7 @@ module Marvin
         message_name = message_name.to_sym
         items = []
         klass = self
-        while klass != Class
+        while klass != Object
           items += @@handlers[klass][message_name]
           klass = klass.superclass
         end
@@ -45,7 +45,7 @@ module Marvin
       # Register this specific handler on the IRC handler.
       def register!(parent = Marvin::Settings.client)
         return if self == Marvin::Base # Only do it for sub-classes.
-        parent.register_handler self.new
+        parent.register_handler self.new unless parent.handlers.any? { |h| h.class == self }
       end
     
     end
