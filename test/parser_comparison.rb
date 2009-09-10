@@ -12,7 +12,7 @@ LINES = [
   ":SuttoL!n=SuttoL@li6-47.members.linode.com PRIVMSG #relayrelay :testing...",
   ":wolfe.freenode.net 004 MarvinBot3000 wolfe.freenode.net hyperion-1.0.2b aAbBcCdDeEfFGhHiIjkKlLmMnNopPQrRsStTuUvVwWxXyYzZ01234569*@ bcdefFhiIklmnoPqstv"
 ]
-PARSERS = [Marvin::Parsers::RagelParser, Marvin::Parsers::SimpleParser]
+PARSERS = [Marvin::Parsers::SimpleParser, Marvin::Parsers::RagelParser]
 
 LINES.each do |line|
   
@@ -44,7 +44,7 @@ puts ""
 
 width = PARSERS.map { |p| p.name.length }.max + 2
 
-ITERATIONS = 1000
+ITERATIONS = 100
 
 Benchmark.bm(width) do |b|
   PARSERS.each do |parser|
