@@ -10,12 +10,12 @@ module Marvin::IRC
     class EMConnection < EventMachine::Protocols::LineAndTextProtocol
       is :loggable
       
-      attr_accessor :client, :server, :port
+      attr_accessor :client, :port
       
       def initialize(*args)
-        opts = args.extract_options!
+        config = args.last.is_a?(Marvin::Nash) ? args.pop : Marvin::Nash.new
         super(*args)
-        @client = Marvin::IRC::Client.new(opts)
+        @client = Marvin::IRC::Client.new(config)
         @client.em_connection = self
       end
       
@@ -38,16 +38,22 @@ module Marvin::IRC
         Marvin::ExceptionTracker.log(e)
       end
       
-    end
-
-    def send_line(*args)
-      args.each { |line| Marvin::Logger.debug ">> #{line.strip}" }
-      em_connection.send_data *args
+      def send_line(*lines)
+        lines.each do |l|
+          logger.debug ">> #{line.strip}"
+          em_connection.send_data line
+        end
+      end
+      
     end
     
     ## Client specific details
     
     class << self
+      
+      def send_line(*args)
+        @em_connection.send_line(*args)
+      end
       
       # Starts the EventMachine loop and hence starts up the actual
       # networking portion of the IRC Client.
@@ -61,12 +67,12 @@ module Marvin::IRC
           EventMachine.epoll
           EventMachine.run do
             connections.each_pair do |server, configuration|
-              connect(configuration.merge(:server => server))
+              connect(configuration.merge(:server => server.to_s))
             end
             @@stopped = false
           end
         else
-          logger.fatal "config/connections.yml couldn't be loaded. Exiting"
+          logger.fatal "config/connections.yml couldn't be loaded."
         end
       end
 
@@ -89,11 +95,11 @@ module Marvin::IRC
         @@stoped = true
       end
 
-      def add_reconnect(opts)
-        logger.warn "Adding timer to reconnect to #{opts.server}:#{opts.port} in 15 seconds"
+      def add_reconnect(c)
+        logger.warn "Adding timer to reconnect to #{c.server}:#{c.port} in 15 seconds"
         EventMachine.add_timer(15) do
-          logger.warn "Preparing to reconnect to #{opts.server}:#{opts.port}"
-          connect(opts)
+          logger.warn "Preparing to reconnect to #{c.server}:#{c.port}"
+          connect(c)
         end
       end
       

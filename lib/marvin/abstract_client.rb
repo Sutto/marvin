@@ -7,18 +7,18 @@ module Marvin
     
     is :dispatchable, :loggable
     
-    def initialize(opts = {})
-      self.original_opts    = opts.dup # Copy the options so we can use them to reconnect.
-      self.server           = opts[:server]
-      self.port             = opts[:port]
-      self.default_channels = opts[:channels]
-      self.nicks            = opts[:nicks] || []
-      self.pass             = opts[:pass]
+    def initialize(opts)
+      @connection_config    = opts.dup # Copy the options so we can use them to reconnect.
+      @server           = opts.server
+      @port             = opts.port
+      @default_channels = opts.channels
+      @nicks            = opts.nicks || []
+      @pass             = opts.pass
     end
     
     cattr_accessor :events, :configuration, :is_setup, :connections
     attr_accessor  :channels, :nickname, :server, :port, :nicks, :pass,
-                   :disconnect_expected, :original_opts
+                   :disconnect_expected, :connection_config
     
     # Set the default values for the variables
     @@events        = []
@@ -41,12 +41,12 @@ module Marvin
     end
     
     def process_disconnect
-      logger.info "Handling disconnect for #{self.server}:#{self.port}"
+      logger.info "Handling disconnect for #{host_with_port}"
       connections.delete(self)
       dispatch :client_disconnected
       unless @disconnect_expected
-        logger.warn "Lost connection to server - adding reconnect"
-        self.class.add_reconnect @original_opts
+        logger.warn "Unexpectly lost connection to server; adding reconnect"
+        self.class.add_reconnect @connection_config
       else
         Marvin::Loader.stop! if connections.blank?
       end
@@ -99,7 +99,7 @@ module Marvin
     end
     
     def host_with_port
-      @host_with_port ||= "#{self.server}:#{self.port}"
+      @host_with_port ||= "#{server}:#{port}"
     end
     
     def nicks

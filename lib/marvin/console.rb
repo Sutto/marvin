@@ -16,29 +16,6 @@ module Marvin
         $client ||= Marvin::Settings.client.new(:port => 6667, :server => "irc.freenode.net")
       end
 
-      class ServerMock < Marvin::IRC::Server::BaseConnection
-        def send_line(line)
-          puts ">> #{line}"
-        end
-        def kill_connection!
-          puts "Killing connection"
-        end
-
-        def get_peername
-          # Localhost, HTTP
-          "\034\036\000P\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\001\000\000\000\000"
-        end
-
-        def host
-          "localhost"
-        end
-
-        def port
-          6667
-        end
-
-      end
-
       def server(reset = false)
         $server = ServerMock.new(:port => 6667, :host => "localhost") if $server.blank? || reset
         return $server
@@ -66,7 +43,8 @@ module Marvin
     end
     
     def run
-      IRB.start(@file)
+      ARGV.replace []
+      IRB.start
     end
     
     def self.run

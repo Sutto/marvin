@@ -12,6 +12,16 @@ module Marvin
     
     class << self
       
+      def command(name, method_desc = nil, &blk)
+        exposes name
+        desc method_desc unless method_desc.blank?
+        define_method(name, &blk)
+      end
+      
+      def prefix_is(p)
+        self.command_prefix = p
+      end
+      
       def exposes(*args)
         args.each { |name| @@exposed_method_mapping[self] << name.to_sym }
       end
