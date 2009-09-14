@@ -10,10 +10,11 @@ module Marvin
       attr_accessor :em_connection, :remote_client_host, :remote_client_nick
       
       class RemoteClientProxy
+        is :loggable
         
         def initialize(conn, host_with_port, nickname)
           @connection     = conn
-          @host_with_port = client
+          @host_with_port = host_with_port
           @nickname       = nickname
         end
         
@@ -26,8 +27,8 @@ module Marvin
         end
         
         def method_missing(name, *args)
-          logger.debug "Proxying #{name}(#{args.inspect[1..-1]}) to #{@host_with_port}"
-          conn.send_message(:action, {
+          logger.debug "Proxying #{name}(#{args.inspect[1..-2]}) to #{@host_with_port}"
+          @connection.send_message(:action, {
             "action"      => name.to_s,
             "arguments"   => args,
             "client-host" => @host_with_port
@@ -38,14 +39,33 @@ module Marvin
       
       class EMConnection < EventMachine::Protocols::LineAndTextProtocol
         is :loggable
-
-        attr_accessor :client, :port        
+        
+        cattr_accessor :stopping
+        self.stopping = false
+        
+        attr_accessor :client, :port, :connection_host, :connection_port
 
         def initialize(*args)
           config = args.last.is_a?(Marvin::Nash) ? args.pop : Marvin::Nash.new
           super(*args)
           @callbacks = {}
           @client = Marvin::Distributed::Client.new(self)
+        end
+
+        def post_init
+          super
+          logger.info "Connected to distributed server"
+          @client.setup_handlers
+        end
+        
+        def unbind
+          if self.stopping
+            logger.info "Stopping distributed client"
+          else
+            logger.info "Lost connection to distributed client - Scheduling reconnect"
+            EventMachine.add_timer(15) { EMConnection.connect(connection_host, connection_port) }
+          end
+          super
         end
 
         def receive_line(line)
@@ -60,7 +80,7 @@ module Marvin
           Marvin::ExceptionTracker.log(e)
         end
 
-        def send_message(name, arguments, &callback)
+        def send_message(name, arguments = {}, &callback)
           logger.debug "Sending #{name.inspect} to #{self.host_with_port}"
           payload = {
             "message"  => name.to_s,
@@ -108,6 +128,14 @@ module Marvin
           end
         end
         
+        def self.connect(host, port)
+          logger.info "Attempting to connect to #{host}:#{port}"
+          EventMachine.connect(host, port, self) do |c|
+            c.connection_host = host
+            c.connection_port = port
+          end
+        end
+        
         protected
         
         def options_for_callback(blk)
@@ -140,26 +168,42 @@ module Marvin
         @em_connection = em_connection
       end
    
-      def client
-        @client ||= RemoteClientProxy.new(@em_connection, @remote_client_host, @remote_client_nick)
+      def remote_client
+        @remote_client ||= RemoteClientProxy.new(@em_connection, @remote_client_host, @remote_client_nick)
       end
       
       def reset!
-        @client = nil
+        @remote_client = nil
         @remote_client_nick = nil
         @remote_client_host = nil
+      end
+      
+      def method_missing(name, *args)
+        remote_client.send(name, *args)
+      end
+      
+      def setup_handlers
+        self.class.handlers.each { |h| h.client = self if h.respond_to?(:client=) }
       end
       
       class << self
         
         def run
+          logger.info "Preparing to start distributed client"
           EventMachine.kqueue
           EventMachine.epoll
           EventMachine.run do
+            opts = Marvin::Settings.distributed || Marvin::Nash.new
+            opts = opts.client || Marvin::Nash.new
+            host = opts.host  || "0.0.0.0"
+            port = (opts.port || 8943).to_i
+            EMConnection.connect(host, port)
           end
         end
         
         def stop
+          logger.info "Stopping distributed client..."
+          EMConnection.stopping = true
           EventMachine.stop_event_loop
         end
         

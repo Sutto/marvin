@@ -146,8 +146,8 @@ module Marvin
     # details of the current request available.
     def setup_details(options)
       @options = options.is_a?(Marvin::Nash) ? options : Marvin::Nash.new(options.to_hash)
-      @target  = options[:target] if options.has_key?(:target)
-      @from    = options[:nick] if options.has_key?(:nick)
+      @target  = @options.target if @options.target?
+      @from    = @options.nick   if @options.nick?
     end
     
     def reset_details

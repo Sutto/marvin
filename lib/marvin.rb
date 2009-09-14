@@ -31,10 +31,18 @@ module Marvin
   
   manifest do |m, l|
     Settings.root = File.dirname(File.dirname(__FILE__))
-    l.register_controller :client,  'Marvin::Settings.client'
-    l.register_controller :console, 'Marvin::Console'
+    l.register_controller :client,             'Marvin::Settings.client'
+    l.register_controller :console,            'Marvin::Console'
+    l.register_controller :distributed_client, 'Marvin::Distributed::Client'
     # Core Commands handily makes available a set
     # of information about what is running etc.
+    
+    l.before_run do
+      if l.distributed_client?
+        Marvin::Settings.client = Marvin::Distributed::Client 
+      end
+    end
+    
   end
   
   has_library :util, :abstract_client, :abstract_parser, :irc, :exception_tracker

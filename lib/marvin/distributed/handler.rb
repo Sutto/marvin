@@ -2,6 +2,8 @@ module Marvin
   module Distributed
     class Handler < Marvin::Base
       
+      
+      EVENT_WHITELIST = [:incoming_message, :incoming_action]
       QUEUE_PROCESSING_SPACING = 3
       
       attr_accessor :message_queue
@@ -12,21 +14,24 @@ module Marvin
       end
       
       def handle(message, options)
-        return if message == :incoming_line
+        return unless EVENT_WHITELIST.include?(message)
         super(message, options)
         dispatch(message, options)
       end
       
-      def dispatch(name, options)
+      def dispatch(name, options, client = self.client)
         return if client.blank?
         server = Marvin::Distributed::Server.next
         if server.blank?
           # TODO: Add to queued messages, wait
-          @message_queue << [client, name, options]
+          @message_queue << [name, options, client]
           run! unless running?
         else
           server.dispatch(client, name, options)
         end
+      rescue Exception => e
+        logger.warn "Error dispatching #{name}"
+        Marvin::ExceptionTracker.log(e)
       end
       
       def process_queue
@@ -57,6 +62,7 @@ module Marvin
         def register!(*args)
           # DO NOT register if this is  not a normal client.
           return unless Marvin::Loader.client?
+          logger.info "Registering distributed handler on #{Marvin::Settings.client}"
           super
         end
         

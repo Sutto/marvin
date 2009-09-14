@@ -65,7 +65,7 @@ module Marvin
       def dispatch(client, name, options)
         @processing = true
         send_message(:event, {
-          "event-name"    => name,
+          "event-name"    => name.to_s,
           "event-options" => options,
           "client-host"   => client.host_with_port,
           "client-nick"   => client.nickname
@@ -141,8 +141,9 @@ module Marvin
       
       def self.start
         opts = Marvin::Settings.distributed || Marvin::Nash.new
-        host = opts.bind  || "0.0.0.0"
-        port = (opts.bind || 8943).to_i
+        opts = opts.server || Marvin::Nash.new
+        host = opts.host  || "0.0.0.0"
+        port = (opts.port || 8943).to_i
         logger.info "Starting distributed server on #{host}:#{port}"
         EventMachine.start_server(host, port, self)
       end

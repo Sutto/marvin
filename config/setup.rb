@@ -21,8 +21,14 @@ Marvin::Loader.before_run do
   #   HelloWorld.register!
   #   DebugHandler.register!
   # else
-  #   Marvin::Distributed::DispatchHandler.register!
+  
   # end
+  
+  if Marvin::Loader.distributed_client?
+    KeikiThwopper.register!
+  end
+  
+  Marvin::Distributed::Handler.register!
   
   # And any other code here that will be run before the client
   

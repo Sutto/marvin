@@ -11,7 +11,7 @@ module Marvin
         prefix_text, line = line.split(" ", 2) if line[0] == ?:
         command = Command.new("#{line}\r\n")
         command.prefix = self.extract_prefix(prefix_text)
-        parts = Marvin::Utils.arguments(line)
+        parts = Marvin::Util.arguments(line)
         command.code = parts.shift
         command.params = parts
         return command

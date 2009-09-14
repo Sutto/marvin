@@ -39,7 +39,7 @@ module Marvin::IRC
       end
       
       def send_line(*lines)
-        lines.each do |l|
+        lines.each do |line|
           logger.debug ">> #{line.strip}"
           send_data line
         end
@@ -49,11 +49,11 @@ module Marvin::IRC
     
     ## Client specific details
     
+    def send_line(*args)
+      @em_connection.send_line(*args)
+    end
+    
     class << self
-      
-      def send_line(*args)
-        @em_connection.send_line(*args)
-      end
       
       # Starts the EventMachine loop and hence starts up the actual
       # networking portion of the IRC Client.
@@ -70,6 +70,7 @@ module Marvin::IRC
             connections.each_pair do |server, configuration|
               connect(configuration.merge(:server => server.to_s))
             end
+            Marvin::Distributed::Server.start if Marvin::Distributed::Handler.registered?
             @@stopped = false
           end
         else

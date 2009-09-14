@@ -16,11 +16,6 @@ module Marvin
         $client ||= Marvin::Settings.client.new(:port => 6667, :server => "irc.freenode.net")
       end
 
-      def server(reset = false)
-        $server = ServerMock.new(:port => 6667, :host => "localhost") if $server.blank? || reset
-        return $server
-      end
-
       def user(reset = false)
         unless @user_created || reset
           server.receive_line "NICK SuttoL"
