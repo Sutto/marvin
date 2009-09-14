@@ -55,7 +55,6 @@ module Marvin
         def post_init
           super
           logger.info "Connected to distributed server"
-          @client.setup_handlers
         end
         
         def unbind
@@ -112,6 +111,7 @@ module Marvin
             logger.debug "Handling #{event}"
             @client.remote_client_host = client_host
             @client.remote_client_nick = client_nick
+            @client.setup_handlers
             @client.dispatch(event.to_sym, options)
           rescue Exception => e
             logger.warn "Got Exception - Forwarding to Remote"
@@ -176,14 +176,15 @@ module Marvin
         @remote_client = nil
         @remote_client_nick = nil
         @remote_client_host = nil
-      end
-      
-      def method_missing(name, *args)
-        remote_client.send(name, *args)
+        reset_handlers
       end
       
       def setup_handlers
-        self.class.handlers.each { |h| h.client = self if h.respond_to?(:client=) }
+        self.class.handlers.each { |h| h.client = remote_client if h.respond_to?(:client=) }
+      end
+      
+      def reset_handlers
+        self.class.handlers.each { |h| h.client = nil if h.respond_to?(:client=) }
       end
       
       class << self
