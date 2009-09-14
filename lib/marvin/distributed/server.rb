@@ -1,25 +1,44 @@
 require 'json'
 require 'digest/sha2'
+require 'eventmachine'
+require 'socket'
 
 module Marvin
   module Distributed
-    class Server < EventMachine::Connection
+    class Server < EventMachine::Protocols::LineAndTextProtocol
       is :loggable
       
       cattr_accessor :free_connections
       self.free_connections = []
       
-      attr_accessor :last_request, :processing, :callbacks
+      attr_accessor :processing, :callbacks
+      
+      def post_init
+        super
+        logger.info "Got distributed client connection with #{self.host_with_port}"
+        complete_processing
+        @callbacks = {}
+      end
+      
+      def unbind
+        logger.info "Lost distributed client connection with #{self.host_with_port}"
+        @@free_connections.delete(self)
+        super
+      end
       
       def receive_line(line)
+        line.strip!
+        logger.debug "<< #{line}"
         response = JSON.parse(line)
         handle_response(response)
       rescue JSON::ParserError
+        logger.debug "JSON parsing error for #{line.inspect}"
       rescue Exception => e
         Marvin::ExceptionTracker.log(e)
       end
       
       def send_message(name, arguments, &callback)
+        logger.debug "Sending #{name.inspect} to #{self.host_with_port}"
         payload = {
           "message"  => name.to_s,
           "options"  => arguments,
@@ -48,15 +67,18 @@ module Marvin
         send_message(:event, {
           "event-name"    => name,
           "event-options" => options,
-          "client"        => client.host_with_port
+          "client-host"   => client.host_with_port,
+          "client-nick"   => client.nickname
         })
       end
       
       def handle_completed(options = {})
+        logger.debug "Completed message from #{self.host_with_port}"
         complete_processing
       end
       
       def handle_exception(options = {})
+        logger.info "Handling exception on #{self.host_with_port}"
         name      = options["name"]
         message   = options["message"]
         backtrace = options["backtrace"]
@@ -65,7 +87,8 @@ module Marvin
       end
       
       def handle_action(options = {})
-        server    = lookup_client_for(options["client"])
+        logger.debug "Handling action from on #{self.host_with_port}"
+        server    = lookup_client_for(options["client-host"])
         action    = options["action"]
         arguments = [*options["arguments"]]
         return if server.blank? || action.blank?
@@ -109,7 +132,19 @@ module Marvin
         end
       end
       
+      def host_with_port
+        @host_with_port ||= begin
+          port, ip = Socket.unpack_sockaddr_in(get_peername)
+          "#{ip}:#{port}"
+        end
+      end
+      
       def self.start
+        opts = Marvin::Settings.distributed || Marvin::Nash.new
+        host = opts.bind  || "0.0.0.0"
+        port = (opts.bind || 8943).to_i
+        logger.info "Starting distributed server on #{host}:#{port}"
+        EventMachine.start_server(host, port, self)
       end
       
       def self.stop

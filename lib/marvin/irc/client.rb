@@ -41,7 +41,7 @@ module Marvin::IRC
       def send_line(*lines)
         lines.each do |l|
           logger.debug ">> #{line.strip}"
-          em_connection.send_data line
+          send_data line
         end
       end
       
@@ -64,6 +64,7 @@ module Marvin::IRC
         connections = Marvin::Nash.load_file(connections_file) rescue nil
         if connections.present?
           # Use epoll if available
+          EventMachine.kqueue
           EventMachine.epoll
           EventMachine.run do
             connections.each_pair do |server, configuration|

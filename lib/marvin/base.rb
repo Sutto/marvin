@@ -1,5 +1,3 @@
-require 'ostruct'
-
 module Marvin
   class Base
     is :loggable
@@ -147,7 +145,7 @@ module Marvin
     # Initializes details for the current cycle - in essence, this makes the
     # details of the current request available.
     def setup_details(options)
-      @options = options.is_a?(OpenStruct) ? options : OpenStruct.new(options)
+      @options = options.is_a?(Marvin::Nash) ? options : Marvin::Nash.new(options.to_hash)
       @target  = options[:target] if options.has_key?(:target)
       @from    = options[:nick] if options.has_key?(:nick)
     end
