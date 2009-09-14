@@ -7,7 +7,7 @@ module Marvin
         attr_accessor :name
         
         def initialize(name = nil)
-          self.name = name || ""
+          @name = name.to_s
         end
         
         def to_hash

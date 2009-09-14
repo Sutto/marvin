@@ -13,7 +13,11 @@ module Marvin
         
         # Convert it to a usable hash.
         def to_hash
-          {:nick => @nick.freeze, :ident => @user.freeze, :host => @host.freeze}
+          {
+            :nick => @nick.dup.freeze,
+            :ident => @user.dup.freeze,
+            :host => @host.dup.freeze
+          }
         end
         
         # Converts it back to a nicer form / a string.
@@ -22,6 +26,7 @@ module Marvin
           str << @nick.to_s
           str << "!#{@user}" unless @user.blank?
           str << "@#{@host}" unless @host.blank?
+          str
         end
         
       end

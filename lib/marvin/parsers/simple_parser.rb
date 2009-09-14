@@ -7,17 +7,12 @@ module Marvin
       # Parses an incoming message by using string
       # Manipulation.
       def self.parse!(line)
-        if line[0] == ?:
-          prefix_text, line = line.split(" ", 2)
-        else
-          prefix_text = nil
-        end
+        prefix_text = nil
+        prefix_text, line = line.split(" ", 2) if line[0] == ?:
         command = Command.new("#{line}\r\n")
         command.prefix = self.extract_prefix(prefix_text)
-        head, tail = line.split(":", 2)
-        parts = head.split(" ")
+        parts = Marvin::Utils.arguments(line)
         command.code = parts.shift
-        parts << tail unless tail.nil?
         command.params = parts
         return command
       end

@@ -29,9 +29,8 @@ module Marvin
       # the actual message part of a response).
       def last_param(section, ignore_prefix = true)
         content = section.to_s.strip
-        if content == ""
-          nil
-        elsif content =~ /\s+/ && (ignore_prefix || content !~ /^:/)
+        return if content.blank?
+        if content =~ /\s+/ && (ignore_prefix || content !~ /^:/)
           ":#{content}"
         else
           content
