@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require File.join(File.dirname(__FILE__), "..", "lib", "marvin")
+
+Marvin::Application.processing(ARGV) do |a|
+  
+  a.banner = "Marvin v#{Marvin::VERSION}"
+  
+  a.controller! :console, "Opens a friendly IRB prompt with Marvin pre-loaded"
+  a.controller! :client,  "Starts the actual Marvin client instance"
+  
+end
