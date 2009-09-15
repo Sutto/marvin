@@ -23,6 +23,7 @@ module Marvin
         return if client.blank?
         server = Marvin::Distributed::Server.next
         if server.blank?
+          logger.debug "Distributed handler is currently busy - adding to queue"
           # TODO: Add to queued messages, wait
           @message_queue << [name, options, client]
           run! unless running?
@@ -36,7 +37,13 @@ module Marvin
       
       def process_queue
         count = [@message_queue.size, Server.free_connections.size].min
+        logger.debug "Processing #{count} item(s) from the message queue"
         count.times { |item| dispatch(*@message_queue.shift) }
+        if @message_queue.empty?
+          logger.debug "The message queue is now empty"
+        else
+          logger.debug "The message queue still has #{count} item(s)"
+        end
         check_queue_progress
       end
       
@@ -58,6 +65,11 @@ module Marvin
       end
       
       class << self
+        
+        def whitelist_event(name)
+          EVENT_WHITELIST << name.to_sym
+          EVENT_WHITELIST.uniq!
+        end
         
         def register!(*args)
           # DO NOT register if this is  not a normal client.

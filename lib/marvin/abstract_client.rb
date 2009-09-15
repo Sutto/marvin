@@ -75,8 +75,9 @@ module Marvin
         config.merge! nash
       end
       @@configuration = config
-      # TODO: Remove Duplication
-      Marvin::CoreCommands.register!
+      # Help is only currently available on an instance running
+      # distributed handler.
+      Marvin::CoreCommands.register! unless Marvin::Distributed::Handler.registered?
       @setup = true
     end
     

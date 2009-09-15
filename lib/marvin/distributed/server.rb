@@ -5,13 +5,18 @@ require 'socket'
 
 module Marvin
   module Distributed
-    class Server < EventMachine::Protocols::LineAndTextProtocol
-      is :loggable
+    class Server < Protocol
       
-      cattr_accessor :free_connections
+      register_handler_method :completed
+      register_handler_method :exception
+      register_handler_method :action
+      register_handler_method :authenticate
+      
+      cattr_accessor :free_connections, :action_whitelist
       self.free_connections = []
+      self.action_whitelist = [:nick, :pong, :action, :msg, :quit, :part, :join, :command]
       
-      attr_accessor :processing, :callbacks
+      attr_accessor :processing, :configuration
       
       def post_init
         super
@@ -26,42 +31,6 @@ module Marvin
         super
       end
       
-      def receive_line(line)
-        line.strip!
-        logger.debug "<< #{line}"
-        response = JSON.parse(line)
-        handle_response(response)
-      rescue JSON::ParserError
-        logger.debug "JSON parsing error for #{line.inspect}"
-      rescue Exception => e
-        Marvin::ExceptionTracker.log(e)
-      end
-      
-      def send_message(name, arguments, &callback)
-        logger.debug "Sending #{name.inspect} to #{self.host_with_port}"
-        payload = {
-          "message"  => name.to_s,
-          "options"  => arguments,
-          "sent-at"  => Time.now
-        }
-        payload.merge!(options_for_callback(callback))
-        send_data "#{JSON.dump(payload)}\n"
-      end
-      
-      def handle_response(response)
-        return unless response.is_a?(Hash) && response.has_key?("message")
-        options = response["options"] || {}
-        process_callback(response)
-        case response["message"]
-          when "completed"
-            handle_completed(options)
-          when "exception"
-            handle_exception(options)
-          when "action"
-            handle_action(options)
-        end
-      end
-      
       def dispatch(client, name, options)
         @processing = true
         send_message(:event, {
@@ -72,12 +41,25 @@ module Marvin
         })
       end
       
+      def handle_authenticate(options = {})
+        return unless requires_auth?
+        logger.info "Attempting authentication for distributed client"
+        if options["token"].present? && options["token"] == configuration.token
+          @authenticated = true
+          send_message(:authenticated)
+        else
+          send_message(:authentication_failed)
+        end
+      end
+      
       def handle_completed(options = {})
+        return if fails_auth!
         logger.debug "Completed message from #{self.host_with_port}"
         complete_processing
       end
       
       def handle_exception(options = {})
+        return if fails_auth!
         logger.info "Handling exception on #{self.host_with_port}"
         name      = options["name"]
         message   = options["message"]
@@ -87,6 +69,7 @@ module Marvin
       end
       
       def handle_action(options = {})
+        return if fails_auth!
         logger.debug "Handling action from on #{self.host_with_port}"
         server    = lookup_client_for(options["client-host"])
         action    = options["action"]
@@ -94,7 +77,11 @@ module Marvin
         return if server.blank? || action.blank?
         begin
           a = action.to_sym
-          server.send(a, *arguments) if server.respond_to?(a)
+          if self.action_whitelist.include?(a)
+            server.send(a, *arguments) if server.respond_to?(a)
+          else
+            logger.warn "Client attempted invalid action #{a.inspect}"
+          end
         rescue Exception => e
           Marvin::ExceptionTracker.log(e)
         end
@@ -115,27 +102,20 @@ module Marvin
         end
       end
       
-      def options_for_callback(blk)
-        return {} if blk.blank?
-        cb_id = "callback-#{seld.object_id}-#{Time.now.to_f}"
-        count = 0
-        count += 1 while @callbacks.has_key?(Digest::SHA256.hexdigest("#{cb_id}-#{count}"))
-        final_id = Digest::SHA256.hexdigest("#{cb_id}-#{count}")
-        @callbacks[final_id] = blk
-        {"callback-id" => final_id}
+      def requires_auth?
+        configuration.token? && !authenticated?
       end
       
-      def process_callback(hash)
-        if hash.is_a?(Hash) && hash.has_key?("callback-id")
-          callback = @callbacks.delete(hash["callback-id"])
-          callback.call(self, hash)
-        end
+      def authenticated?
+        @authenticated ||= false
       end
       
-      def host_with_port
-        @host_with_port ||= begin
-          port, ip = Socket.unpack_sockaddr_in(get_peername)
-          "#{ip}:#{port}"
+      def fails_auth!
+        if requires_auth?
+          logger.debug "Authentication missing for distributed client"
+          send_message(:unauthorized)
+          close_connection_after_writing
+          return true
         end
       end
       
@@ -144,11 +124,10 @@ module Marvin
         opts = opts.server || Marvin::Nash.new
         host = opts.host  || "0.0.0.0"
         port = (opts.port || 8943).to_i
-        logger.info "Starting distributed server on #{host}:#{port}"
-        EventMachine.start_server(host, port, self)
-      end
-      
-      def self.stop
+        logger.info "Starting distributed server on #{host}:#{port} (requires authentication = #{opts.token?})"
+        EventMachine.start_server(host, port, self) do |s|
+          s.configuration = opts
+        end
       end
       
       def self.next

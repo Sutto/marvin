@@ -37,24 +37,33 @@ module Marvin
         
       end
       
-      class EMConnection < EventMachine::Protocols::LineAndTextProtocol
-        is :loggable
+      class EMConnection < Marvin::Distributed::Protocol
+        
+        register_handler_method :event
+        register_handler_method :authentication_failed
+        register_handler_method :authenticated
+        register_handler_method :unauthorized
         
         cattr_accessor :stopping
         self.stopping = false
         
-        attr_accessor :client, :port, :connection_host, :connection_port
+        attr_accessor :client, :port, :connection_host, :connection_port, :configuration
 
         def initialize(*args)
-          config = args.last.is_a?(Marvin::Nash) ? args.pop : Marvin::Nash.new
+          @configuration = args.last.is_a?(Marvin::Nash) ? args.pop : Marvin::Nash.new
           super(*args)
           @callbacks = {}
           @client = Marvin::Distributed::Client.new(self)
+          @authenticated = false
         end
 
         def post_init
           super
           logger.info "Connected to distributed server"
+          if configuration.token?
+            logger.info "Attempting to authenticate..." 
+            send_message(:authenticate, {:token => configuration.token})
+          end
         end
         
         def unbind
@@ -62,50 +71,17 @@ module Marvin
             logger.info "Stopping distributed client"
           else
             logger.info "Lost connection to distributed client - Scheduling reconnect"
-            EventMachine.add_timer(15) { EMConnection.connect(connection_host, connection_port) }
+            EventMachine.add_timer(15) { EMConnection.connect(connection_host, connection_port, @configuration) }
           end
           super
         end
-
-        def receive_line(line)
-          line.strip!
-          logger.debug "<< #{line}"
-          response = JSON.parse(line)
-          handle_response(response)
-        rescue JSON::ParserError
-          logger.warn "Error parsing input: #{line}"
-        rescue Exception => e
-          logger.warn "Uncaught exception raised; Likely in Marvin"
-          Marvin::ExceptionTracker.log(e)
-        end
-
-        def send_message(name, arguments = {}, &callback)
-          logger.debug "Sending #{name.inspect} to #{self.host_with_port}"
-          payload = {
-            "message"  => name.to_s,
-            "options"  => arguments,
-            "sent-at"  => Time.now
-          }
-          payload.merge!(options_for_callback(callback))
-          send_data "#{JSON.dump(payload)}\n"
-        end
-        
-        def handle_response(response)
-          return unless response.is_a?(Hash) && response.has_key?("message")
-          options = response["options"] || {}
-          process_callback(response)
-          case response["message"]
-          when "event"
-            handle_event(options)
-          end
-        end
         
         def handle_event(options = {})
-          event = options["event-name"]
+          event       = options["event-name"]
           client_host = options["client-host"]
           client_nick = options["client-nick"]
-          options = options["event-options"]
-          options = {} unless options.is_a?(Hash)
+          options     = options["event-options"]
+          options     = {} unless options.is_a?(Hash)
           return if event.blank?
           begin
             logger.debug "Handling #{event}"
@@ -128,9 +104,24 @@ module Marvin
           end
         end
         
-        def self.connect(host, port)
+        def handle_unauthorized(options = {})
+          logger.warn "Attempted action when unauthorized. Stopping client."
+          Marvin::Distributed::Client.stop
+        end
+        
+        def handle_authenticated(options = {})
+          @authenticated = true
+          logger.info "Successfully authenticated with #{host_with_port}"
+        end
+        
+        def handle_authentication_failed(options = {})
+          logger.info "Authentication with #{host_with_port} failed. Stopping."
+          Marvin::Distributed::Client.stop
+        end
+        
+        def self.connect(host, port, config = Marvin::Nash.new)
           logger.info "Attempting to connect to #{host}:#{port}"
-          EventMachine.connect(host, port, self) do |c|
+          EventMachine.connect(host, port, self, config) do |c|
             c.connection_host = host
             c.connection_port = port
           end
@@ -198,7 +189,7 @@ module Marvin
             opts = opts.client || Marvin::Nash.new
             host = opts.host  || "0.0.0.0"
             port = (opts.port || 8943).to_i
-            EMConnection.connect(host, port)
+            EMConnection.connect(host, port, opts)
           end
         end
         
