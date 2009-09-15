@@ -16,13 +16,26 @@ module Marvin
       self.free_connections = []
       self.action_whitelist = [:nick, :pong, :action, :msg, :quit, :part, :join, :command]
       
-      attr_accessor :processing, :configuration
+      attr_accessor :processing, :configuration, :using_tls
+      
+      def initialize(*args)
+        @configuration = args.last.is_a?(Marvin::Nash) ? args.pop : Marvin::nash.new
+        super(*args)
+      end
       
       def post_init
         super
-        logger.info "Got distributed client connection with #{self.host_with_port}"
-        complete_processing
         @callbacks = {}
+        logger.info "Got distributed client connection with #{self.host_with_port}"
+        if should_use_tls?
+          start_tls
+        else
+          complete_processing
+        end
+      end
+      
+      def ssl_handshake_completed
+        complete_processing if should_use_tls?
       end
       
       def unbind
@@ -110,6 +123,10 @@ module Marvin
         @authenticated ||= false
       end
       
+      def should_use_tls?
+        @using_tls ||= configuration.encrypted?
+      end
+      
       def fails_auth!
         if requires_auth?
           logger.debug "Authentication missing for distributed client"
@@ -125,9 +142,7 @@ module Marvin
         host = opts.host  || "0.0.0.0"
         port = (opts.port || 8943).to_i
         logger.info "Starting distributed server on #{host}:#{port} (requires authentication = #{opts.token?})"
-        EventMachine.start_server(host, port, self) do |s|
-          s.configuration = opts
-        end
+        EventMachine.start_server(host, port, self, opts)
       end
       
       def self.next

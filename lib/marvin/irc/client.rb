@@ -10,18 +10,38 @@ module Marvin::IRC
     class EMConnection < EventMachine::Protocols::LineAndTextProtocol
       is :loggable
       
-      attr_accessor :client, :port
+      attr_accessor :client, :port, :configuration
       
       def initialize(*args)
-        config = args.last.is_a?(Marvin::Nash) ? args.pop : Marvin::Nash.new
+        @configuration = args.last.is_a?(Marvin::Nash) ? args.pop : Marvin::Nash.new
         super(*args)
-        @client = Marvin::IRC::Client.new(config)
+        @client = Marvin::IRC::Client.new(@configuration)
         @client.em_connection = self
+        @connected = false
+      rescue Exception => e
+        Marvin::ExceptionTracker.log(e)
+        Marvin::IRC::Client.stop
       end
       
       def post_init
         super
-        @client.process_connect
+        if should_use_ssl?
+          logger.info "Starting SSL for #{host_with_port}"
+          start_tls
+        else
+          connected!
+        end
+      rescue Exception => e
+        Marvin::ExceptionTracker.log(e)
+        Marvin::IRC::Client.stop
+      end
+      
+      def ssl_handshake_completed
+        logger.info "SSL handshake completed for #{host_with_port}"
+        connected! if should_use_ssl?
+      rescue Exception => e
+        Marvin::ExceptionTracker.log(e)
+        Marvin::IRC::Client.stop
       end
 
       def unbind
@@ -30,6 +50,7 @@ module Marvin::IRC
       end
       
       def receive_line(line)
+        return unless @connected
         line = line.strip
         logger.debug "<< #{line}"
         @client.receive_line(line)
@@ -39,10 +60,24 @@ module Marvin::IRC
       end
       
       def send_line(*lines)
+        return unless @connected
         lines.each do |line|
           logger.debug ">> #{line.strip}"
           send_data line
         end
+      end
+      
+      def connected!
+        @connected = true
+        @client.process_connect
+      end
+      
+      def should_use_ssl?
+        @should_use_ssl ||= @configuration.ssl?
+      end
+      
+      def host_with_port
+        "#{@configuration.host}:#{@configuration.port}"
       end
       
     end
@@ -83,7 +118,7 @@ module Marvin::IRC
         raise ArgumentError, "Your connection options must specify a server" if !c.server?
         raise ArgumentError, "Your connection options must specify a port"   if !c.port?
         real_block = blk.present? ? proc { |c| blk.call(connection.client) } : nil
-        logger.info "Connecting to #{c.server}:#{c.port} - Channels: #{c.channels.join(", ")}"
+        logger.info "Connecting to #{c.server}:#{c.port} (using ssl: #{c.ssl?}) - Channels: #{c.channels.join(", ")}"
         EventMachine.connect(c.server, c.port, EMConnection, c, &real_block)
       end
 
@@ -116,6 +151,7 @@ module Marvin::IRC
         else
           config.channels = []
         end
+        config.host ||= config.server
         return config
       end
       

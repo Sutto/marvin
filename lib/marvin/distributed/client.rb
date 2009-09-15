@@ -60,11 +60,19 @@ module Marvin
         def post_init
           super
           logger.info "Connected to distributed server"
-          if configuration.token?
-            logger.info "Attempting to authenticate..." 
-            send_message(:authenticate, {:token => configuration.token})
+          if should_use_tls?
+            logger.info "Attempting to initialize tls"
+            start_tls
+          else
+            process_authentication
           end
         end
+        
+        def ssl_handshake_completed
+          logger.info "tls handshake completed"
+          process_authentication if should_use_tls?
+        end
+        
         
         def unbind
           if self.stopping
@@ -74,6 +82,13 @@ module Marvin
             EventMachine.add_timer(15) { EMConnection.connect(connection_host, connection_port, @configuration) }
           end
           super
+        end
+        
+        def process_authentication
+          if configuration.token?
+            logger.info "Attempting to authenticate..." 
+            send_message(:authenticate, {:token => configuration.token})
+          end
         end
         
         def handle_event(options = {})
@@ -151,6 +166,10 @@ module Marvin
             port, ip = Socket.unpack_sockaddr_in(get_peername)
             "#{ip}:#{port}"
           end
+        end
+
+        def should_use_tls?
+          @using_tls ||= configuration.encrypted?
         end
 
       end

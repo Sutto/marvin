@@ -2,10 +2,8 @@
   port: 6667
   channels:
     - "#marvin-testing"
-
-# "localhost":
-#     port: 6667
-#     channels:
-#       - "#webjam"
-#       - "#eotw"
-#       - "#general"
+# 
+# "irc.oftc.net":
+#   port: 6697
+#   channels:
+#     - "#marvin-testing"

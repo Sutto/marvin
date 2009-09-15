@@ -1,5 +1,10 @@
 "irc.freenode.net":
-    port: 6667
-    channels:
-      - "#marvin-testing"
-      - "#relayrelay"
+  port: 6667
+  channels:
+    - "#marvin-testing"
+
+"irc.oftc.net":
+  port: 6697
+  ssl: true
+  channels:
+    - "#marvin-testing"

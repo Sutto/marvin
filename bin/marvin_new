@@ -6,8 +6,9 @@ Marvin::Application.processing(ARGV) do |a|
   
   a.banner = "Marvin v#{Marvin::VERSION}"
   
-  a.controller! :console, "Opens a friendly IRB prompt with Marvin pre-loaded"
+  a.option      :development, "Runs the app in development mode (single managed distributed client)"
   a.controller! :client, "Starts the actual Marvin client instance"
+  a.controller! :console, "Opens a friendly IRB prompt with Marvin pre-loaded"
   a.controller! :distributed_client, "Starts a distributed client instance"
   
 end
