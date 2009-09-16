@@ -74,5 +74,6 @@ end
 task :release => [:commit_gemspec, :tag] do
   puts ">> git push"
   system "git push"
+  system "git push --tags"
   puts "New version released."
 end
