@@ -21,18 +21,21 @@ module Marvin
       end
     end
     
-    on_event :client_connected do
-      @server = self.client.host_with_port
-      @nick   = self.client.nickname
-      setup_logging
-    end
+    on_event :client_connected, :presetup_logging
+    on_event :client_connected, :setup_logging
+    on_event :reloaded, :presetup_logging
+    on_event :reloaded, :setup_logging
 
-    on_event :client_disconnected do
-      teardown_logging
-    end
+    on_event :client_disconnected, :teardown_logging
+    on_event :reloaded, :teardown_logging
     
     on_event :outgoing_nick do
       @nick = options.new_nick
+    end
+    
+    def presetup_logging
+      @server = self.client.host_with_port
+      @nick   = self.client.nickname
     end
     
     # Called when the client connects, over ride it to

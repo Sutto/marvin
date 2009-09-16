@@ -8,7 +8,6 @@ module Marvin
     
     @@exposed_method_mapping = Hash.new { |h,k| h[k] = [] }
     @@method_descriptions    = Hash.new { |h,k| h[k] = {} }
-    @@registered_classes     = Set.new
     
     class << self
       
@@ -46,6 +45,12 @@ module Marvin
       
       def exposed_name(method)
         "#{command_prefix}#{method}"
+      end
+      
+      def reloading!
+        super
+        @@exposed_method_mapping.delete(self)
+        @@method_descriptions.delete(self)
       end
       
     end

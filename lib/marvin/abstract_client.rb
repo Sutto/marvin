@@ -57,10 +57,7 @@ module Marvin
     end
     
     def process_development
-      if @@development
-        Marvin::Reloading.reload!
-        setup_handlers
-      end
+      Marvin::Reloading.reload! if @@development
     end
     
     def dispatch(*args)

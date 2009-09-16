@@ -76,9 +76,11 @@ module Marvin
           before = dispatcher.handlers
           register!(dispatcher)
           after = dispatcher.handlers
-          (after - before).each { |h| h.handle(:reloaded, {}) }
+          (after - before).each do |h|
+            h.client = dispatcher
+            h.handle(:reloaded, {})
+          end
         end
-        
       end
     
     end
