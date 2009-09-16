@@ -1,1 +1,0 @@
-gem uninstall marvin --quiet && rake gemspec  && gem build marvin.gemspec && gem install marvin-*.gem
