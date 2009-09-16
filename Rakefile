@@ -51,11 +51,17 @@ task :install_dependencies do
   end
 end
 
-task :tag do
+task :check_dirty do
   if `git rev-parse HEAD` != `git rev-parse origin/master`
-    puts "You have uncommited changes. Please commit / stash them and rerun"
+    puts "You have unpushed changes. Please push them first"
+    exit!
   end
-  command = "git tag -a v#{Marvin.version(ENV['RELEASE'].blank?)}"
-  puts command
-  
 end
+
+task :tag do
+  version = Marvin.version(ENV['RELEASE'].blank?)
+  command = "git tag -a v#{version} -m 'Code checkpoint for v#{version}'"
+  puts ">> #{command}"
+  system command
+end
+
