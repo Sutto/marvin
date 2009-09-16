@@ -92,7 +92,8 @@ module Marvin::IRC
       
       # Starts the EventMachine loop and hence starts up the actual
       # networking portion of the IRC Client.
-      def run(force = false)
+      def run(opts = {}, force = false)
+        self.development = opts[:development]
         return if @stopped && !force
         self.setup # So we have options etc
         connections_file = Marvin::Settings.root / "config" / "connections.yml"

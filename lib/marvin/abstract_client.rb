@@ -15,7 +15,7 @@ module Marvin
       @pass              = opts.pass
     end
     
-    cattr_accessor :events, :configuration, :is_setup, :connections
+    cattr_accessor :events, :configuration, :is_setup, :connections, :development
     attr_accessor  :channels, :nickname, :server, :port, :nicks, :pass,
                    :disconnect_expected, :connection_config
     
@@ -23,7 +23,8 @@ module Marvin
     @@events        = []
     @@configuration = Marvin::Nash.new
     @@connections   = []
-    
+    @@development   = false
+      
     # Initializes the instance variables used for the
     # current connection, dispatching a :client_connected event
     # once it has finished. During this process, it will
@@ -34,7 +35,7 @@ module Marvin
       @channels = []
       connections << self
       logger.info "Setting the client for each handler"
-      handlers.each { |h| h.client = self if h.respond_to?(:client=) }
+      setup_handlers
       logger.info "Dispatching the default :client_connected event"
       dispatch :client_connected
     end
@@ -49,6 +50,22 @@ module Marvin
       else
         Marvin::Loader.stop! if connections.blank?
       end
+    end
+    
+    def setup_handlers
+      handlers.each { |h| h.client = self if h.respond_to?(:client=) }
+    end
+    
+    def process_development
+      if @@development
+        Marvin::Reloading.reload!
+        setup_handlers
+      end
+    end
+    
+    def dispatch(*args)
+      process_development
+      super
     end
     
     # Sets the current class-wide settings of this IRC Client

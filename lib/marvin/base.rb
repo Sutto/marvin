@@ -1,4 +1,9 @@
 module Marvin
+  
+  def self.handler_parent_classes
+    @@handler_parent_classes ||= Hash.new { |h,k| h[k] = Set.new }
+  end
+  
   class Base
     is :loggable
     
@@ -52,6 +57,28 @@ module Marvin
       def register!(parent = Marvin::Settings.client)
         return if self == Marvin::Base # Only do it for sub-classes.
         parent.register_handler self.new unless parent.handlers.any? { |h| h.class == self }
+        Marvin.handler_parent_classes[self.name] << parent
+      end
+    
+      def reloading!
+        Marvin.handler_parent_classes[self.name].each do |dispatcher|
+          parent_handlers = dispatcher.handlers
+          related = parent_handlers.select { |h| h.class == self }
+          related.each do |h|
+            h.handle(:reloading, {})
+            dispatcher.delete_handler(h)
+          end
+        end
+      end
+      
+      def reloaded!
+        Marvin.handler_parent_classes[self.name].each do |dispatcher|
+          before = dispatcher.handlers
+          register!(dispatcher)
+          after = dispatcher.handlers
+          (after - before).each { |h| h.handle(:reloaded, {}) }
+        end
+        
       end
     
     end
