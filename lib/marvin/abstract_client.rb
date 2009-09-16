@@ -6,12 +6,13 @@ module Marvin
     is :dispatchable, :loggable
     
     def initialize(opts)
-      @connection_config    = opts.dup # Copy the options so we can use them to reconnect.
-      @server           = opts.server
-      @port             = opts.port
-      @default_channels = opts.channels
-      @nicks            = opts.nicks || []
-      @pass             = opts.pass
+      opts = opts.to_nash if opts.is_a?(Hash)
+      @connection_config = opts.dup # Copy the options so we can use them to reconnect.
+      @server            = opts.server
+      @port              = opts.port
+      @default_channels  = opts.channels
+      @nicks             = opts.nicks || []
+      @pass              = opts.pass
     end
     
     cattr_accessor :events, :configuration, :is_setup, :connections

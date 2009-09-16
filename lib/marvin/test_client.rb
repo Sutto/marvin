@@ -1,6 +1,3 @@
-require 'ostruct'
-require 'active_support'
-
 module Marvin
   # Marvin::TestClient is a simple client used for testing
   # Marvin::Base derivatives in a non-network-reliant setting.
