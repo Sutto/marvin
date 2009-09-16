@@ -52,10 +52,6 @@ task :install_dependencies do
 end
 
 task :check_dirty do
-  if `git rev-parse HEAD` != `git rev-parse origin/master`
-    puts "You have unpushed changes. Please push them first"
-    exit!
-  end
   if `git status`.include? 'added to commit'
     puts "You have uncommited changes. Please commit them first"
     exit!
@@ -69,3 +65,14 @@ task :tag => :check_dirty do
   system command
 end
 
+task :commit_gemspec => [:check_dirty, :gemspec] do
+  command = "git commit -am 'Generate gemspec for v#{Marvin.version(ENV['RELEASE'].blank?)}'"
+  puts ">> #{command}"
+  system command
+end
+
+task :release => [:commit_gemspec, :tag] do
+  puts ">> git push"
+  system "git push"
+  puts "New version released."
+end
