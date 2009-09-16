@@ -56,9 +56,13 @@ task :check_dirty do
     puts "You have unpushed changes. Please push them first"
     exit!
   end
+  if `git status`.include? 'added to commit'
+    puts "You have uncommited changes. Please commit them first"
+    exit!
+  end
 end
 
-task :tag do
+task :tag => :check_dirty do
   version = Marvin.version(ENV['RELEASE'].blank?)
   command = "git tag -a v#{version} -m 'Code checkpoint for v#{version}'"
   puts ">> #{command}"
