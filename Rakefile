@@ -1,30 +1,61 @@
+require 'rubygems'
+require 'rake'
 require 'rake/testtask'
+require 'rake/gempackagetask'
+require File.join(File.dirname(__FILE__), "lib", "marvin")
 
-begin
-  require 'jeweler'
-  Jeweler::Tasks.new do |s|
-    s.name        = "marvin"
-    s.summary     = "Ruby IRC Library / Framework"
-    s.email       = "sutto@sutto.net"
-    s.homepage    = "http://blog.ninjahideout.com/"
-    s.description = "Marvin is a Ruby IRC library / framework for ultimate awesomeness and with an evented design."
-    s.authors     = ["Darcy Laycock"]
-    # Non-standard files to be included.
-    extras        = ["config/setup.rb", "config/boot.rb", "config/settings.yml.sample", "config/connections.yml.sample"]
-    s.files       = FileList["[A-Z]*.*", "{bin,generators,lib,test,spec,script,handlers}/**/*"] + extras
-    s.executables = "marvin"
-    # Our dependencies
-    s.add_dependency "Sutto-perennial"
-    s.add_dependency "eventmachine",  ">= 0.12.0"
-  end
-rescue LoadError
-  puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
+spec = Gem::Specification.new do |s|
+  s.name     = 'marvin'
+  s.email    = 'sutto@sutto.net'
+  s.homepage = 'http://sutto.net/'
+  s.authors  = ["Darcy Laycock"]
+  s.version  = Marvin.version(ENV['RELEASE'].blank?)
+  s.summary  = "Evented IRC Library of Doom"
+  s.files    = FileList["{bin,lib,templates,test,handlers}/**/*"].to_a
+  s.platform = Gem::Platform::RUBY
+  s.add_dependency "Sutto-perennial",           ">= 0.2.4.6"
+  s.add_dependency "eventmachine-eventmachine", ">= 0.12.9"
+  s.add_dependency "json"
 end
 
-task :default => "test"
+task :default => "test:units"
 
-Rake::TestTask.new do |t|
- t.libs << "test"
- t.test_files = FileList['test/*_test.rb']
- t.verbose = true
+namespace :test do
+  desc "Runs the unit tests for perennial"
+  Rake::TestTask.new("units") do |t|
+    t.pattern = 'test/*_test.rb'
+    t.libs << 'test'
+    t.verbose = true
+  end  
+end
+
+
+Rake::GemPackageTask.new(spec) do |pkg|
+  pkg.need_zip = true
+  pkg.need_tar = true
+end
+
+task :gemspec do
+  File.open("marvin.gemspec", "w+") { |f| f.puts spec.to_ruby }
+end
+
+def gemi(name, version)
+  command = "gem install #{name} --version '#{version}' --source http://gems.github.com"
+  puts ">> #{command}"
+  system "#{command} 1> /dev/null 2> /dev/null"
+end
+
+task :install_dependencies do
+  spec.dependencies.each do |dependency|
+    gemi dependency.name, dependency.requirement_list.first
+  end
+end
+
+task :tag do
+  if `git rev-parse HEAD` != `git rev-parse origin/master`
+    puts "You have uncommited changes. Please commit / stash them and rerun"
+  end
+  command = "git tag -a v#{Marvin.version(ENV['RELEASE'].blank?)}"
+  puts command
+  
 end

@@ -1,160 +1,33 @@
 #!/usr/bin/env ruby
 require 'rubygems'
-require 'fileutils'
-require "thor"
+require File.join(File.dirname(__FILE__), "..", "lib", "marvin")
 
-class Marvin < Thor
+Marvin::Application.processing(ARGV) do |a|
   
-  GEM_ROOT = File.expand_path(File.join(File.dirname(__FILE__), ".."))
+  a.banner = "Marvin v#{Marvin::VERSION} - An IRC Library for Ruby"
   
-  attr_accessor :dest
+  a.generator!
   
-  # Map default help tasks.
-  map ["-h", "-?", "--help", "-D"] => :help
+  a.option      :development, "Runs the app in development mode (handler reloading)", :shortcut => "D"
+  a.controller! :client, "Starts the actual Marvin client instance"
+  a.controller! :console, "Opens a friendly IRB prompt with Marvin pre-loaded"
+  a.controller! :distributed_client, "Starts a distributed client instance"
   
-  desc "create [PATH]", "creates a new marvin app at the given path"
-  method_options :verbose => :boolean
-  def create(path)
-    @dest    = File.expand_path(path)
-    @verbose = options[:verbose]
-    if File.directory?(@dest)
-      STDOUT.puts "The given directory, \"#{path}\", already exists."
-      exit! 1
-    else
-      say "Creating Marvin app"
-      say " => Making directories"
-      mkdir   @dest
-      mkdir   source(@dest, "script")
-      mkdir   source(@dest, "config")
-      mkdir   source(@dest, "handlers")
-      mkdir_p source(@dest, "tmp/pids")
-      mkdir   source(@dest, "log")
-      mkdir   source(@dest, "lib")
-      say " => Copying files..."
-      copy "config/setup.rb"
-      copy "config/boot.rb"
-      copy "config/connections.yml.sample", "config/connections.yml"
-      copy "config/settings.yml.sample",    "config/settings.yml"
-      copy "handlers/hello_world.rb"
-      copy "handlers/debug_handler.rb"
-      %w(client console distributed_client ring_server status).each do |c|
-        copy "script/#{c}"
-        FileUtils.chmod 0755, source(@dest, "script/#{c}")
-      end
-      say "Done!"
+  a.option :force, "force the creation of the application"
+  a.add "create PATH", "Creates a marvin application at the given location" do |path, options|
+    path = File.expand_path(path)
+    if File.exists?(path) && !options[:force]
+      die! "The path you tried to use, #{path}, already exists. Please try another or use the --force option"
     end
+    setup_generator(path)
+    folders 'tmp', 'config', 'lib', 'handlers', 'test'
+    template 'boot.erb',            'config/boot.rb'
+    template 'setup.erb',           'config/setup.rb'
+    template 'settings.yml.erb',    'config/settings.yml'
+    template 'connections.yml.erb', 'config/connections.yml'
+    template 'debug_handler.erb',   'handlers/debug_handler.rb'
+    template 'hello_world.erb',     'handlers/hello_world.rb'
+    template 'rakefile.erb',        'Rakefile'
   end
   
-  map "cl" => :client, "st" => :status, "rs" => :ring_server,
-      "dc" => :distributed_client, "co" => :console
-  
-  desc "start [PATH]", "starts client at the given path"
-  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional, :kill => :boolean
-  def start(path = ".")
-    @dest = File.expand_path(path)
-    start_script(:client)
-  end
-  
-  desc "status [PATH]", "shows status of marvin app at a given location"
-  def status(path = ".")
-    @dest = File.expand_path(path)
-    start_script(:status)
-  end
-  
-  desc "client [PATH]", "starts a client instance from the given location"
-  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional, :kill => :boolean
-  def client(path = ".")
-    @dest = File.expand_path(path)
-    start_script(:client)
-  end
-  
-  desc "ring_server [PATH]", "starts a ring server from the given location"
-  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional, :kill => :boolean
-  def ring_server(path = ".")
-    @dest = File.expand_path(path)
-    start_script(:ring_server)
-  end
-  
-  desc "distributed_client [PATH]", "starts a distributed client from the given location"
-  method_options :verbose => :boolean, :daemon => :boolean, :level => :optional,
-                 :kill => :boolean, :nodes => :numeric
-  def distributed_client(path = ".")
-    @dest = File.expand_path(path)
-    start_script(:distributed_client)
-  end
-  
-  desc "console [PATH]", "starts a marvin console from the given location"
-  def console(path = ".")
-    @dest = File.expand_path(path)
-    start_script(:console)
-  end
-  
-  private
-  
-  def source(*args)
-    File.expand_path(File.join(*args))
-  end
-  
-  def copy(from, to = from)
-    s, d = source(GEM_ROOT, from), source(@dest, to)
-    say " --> cp #{s.gsub(" ", "\\ ")} #{d.gsub(" ", "\\ ")}" if @verbose
-    FileUtils.cp_r(s, d)
-  end
-  
-  def mkdir(path)
-    say " --> mkdir #{path.gsub(" ", "\\ ")}" if @verbose
-    FileUtils.mkdir path
-  end
-  
-  def mkdir_p(path)
-    say " --> mkdir #{path.gsub(" ", "\\ ")}" if @verbose
-    FileUtils.mkdir_p path
-  end
-  
-  def say(text)
-    STDOUT.puts text
-  end
-  
-  def marvin_repo?(path, type = client)
-    File.directory?(source(path, "script")) && File.exist?(source(path, "script/#{type}"))
-  end
-  
-  def start_script(name)
-    if marvin_repo?(@dest, name)
-      extra_args = []
-      extra_args << "-k" if options[:kill]
-      extra_args << "-v" if options[:verbose]
-      extra_args << "-d" if options[:daemon]
-      extra_args << "--level=#{options[:level]}" if options[:level]
-      if options[:daemon] && options[:nodes]
-        nodes = options[:nodes]
-      else
-        nodes = 1
-      end
-      Dir.chdir(@dest) do
-        # Lets you start a number of different processes.
-        # uses system if there are more than 1 nodes, exec
-        # otherwise.
-        if nodes > 1
-          nodes.times { system("script/#{name}", *extra_args) }
-        else
-          exec("script/#{name}", *extra_args)
-        end
-      end
-    else
-      STDOUT.puts "Woop! #{@dest.gsub(" ", "\\ ")} isn't a marvin app."
-    end
-  end
-  
-end
-
-STDOUT.puts "Marvin - IRC Library / Framework for Ruby"
-
-# Check if we have arguments, we run the normal
-# thor task otherwise we just print the help
-# message.
-if ARGV.empty?
-  Marvin.new.help
-else
-  Marvin.start
 end

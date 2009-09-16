@@ -1,0 +1,17 @@
+require 'rubygems'
+
+# Testing dependencies
+require 'test/unit'
+require 'shoulda'
+# RedGreen doesn't seem to be needed under 1.9
+require 'redgreen' if RUBY_VERSION < "1.9"
+
+require 'pathname'
+root_directory = Pathname.new(__FILE__).dirname.join("..").expand_path
+require root_directory.join("config", "boot")
+
+class Test::Unit::TestCase
+
+  # Add your extensions here
+  
+end

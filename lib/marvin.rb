@@ -5,7 +5,7 @@ require 'perennial'
 module Marvin
   include Perennial
   
-  VERSION = "0.5.0"
+  VERSION = [0, 8, 0, 0]
   
   # Misc.
   #autoload :Util,             'marvin/util'
@@ -43,6 +43,10 @@ module Marvin
       end
     end
     
+  end
+  
+  def self.version(include_minor = false)
+    VERSION[0, (include_minor ? 4 : 3)].join(".")
   end
   
   has_library :util, :abstract_client, :abstract_parser, :irc, :exception_tracker
