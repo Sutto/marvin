@@ -5,15 +5,16 @@ require 'rake/gempackagetask'
 require File.join(File.dirname(__FILE__), "lib", "marvin")
 
 spec = Gem::Specification.new do |s|
-  s.name     = 'marvin'
-  s.email    = 'sutto@sutto.net'
-  s.homepage = 'http://sutto.net/'
-  s.authors  = ["Darcy Laycock"]
-  s.version  = Marvin.version(ENV['RELEASE'].blank?)
-  s.summary  = "Evented IRC Library of Doom"
-  s.files    = FileList["{bin,lib,templates,test,handlers}/**/*"].to_a
-  s.platform = Gem::Platform::RUBY
-  s.add_dependency "Sutto-perennial",           ">= 0.2.4.6"
+  s.name        = 'marvin'
+  s.email       = 'sutto@sutto.net'
+  s.homepage    = 'http://sutto.net/'
+  s.authors     = ["Darcy Laycock"]
+  s.version     = Marvin.version(ENV['RELEASE'].blank?)
+  s.summary     = "Evented IRC Library of Doom"
+  s.files       = FileList["{bin,lib,templates,test,handlers}/**/*"].to_a
+  s.platform    = Gem::Platform::RUBY
+  s.executables = FileList["bin/*"].map { |f| File.basename(f) }
+  s.add_dependency "Sutto-perennial",           ">= 1.0.0.0"
   s.add_dependency "eventmachine-eventmachine", ">= 0.12.9"
   s.add_dependency "json"
 end
