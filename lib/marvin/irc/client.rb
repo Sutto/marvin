@@ -103,8 +103,10 @@ module Marvin::IRC
           EventMachine.kqueue
           EventMachine.epoll
           EventMachine.run do
-            connections.each_pair do |server, configuration|
-              connect(configuration.merge(:server => server.to_s))
+            unless connections.data == false
+              connections.each_pair do |server, configuration|
+                connect(configuration.merge(:server => server.to_s))
+              end
             end
             Marvin::Distributed::Server.start if Marvin::Distributed::Handler.registered?
             @@stopped = false

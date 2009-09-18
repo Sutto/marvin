@@ -43,6 +43,7 @@ module Marvin
         register_handler_method :authentication_failed
         register_handler_method :authenticated
         register_handler_method :unauthorized
+        register_handler_method :welcome
         
         cattr_accessor :stopping
         self.stopping = false
@@ -60,19 +61,12 @@ module Marvin
         def post_init
           super
           logger.info "Connected to distributed server"
-          if should_use_tls?
-            logger.info "Attempting to initialize tls"
-            start_tls
-          else
-            process_authentication
-          end
         end
         
-        def ssl_handshake_completed
-          logger.info "tls handshake completed"
-          process_authentication if should_use_tls?
+        def post_connect
+          logger.info "Connection started; processing authentication"
+          process_authentication
         end
-        
         
         def unbind
           if self.stopping
@@ -88,6 +82,15 @@ module Marvin
           if configuration.token?
             logger.info "Attempting to authenticate..." 
             send_message(:authenticate, {:token => configuration.token})
+          end
+        end
+        
+        def handle_welcome(options = {})
+          if should_use_ssl? && !ssl_enabled?
+            request_ssl!
+          else
+            @connected = true
+            post_connect
           end
         end
         
@@ -142,34 +145,9 @@ module Marvin
           end
         end
         
-        protected
-        
-        def options_for_callback(blk)
-          return {} if blk.blank?
-          cb_id = "callback-#{seld.object_id}-#{Time.now.to_f}"
-          count = 0
-          count += 1 while @callbacks.has_key?(Digest::SHA256.hexdigest("#{cb_id}-#{count}"))
-          final_id = Digest::SHA256.hexdigest("#{cb_id}-#{count}")
-          @callbacks[final_id] = blk
-          {"callback-id" => final_id}
-        end
-
-        def process_callback(hash)
-          if hash.is_a?(Hash) && hash.has_key?("callback-id")
-            callback = @callbacks.delete(hash["callback-id"])
-            callback.call(self, hash)
-          end
-        end
-
-        def host_with_port
-          @host_with_port ||= begin
-            port, ip = Socket.unpack_sockaddr_in(get_peername)
-            "#{ip}:#{port}"
-          end
-        end
-
-        def should_use_tls?
-          @using_tls ||= configuration.encrypted?
+        def request_ssl!
+          logger.info "Requesting SSL for Distributed Client"
+          send_message(:enable_ssl) unless ssl_enabled?
         end
 
       end

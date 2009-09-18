@@ -16,7 +16,7 @@ module Marvin
       self.free_connections = []
       self.action_whitelist = [:nick, :pong, :action, :msg, :quit, :part, :join, :command]
       
-      attr_accessor :processing, :configuration, :using_tls
+      attr_accessor :processing, :configuration
       
       def initialize(*args)
         @configuration = args.last.is_a?(Marvin::Nash) ? args.pop : Marvin::nash.new
@@ -24,18 +24,20 @@ module Marvin
       end
       
       def post_init
-        super
         @callbacks = {}
         logger.info "Got distributed client connection with #{self.host_with_port}"
-        if should_use_tls?
-          start_tls
+        if should_use_ssl?
+          handle_enable_ssl
         else
-          complete_processing
+          @connected = true
+          post_connect
         end
       end
       
-      def ssl_handshake_completed
-        complete_processing if should_use_tls?
+      def post_connect
+        logger.info "Connection started, welcoming"
+        send_message(:welcome)
+        complete_processing
       end
       
       def unbind
@@ -121,10 +123,6 @@ module Marvin
       
       def authenticated?
         @authenticated ||= false
-      end
-      
-      def should_use_tls?
-        @using_tls ||= configuration.encrypted?
       end
       
       def fails_auth!
