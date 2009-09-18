@@ -35,7 +35,7 @@ module Marvin
       end
       
       def post_connect
-        logger.info "Connection started, welcoming"
+        logger.debug "Remote client available, welcoming"
         send_message(:welcome)
         complete_processing
       end
@@ -86,14 +86,17 @@ module Marvin
       def handle_action(options = {})
         return if fails_auth!
         logger.debug "Handling action from on #{self.host_with_port}"
-        server    = lookup_client_for(options["client-host"])
+        target    = lookup_client_for(options["client-host"])
         action    = options["action"]
         arguments = [*options["arguments"]]
-        return if server.blank? || action.blank?
+        return if target.blank? || action.blank?
         begin
           a = action.to_sym
-          if self.action_whitelist.include?(a)
-            server.send(a, *arguments) if server.respond_to?(a)
+          if self.action_whitelist.include?(a) && target.respond_to?(a)
+            res = target.send(a, *arguments)
+            if @callback_id.present? && res.respond_to?(:to_json)
+              send_message_reply(:noop, {"return-value" => res.to_json})
+            end
           else
             logger.warn "Client attempted invalid action #{a.inspect}"
           end

@@ -2,7 +2,6 @@ module Marvin
   module Distributed
     class Handler < Marvin::Base
       
-      
       EVENT_WHITELIST = [:incoming_message, :incoming_action]
       QUEUE_PROCESSING_SPACING = 3
       

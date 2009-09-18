@@ -26,13 +26,22 @@ module Marvin
           @host_with_port
         end
         
-        def method_missing(name, *args)
+        def method_missing(name, *args, &blk)
           logger.debug "Proxying #{name}(#{args.inspect[1..-2]}) to #{@host_with_port}"
+          cb = nil
+          if blk.present?
+            cb = proc do |_, options|
+              if options.is_a?(Hash) 
+                value = options.delete("return-value")
+                blk.call(value)
+              end
+            end
+          end
           @connection.send_message(:action, {
             "action"      => name.to_s,
             "arguments"   => args,
             "client-host" => @host_with_port
-          })
+          }, &cb)
         end
         
       end

@@ -3,8 +3,9 @@ require 'rubygems'
 require File.join(File.dirname(__FILE__), "..", "lib", "marvin")
 
 Marvin::Application.processing(ARGV) do |a|
-  
-  a.banner = "Marvin v#{Marvin::VERSION} - An IRC Library for Ruby"
+  version = Marvin.version
+  version << "p#{Marvin::VERSION[3]}" if Marvin::VERSION[3] != 0
+  a.banner = "Marvin v#{version} - An IRC Library for Ruby"
   
   a.generator!
   

@@ -63,6 +63,11 @@ module Marvin
         enable_ssl
       end
       
+      def handle_noop(opts = {})
+        # DO NOTHING.
+        logger.debug "no-op"
+      end
+      
       # After the connection is made and / or ssl is enabled.
       def post_connect
       end
@@ -130,6 +135,7 @@ module Marvin
       # Default Handlers
       register_handler_method :enable_ssl
       register_handler_method :enabled_ssl
+      register_handler_method :noop
       
       def connected?
         instance_variable_defined?(:@connected) && @connected
