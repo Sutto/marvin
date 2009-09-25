@@ -10,12 +10,13 @@ spec = Gem::Specification.new do |s|
   s.homepage    = 'http://sutto.net/'
   s.authors     = ["Darcy Laycock"]
   s.version     = Marvin.version(ENV['RELEASE'].blank?)
-  s.summary     = "Evented IRC Library of Doom"
+  s.summary     = "Evented IRC Library for Ruby, built on EventMachine and Perennial."
+  s.description = File.read("DESCRIPTION")
   s.files       = FileList["{bin,lib,templates,test,handlers}/**/*"].to_a
   s.platform    = Gem::Platform::RUBY
   s.executables = FileList["bin/*"].map { |f| File.basename(f) }
-  s.add_dependency "Sutto-perennial",           ">= 1.0.0.0"
-  s.add_dependency "eventmachine-eventmachine", ">= 0.12.9"
+  s.add_dependency "perennial",    ">= 1.0.0.0"
+  s.add_dependency "eventmachine", ">= 0.12.9"
   s.add_dependency "json"
 end
 
@@ -76,5 +77,12 @@ task :release => [:commit_gemspec, :tag] do
   puts ">> git push"
   system "git push"
   system "git push --tags"
+  Rake::Task["gemcutter"].invoke
   puts "New version released."
+end
+
+task :gemcutter => [:check_dirty, :gemspec] do
+  puts ">> pushing to gemcutter"
+  gem_name = "marvin-#{spec.version.to_s}.gem"
+  system "gem build marvin.gemspec && gem push #{gem_name} && rm #{gem_name}"
 end

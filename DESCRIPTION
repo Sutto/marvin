@@ -1,0 +1,6 @@
+Marvin is a library (also usable in framework / application form) that
+makes it simple and fast to build applications around IRC. With an emphasis
+on making common tasks (e.g. replies, bots using method call style syntax
+and the like) easy, whilst still making it possible to do more complex thing
+(1 connection, N worker processes, Multiple servers, etc) it aims to make
+working with IRC in an evented fashion fun and easy for all rubyists.
