@@ -16,7 +16,7 @@ spec = Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.executables = FileList["bin/*"].map { |f| File.basename(f) }
   s.add_dependency "perennial",    ">= 1.0.0.0"
-  s.add_dependency "eventmachine", ">= 0.12.9"
+  s.add_dependency "eventmachine", ">= 0.12.8"
   s.add_dependency "json"
 end
 

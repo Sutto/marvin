@@ -28,16 +28,16 @@ working with IRC in an evented fashion fun and easy for all rubyists.}
 
     if Gem::Version.new(Gem::RubyGemsVersion) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<perennial>, [">= 1.0.0.0"])
-      s.add_runtime_dependency(%q<eventmachine>, [">= 0.12.9"])
+      s.add_runtime_dependency(%q<eventmachine>, [">= 0.12.8"])
       s.add_runtime_dependency(%q<json>, [">= 0"])
     else
       s.add_dependency(%q<perennial>, [">= 1.0.0.0"])
-      s.add_dependency(%q<eventmachine>, [">= 0.12.9"])
+      s.add_dependency(%q<eventmachine>, [">= 0.12.8"])
       s.add_dependency(%q<json>, [">= 0"])
     end
   else
     s.add_dependency(%q<perennial>, [">= 1.0.0.0"])
-    s.add_dependency(%q<eventmachine>, [">= 0.12.9"])
+    s.add_dependency(%q<eventmachine>, [">= 0.12.8"])
     s.add_dependency(%q<json>, [">= 0"])
   end
 end
