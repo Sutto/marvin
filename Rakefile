@@ -75,8 +75,8 @@ end
 
 task :release => [:commit_gemspec, :tag] do
   puts ">> git push"
-  system "git push"
-  system "git push --tags"
+  system "git push 1> /dev/null 2> /dev/null"
+  system "git push --tags 1> /dev/null 2> /dev/null"
   Rake::Task["gemcutter"].invoke
   puts "New version released."
 end
@@ -84,5 +84,5 @@ end
 task :gemcutter => [:check_dirty, :gemspec] do
   puts ">> pushing to gemcutter"
   gem_name = "marvin-#{spec.version.to_s}.gem"
-  system "gem build marvin.gemspec && gem push #{gem_name} && rm #{gem_name}"
+  system "gem build marvin.gemspec && gem push #{gem_name} && rm #{gem_name} 1> /dev/null 2> /dev/null"
 end
