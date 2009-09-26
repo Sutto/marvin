@@ -2,14 +2,16 @@ require 'rubygems'
 require 'rake'
 require 'rake/testtask'
 require 'rake/gempackagetask'
+
 require File.join(File.dirname(__FILE__), "lib", "marvin")
+CURRENT_VERSION = Marvin.version(ENV['RELEASE'].blank?)
 
 spec = Gem::Specification.new do |s|
   s.name        = 'marvin'
   s.email       = 'sutto@sutto.net'
   s.homepage    = 'http://sutto.net/'
   s.authors     = ["Darcy Laycock"]
-  s.version     = Marvin.version(ENV['RELEASE'].blank?)
+  s.version     = CURRENT_VERSION
   s.summary     = "Evented IRC Library for Ruby, built on EventMachine and Perennial."
   s.description = File.read("DESCRIPTION")
   s.files       = FileList["{bin,lib,templates,test,handlers}/**/*"].to_a
@@ -31,18 +33,17 @@ namespace :test do
   end  
 end
 
-
 Rake::GemPackageTask.new(spec) do |pkg|
   pkg.need_zip = true
   pkg.need_tar = true
 end
 
 task :gemspec do
-  File.open("marvin.gemspec", "w+") { |f| f.puts spec.to_ruby }
+  File.open("#{spec.name}.gemspec", "w+") { |f| f.puts spec.to_ruby }
 end
 
 def gemi(name, version)
-  command = "gem install #{name} --version '#{version}' --source http://gems.github.com"
+  command = "gem install #{name} --version '#{version}' #{"--source http://gems.github.com" if name.include?("-")}".strip
   puts ">> #{command}"
   system "#{command} 1> /dev/null 2> /dev/null"
 end
@@ -61,14 +62,13 @@ task :check_dirty do
 end
 
 task :tag => :check_dirty do
-  version = Marvin.version(ENV['RELEASE'].blank?)
-  command = "git tag -a v#{version} -m 'Code checkpoint for v#{version}'"
+  command = "git tag -a v#{CURRENT_VERSION} -m 'Code checkpoint for v#{CURRENT_VERSION}'"
   puts ">> #{command}"
   system command
 end
 
 task :commit_gemspec => [:check_dirty, :gemspec] do
-  command = "git commit -am 'Generate gemspec for v#{Marvin.version(ENV['RELEASE'].blank?)}'"
+  command = "git commit -am 'Generate gemspec for v#{CURRENT_VERSION}'"
   puts ">> #{command}"
   system command
 end
@@ -83,6 +83,6 @@ end
 
 task :gemcutter => [:check_dirty, :gemspec] do
   puts ">> pushing to gemcutter"
-  gem_name = "marvin-#{spec.version.to_s}.gem"
-  system "gem build marvin.gemspec && gem push #{gem_name} && rm #{gem_name} 1> /dev/null 2> /dev/null"
+  gem_name = "#{spec.name}-#{CURRENT_VERSION}.gem"
+  system "gem build #{spec.name}.gemspec && gem push #{gem_name} && rm #{gem_name}"
 end
