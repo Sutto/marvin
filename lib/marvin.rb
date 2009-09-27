@@ -5,7 +5,7 @@ require 'perennial'
 module Marvin
   include Perennial
   
-  VERSION = [0, 8, 0, 1]
+  VERSION = [0, 8, 0, 2]
   
   # Client
   autoload :TestClient,       'marvin/test_client'

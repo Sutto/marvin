@@ -1,3 +1,5 @@
+require 'set'
+
 module Marvin
   
   def self.handler_parent_classes
