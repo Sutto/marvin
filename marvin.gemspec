@@ -2,11 +2,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{marvin}
-  s.version = "0.8.0.1"
+  s.version = "0.8.0.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Darcy Laycock"]
-  s.date = %q{2009-09-25}
+  s.date = %q{2009-09-27}
   s.default_executable = %q{marvin}
   s.description = %q{Marvin is a library (also usable in framework / application form) that
 makes it simple and fast to build applications around IRC. With an emphasis
