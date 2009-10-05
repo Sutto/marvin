@@ -1,11 +1,10 @@
 default:
-  name: Marvin
+  user: MarvinBot
+  name: MarvinBot
+  nick: MarvinBot
   nicks:
     - MarvinBot1000
     - MarvinBot2000
     - MarvinBot3000
     - MarvinusBoticus
-development:
-  user: MarvinBot
-  name: MarvinBot
-  nick: MarvinBot
+  distributed_server: false

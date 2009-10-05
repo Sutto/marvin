@@ -14,13 +14,11 @@ Marvin::Loader.before_run do
   # Conditional registration - load the distributed dispatcher
   # if an actual client, otherwise use the normal handlers.
   #
-  if Marvin::Loader.distributed_client?
-    HelloWorld.register!
-    DebugHandler.register!
-  else
-    Marvin::Distributed::Handler.register!
-  end
-  
+  # if Marvin::Loader.distributed_client?
+  #   
+  #   DebugHandler.register!
+  # else
+  #   Marvin::Distributed::Handler.register!
   # end
   
   # And any other code here that will be run before the client, e.g:

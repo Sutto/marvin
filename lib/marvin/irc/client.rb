@@ -52,7 +52,7 @@ module Marvin::IRC
       def receive_line(line)
         return unless @connected
         line = line.strip
-        logger.debug "<< #{line}"
+        logger.debug "[#{host_with_port}] << #{line}"
         @client.receive_line(line)
       rescue Exception => e
         logger.warn "Uncaught exception raised; Likely in Marvin"
@@ -62,7 +62,7 @@ module Marvin::IRC
       def send_line(*lines)
         return unless @connected
         lines.each do |line|
-          logger.debug ">> #{line.strip}"
+          logger.debug "[#{host_with_port}] >> #{line.strip}"
           send_data line
         end
       end

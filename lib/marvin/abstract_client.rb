@@ -34,8 +34,6 @@ module Marvin
       logger.info "Initializing the current instance"
       @channels = []
       connections << self
-      logger.info "Setting the client for each handler"
-      setup_handlers
       logger.info "Dispatching the default :client_connected event"
       dispatch :client_connected
     end
@@ -60,9 +58,9 @@ module Marvin
       Marvin::Reloading.reload! if @@development
     end
     
-    def dispatch(*args)
+    def pre_dispatching
       process_development
-      super
+      setup_handlers
     end
     
     # Sets the current class-wide settings of this IRC Client
