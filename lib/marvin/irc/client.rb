@@ -105,6 +105,7 @@ module Marvin::IRC
           EventMachine.run do
             unless connections.data == false
               connections.each_pair do |server, configuration|
+                configuration ||= Marvin::Nash.new
                 connect(configuration.merge(:server => server.to_s))
               end
             end
