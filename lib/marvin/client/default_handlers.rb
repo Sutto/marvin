@@ -42,8 +42,6 @@ module Marvin
           handle_welcome
         when Marvin::IRC::Replies[:ERR_NICKNAMEINUSE]
           handle_nick_taken
-        when Marvin::IRC::Replies[:RPL_TOPIC]
-          handle_channel_topic
       end
       code = opts[:code].to_i
       args = Marvin::Util.arguments(opts[:data])
@@ -73,7 +71,7 @@ module Marvin
         logger.info "Attemping to set nickname to '#{next_nick}'"
         nick next_nick
       else
-        logger.fatal "No Nicknames available - QUITTING"
+        logger.error "No Nicknames available - QUITTING"
         quit
       end
     end
@@ -89,7 +87,7 @@ module Marvin
     # Make sure we show user server errors
     def handle_incoming_error(opts = {})
       if opts[:message].present?
-        logger.info "Got ERROR Message: #{opts[:message]}"
+        logger.error "Server ERROR Message: #{opts[:message]}"
       end
     end
     
