@@ -85,7 +85,10 @@ module Marvin::IRC
     ## Client specific details
     
     def send_line(*args)
-      @em_connection.send_line(*args)
+      args.each do |line|
+        @em_connection.send_line(line)
+        dispatch :outgoing_line, :line => line
+      end
     end
     
     class << self
@@ -163,7 +166,10 @@ module Marvin::IRC
     
     # Registers a callback handle that will be periodically run.
     def periodically(timing, event_callback)
-      EventMachine.add_periodic_timer(timing) { dispatch(event_callback.to_sym) }
+      EventMachine.add_periodic_timer(timing) do
+        setup_handlers
+        dispatch(event_callback.to_sym)
+      end
     end
     
   end

@@ -60,7 +60,6 @@ module Marvin
     
     def pre_dispatching
       process_development
-      setup_handlers
     end
     
     # Sets the current class-wide settings of this IRC Client
@@ -97,6 +96,7 @@ module Marvin
     ## Handling all of the the actual client stuff.
     
     def receive_line(line)
+      setup_handlers
       dispatch :incoming_line, :line => line
       event = Marvin::Settings.parser.parse(line)
       dispatch(event.to_incoming_event_name, event.to_hash) unless event.nil?  

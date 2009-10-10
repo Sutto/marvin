@@ -26,4 +26,6 @@ Marvin::Loader.before_run do
   # HelloWorld.register!
   # DebugHandler.register!
   
+  RawConnectionLogger.register!
+
 end
