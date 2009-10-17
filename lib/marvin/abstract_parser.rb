@@ -1,4 +1,5 @@
 module Marvin
+  # Abstract Class for implementing abstract parsers.
   class AbstractParser
     
     attr_accessor :line, :command, :event
@@ -15,6 +16,8 @@ module Marvin
       @event
     end
     
+    # Parses a line and return the associated event.
+    # @return [Marvin::IRC:Event] the parsed event
     def self.parse(line)
       new(line.strip).to_event
     end

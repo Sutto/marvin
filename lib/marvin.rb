@@ -39,8 +39,12 @@ module Marvin
     
   end
   
-  def self.version(include_minor = false)
-    VERSION[0, (include_minor ? 4 : 3)].join(".")
+  # Returns a string of the current version,
+  # optionally including a build number.
+  # @param [Boolean] include_build include a build version in the string
+  def self.version(include_build = nil)
+    include_build = VERSION[3].to_i == 0 if version_build.nil?
+    VERSION[0, (include_build ? 4 : 3)].join(".")
   end
   
   has_library :util, :abstract_client, :abstract_parser, :irc, :exception_tracker

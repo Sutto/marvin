@@ -22,10 +22,9 @@ Marvin::Loader.before_run do
   # end
   
   # And any other code here that will be run before the client, e.g:
-  
+
   # HelloWorld.register!
   # DebugHandler.register!
-  
-  RawConnectionLogger.register!
+  #RawConnectionLogger.register!
 
 end

@@ -167,7 +167,6 @@ module Marvin::IRC
     # Registers a callback handle that will be periodically run.
     def periodically(timing, event_callback)
       EventMachine.add_periodic_timer(timing) do
-        setup_handlers
         dispatch(event_callback.to_sym)
       end
     end
