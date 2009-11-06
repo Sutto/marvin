@@ -2,4 +2,4 @@ log/*.log
 tmp/pids/*.pid
 config/settings.yml
 config/connections.yml
-
+pkg
