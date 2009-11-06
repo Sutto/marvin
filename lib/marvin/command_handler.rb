@@ -64,7 +64,7 @@ module Marvin
         name, command, data = message.split(/\s+/, 2)
         return if name !~ /^#{client.nickname}:/i
       else
-        command, data = message.splt(/\s+/, 2)
+        command, data = message.split(/\s+/, 2)
       end
       data ||= ""
       if (command_name = extract_command_name(command)).present?
