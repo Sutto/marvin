@@ -19,7 +19,7 @@ module Marvin
       attr_accessor :processing, :configuration
       
       def initialize(*args)
-        @configuration = args.last.is_a?(Marvin::Nash) ? args.pop : Marvin::nash.new
+        @configuration = args.last.is_a?(Marvin::Nash) ? args.pop : Marvin::Nash.new
         super(*args)
       end
       
