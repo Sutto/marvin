@@ -23,7 +23,7 @@ class AbstractClientTest < Test::Unit::TestCase
       assert_dispatched :client_connected, 0, {}
     end
 
-    should "dispatch :client_connected as the first event on process_connect" do
+    should "dispatch the correct events" do
       assert_resets_client
       client.default_channels = ["#awesome", "#rock"]
       client.process_connect

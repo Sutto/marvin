@@ -20,7 +20,7 @@ begin
     gem.add_dependency "perennial",    ">= 1.0.1"
     gem.add_dependency "eventmachine", ">= 0.12.8"
     gem.add_dependency "json"
-    gem.add_development_dependency "thoughtbot-shoulda"
+    gem.add_development_dependency "shoulda"
     gem.add_development_dependency "yard"
   end
   Jeweler::GemcutterTasks.new
