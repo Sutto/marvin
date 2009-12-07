@@ -6,8 +6,8 @@ require MARVIN_MAIN_FILE
 
 begin
   require 'jeweler'
-  require 'perennial/jeweler_ext'
-  Jeweler.versioning_via MARVIN_MAIN_FILE, Marvin::VERSION
+  #require 'perennial/jeweler_ext'
+  #Jeweler.versioning_via MARVIN_MAIN_FILE, Marvin::VERSION
   Jeweler::Tasks.new do |gem|
     gem.name        = "marvin"
     gem.summary     = "Evented IRC Library for Ruby, built on EventMachine and Perennial."
@@ -17,6 +17,7 @@ begin
     gem.authors     = ["Darcy Laycock"]
     gem.files       = FileList["{bin,lib,templates,test,handlers}/**/*"].to_a
     gem.platform    = Gem::Platform::RUBY
+    gem.version     = Marvin.version
     gem.add_dependency "perennial",    ">= 1.0.1"
     gem.add_dependency "eventmachine", ">= 0.12.8"
     gem.add_dependency "json"

@@ -43,7 +43,7 @@ module Marvin
   # optionally including a build number.
   # @param [Boolean] include_build include a build version in the string
   def self.version(include_build = nil)
-    include_build = VERSION[3].to_i == 0 if include_build.nil?
+    include_build = VERSION[3].to_i > 0 if include_build.nil?
     VERSION[0, (include_build ? 4 : 3)].join(".")
   end
   
