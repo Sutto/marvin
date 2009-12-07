@@ -24,7 +24,7 @@ module Marvin::IRC
     end
     
     def to_event_name(prefix = nil)
-      [prefix, @name].join("_").to_sym
+      [prefix, @name].compact.join("_").to_sym
     end
     
     def to_incoming_event_name
